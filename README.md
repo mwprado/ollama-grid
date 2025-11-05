@@ -3,7 +3,7 @@
   <img src="docs/mascot_chimera.png" width="280" alt="OllamaGrid — Chimera Mascot">
 </p>
 
-<h1 align="center">🧠 OllamaGrid</h1>
+<h1 align="center">OllamaGrid</h1>
 <p align="center">
   <b>One brain, many architectures.</b><br>
   Modular and distributed Ollama packaging for Fedora/COPR.
