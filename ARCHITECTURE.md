@@ -8,23 +8,6 @@ Este documento descreve a arquitetura dos pacotes e serviços, com dois formatos
 
 ## 1) Visão atual (v1) — Stateless com Nginx
 
-### 1.1 Diagrama (Mermaid)
-
-```mermaid
-flowchart LR
-  Client[Cliente / App] -->|HTTP| Nginx[(ollama-balancer)]
-  subgraph Host(s)
-    direction TB
-    Nginx -->|/cpu/| CPU[ollama@cpu:11434]
-    Nginx -->|/vulkan/| VK[ollama@vulkan:11435]
-    Nginx -->|/rocm/| ROCM[ollama@rocm:11436]
-    Nginx -->|/cuda129/| C129[ollama@cuda-12.9:11437]
-    Nginx -->|/cudalast/| CL[ollama@cuda-latest:11438]
-  end
-  classDef svc fill:#eef,stroke:#99f,stroke-width:1px;
-  class Nginx,CPU,VK,ROCM,C129,CL svc;
-```
-
 ### 1.2 Diagrama (ASCII)
 
 ```
@@ -45,24 +28,6 @@ flowchart LR
 ---
 
 ## 2) Visão futura (v2) — Sessiond + Sessões Persistentes
-
-### 2.1 Diagrama (Mermaid)
-
-```mermaid
-flowchart LR
-  Client[Cliente / App] -->|/chat (session_id)| Sessiond[(ollama-sessiond)]
-  Sessiond -->|/history| DB[(SQLite/Redis)]
-  Sessiond -->|HTTP| Nginx[(ollama-balancer)]
-  Nginx --> CPU[ollama@cpu]
-  Nginx --> VK[ollama@vulkan]
-  Nginx --> ROCM[ollama@rocm]
-  Nginx --> C129[ollama@cuda-12.9]
-  Nginx --> CL[ollama@cuda-latest]
-  classDef svc fill:#eef,stroke:#99f,stroke-width:1px;
-  class Sessiond,Nginx,CPU,VK,ROCM,C129,CL svc;
-```
-
-### 2.2 Diagrama (ASCII)
 
 ```
 +-------------------+     /chat (session_id)     +-------------------+
