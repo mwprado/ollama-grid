@@ -18,7 +18,7 @@ Este roadmap define a evolução do projeto partindo de uma arquitetura **statel
 
 **Status:** Implementado
 - Múltiplos serviços `systemd@` por backend com `.env` dedicados.
-- `ollama-balancer` (nginx) roteando por caminho (`/cpu/`, `/rocm/`, `/cuda129/`, `/cudalast/`, `/vulkan/`).
+- `ollama-balancer` (nginx) roteando por caminho (`/cpu/`, `/rocm/`, `/cuda129/`, `/cuda/`, `/vulkan/`).
 - **Estado da conversa enviado pelo cliente** (lista `messages[]` em cada chamada `/api/chat`).
 
 **Benefícios:**
