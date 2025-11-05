@@ -1,0 +1,8 @@
+
+Artwork origin:
+
+- This repository includes an original community-designed mascot (Chimera) for the OllamaGrid project,
+  and small companion robots representing CUDA, ROCm, Vulkan, and CPU backends.
+- The artwork was created as an original vector-style illustration (cartoon / Fedora-like aesthetic).
+- No official vendor logos were embedded; only simplified, monochrome symbolic references are used.
+- Trademarks belong to their respective owners (NVIDIA, AMD, Khronos). See README and LICENSE disclaimers.
