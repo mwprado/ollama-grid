@@ -20,9 +20,9 @@ Este documento descreve a arquitetura dos pacotes e serviços, com dois formatos
       |                  |               |               |                   |
 +-----v-----+      +-----v-----+   +-----v-----+   +-----v-----+       +-----v-----+
 | ollama@cpu|      |ollama@vulk|   |ollama@rocm|   |ollama@cuda|       |ollama@cuda|
-|   :11434  |      |   :11435  |   |   :11436  |   |  -12.9    |       |  -latest  |
-+-----------+      +-----------+   +-----------+   |   :11437   |       |   :11438  |
-                                                   +-----------+       +-----------+
+|   :11434  |      |   :11435  |   |   :11436  |   |  -12.9    |       |   :11438  |
++-----------+      +-----------+   +-----------+   |  :11437   |       +-----------+
+                                                   +-----------+       
 ```
 
 ---
@@ -49,9 +49,9 @@ Este documento descreve a arquitetura dos pacotes e serviços, com dois formatos
       |                 |                |               |                |
 +-----v-----+     +-----v-----+    +-----v-----+   +-----v-----+    +-----v-----+
 | ollama@cpu|     |ollama@vulk|    |ollama@rocm|   |ollama@cuda|    |ollama@cuda|
-|   :11434  |     |   :11435  |    |   :11436  |   |  -12.9    |    |  -latest  |
-+-----------+     +-----------+    +-----------+   |   :11437   |    |   :11438  |
-                                                   +-----------+    +-----------+
+|   :11434  |     |   :11435  |    |   :11436  |   |  -12.9    |    |   :11438  |
++-----------+     +-----------+    +-----------+   |  :11437   |    +-----------+
+                                                   +-----------+    
 ```
 
 ---
@@ -59,8 +59,8 @@ Este documento descreve a arquitetura dos pacotes e serviços, com dois formatos
 ## 3) Diretórios & Convenções
 
 - Binário: `/usr/bin/ollama`
-- Libs por backend: `/usr/lib64/ollama/{cpu,vulkan,rocm,cuda-12.9,cuda-latest}`
-- Configs (env): `/etc/ollama/{cpu,vulkan,rocm,cuda-12.9,cuda-latest}.env`
+- Libs por backend: `/usr/lib64/ollama/{cpu,vulkan,rocm,cuda-12.9,cuda}`
+- Configs (env): `/etc/ollama/{cpu,vulkan,rocm,cuda-12.9,cuda}.env`
 - Dados/modelos: `/var/lib/ollama/<backend>/models`
 - Logs: `/var/log/ollama/`
 - Balanceador: `/etc/ollama/balancer/nginx.conf`
@@ -75,7 +75,7 @@ Este documento descreve a arquitetura dos pacotes e serviços, com dois formatos
 - Vulkan: `11435`
 - ROCm: `11436`
 - CUDA-12.9: `11437`
-- CUDA-latest: `11438`
+- CUDA: `11438`
 - Balancer (Nginx): `8080`
 
 ---
