@@ -1,9 +1,8 @@
-
 <p align="center">
   <img src="docs/mascot_chimera.png" width="280" alt="OllamaGrid — Chimera Mascot">
 </p>
 
-<h1 align="center">OllamaGrid</h1>
+<h1 align="center">🧠 OllamaGrid</h1>
 <p align="center">
   <b>One brain, many architectures.</b><br>
   Modular and distributed Ollama packaging for Fedora/COPR.
@@ -14,6 +13,20 @@
   <a href="ROADMAP.md">Roadmap</a> •
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/status-em%20desenvolvimento-orange" alt="Status: Em desenvolvimento">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT">
+  <img src="https://img.shields.io/badge/Fedora-43-informational" alt="Fedora 43">
+  <img src="https://img.shields.io/badge/GCC-14-blue" alt="GCC 14">
+</p>
+
+---
+
+> ⚠️ **Status: Em desenvolvimento (Alpha)**
+>
+> Este projeto ainda está em fase de desenvolvimento ativo.  
+> Alterações na estrutura, empacotamento e documentação podem ocorrer até a estabilização da primeira versão pública.
 
 ---
 
