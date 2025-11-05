@@ -1,4 +1,4 @@
-# ARCHITECTURE
+# ARCHITECTURE — Ollama Community Build
 
 Este documento descreve a arquitetura dos pacotes e serviços, com dois formatos de diagrama:
 - **Mermaid** (renderiza no GitHub/GitLab)
