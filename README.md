@@ -30,7 +30,7 @@
 
 ---
 
-# Ollama Community Build — Fedora 43 / GCC‑14
+# Ollama Community Build
 
 Empacotamento comunitário do **Ollama 0.12.9** com _backends_ modulares (CPU, Vulkan, ROCm, CUDA‑12.9 e CUDA‑latest) e um pacote de **balanceador** (Nginx) para ambientes heterogêneos (Intel/AMD/NVIDIA).
 
