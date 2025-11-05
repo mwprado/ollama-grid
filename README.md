@@ -5,7 +5,7 @@
 <h1 align="center">OllamaGrid</h1>
 <p align="center">
   <b>One brain, many architectures.</b><br>
-  Modular and distributed Ollama packaging for Fedora/COPR.
+  Modular and distributed Ollama packaging.
 </p>
 
 <p align="center">
