@@ -1,0 +1,20 @@
+[Unit]
+Description=Ollama (%i)
+After=network.target
+
+[Service]
+User=ollama
+Group=ollama
+EnvironmentFile=-/etc/ollama/%i.env
+ExecStart=/usr/bin/ollama serve
+Restart=always
+Nice=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectHome=read-only
+# Ajustes conforme necessidade
+# CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target
