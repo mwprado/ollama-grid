@@ -1,5 +1,4 @@
-# ROADMAP — Ollama Community Build (Fedora 43 / GCC‑14)
-
+# ROADMAP — Ollama Community Build
 Este roadmap define a evolução do projeto partindo de uma arquitetura **stateless** (v1) até um modelo **stateful distribuído** (v3), mantendo compatibilidade com múltiplos backends (CPU, Vulkan, ROCm, CUDA‑12.9, CUDA‑latest) e o pacote `ollama-balancer`.
 
 ---
