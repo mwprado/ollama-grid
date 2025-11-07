@@ -15,7 +15,7 @@ BuildRequires:  gcc gcc-c++ cmake make git-core golang patchelf openmpi-devel
 BuildRequires:  pkgconfig(vulkan) glslang glslc
 %endif
 %if %{with rocm}
-BuildRequires:  rocm-hip-runtime rocm-cmake hipblas
+BuildRequires:  rocm-hip
 %endif
 %if %{with cuda_legacy_129}
 BuildRequires:  which
