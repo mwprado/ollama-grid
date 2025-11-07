@@ -2,10 +2,10 @@
   <img src="docs/mascot_chimera.png" width="280" alt="OllamaGrid — Chimera Mascot">
 </p>
 
-<h1 align="center">OllamaGrid</h1>
+<h1 align="center">🧠 OllamaGrid</h1>
 <p align="center">
   <b>One brain, many architectures.</b><br>
-  Modular and distributed Ollama packaging.
+  Modular and distributed Ollama packaging for Fedora/COPR.
 </p>
 
 <p align="center">
@@ -30,215 +30,124 @@
 
 ---
 
-# Ollama Community Build
+## 📦 Estrutura dos pacotes
 
-Empacotamento comunitário do **Ollama 0.12.9** com _backends_ modulares (CPU, Vulkan, ROCm, CUDA‑12.9 e CUDA‑latest) e um pacote de **balanceador** (Nginx) para ambientes heterogêneos (Intel/AMD/NVIDIA).
+O OllamaGrid é dividido em módulos independentes, podendo ser instalados no mesmo host ou distribuídos em nós diferentes.
+Cada backend utiliza sua própria configuração, binário e serviço `systemd`.
 
-> Objetivo: permitir instalação co‑existente de múltiplos backends (na mesma máquina ou distribuídos), cada um com serviço, configuração e pasta próprios.
-
----
-
-## Pacotes fornecidos
-
-- `ollama` — pacote base (binário/serviço e libs comuns, perfil CPU).
-- `ollama-backend-vulkan` — backend universal via Vulkan.
-- `ollama-backend-rocm` — backend AMD (HIP/rocBLAS).
-- `ollama-backend-cuda-12.9` — backend NVIDIA legado (ex.: Tesla P4, sm_61).
-- `ollama-backend-cuda-latest` — backend NVIDIA atual (CUDA 13).
-- `ollama-balancer` — Nginx como proxy reverso/balanceador.
-
-Cada backend instala em diretório próprio:
-
-```
-/usr/lib64/ollama/{cpu,vulkan,rocm,cuda-12.9,cuda-latest}
-```
-
-e possui um arquivo de ambiente em:
-
-```
-/etc/ollama/{cpu,vulkan,rocm,cuda-12.9,cuda-latest}.env
-```
+| Pacote | Descrição |
+|---------|------------|
+| `ollama-cpu` | Backend genérico (CPU / fallback). |
+| `ollama-vulkan` | Backend universal baseado em Vulkan. |
+| `ollama-rocm` | Backend para GPUs AMD, sempre rastreando a última versão estável do ROCm. |
+| `ollama-cuda` | Backend para GPUs NVIDIA modernas, sempre rastreando a última versão estável do CUDA Toolkit. |
+| `ollama-cuda-legacy-12.9` | Backend fixo para GPUs NVIDIA Compute 6.1 (ex.: Tesla P4). |
+| `ollama-balancer` | Serviço Nginx responsável pelo balanceamento entre os backends. |
 
 ---
 
-## Requisitos
+## ⚙️ Estrutura de instalação recomendada
 
-- **Fedora 43**, **GCC 14** nativo.
-- Drivers correspondentes (RPM Fusion ou oficiais).
-- Para **compilar** CUDA localmente:
-  - CUDA 12.9 (repo NVIDIA Fedora 41, testado no F43).
-  - CUDA 13 (repo NVIDIA Fedora 42).
-- OpenMPI, pkgconfig(vulkan) para builds.
-- Root para instalar/gerenciar serviços.
+```
+/usr/lib/systemd/system/ollama@.service
+/usr/lib/systemd/system/ollama-balancer.service
+/etc/ollama-grid/                  ← configurações específicas
+/etc/nginx/conf.d/ollama-grid.conf ← proxy/balancer principal
+/var/log/ollama-grid/              ← logs dos serviços
+/run/ollama-grid/                  ← PID e sockets (tmpfiles.d)
+```
+
+> **Nota:** O diretório correto é `tmpfiles.d`, e não `tempfiles.d`.
 
 ---
 
-## Usuário, diretórios e permissões
+## 🌐 Balanceador (Nginx)
 
-Criados via `sysusers.d` / `tmpfiles.d`:
+O pacote `ollama-balancer` instala a configuração padrão do Nginx em:
 
 ```
-User/Group: ollama
-/var/lib/ollama   (0750, ollama:ollama)
-/var/log/ollama   (0750, ollama:ollama)
-/etc/ollama       (0750, root:ollama)
+/etc/nginx/conf.d/ollama-grid.conf
 ```
 
-Após instalar, recomenda‑se:
+Trecho simplificado:
+
+```nginx
+upstream ollama_nodes {
+    server 127.0.0.1:11434; # CPU
+    server 127.0.0.1:11435; # Vulkan
+    server 127.0.0.1:11436; # ROCm
+    server 127.0.0.1:11437; # CUDA
+    # server 127.0.0.1:11439; # CUDA Legacy 12.9 (opcional)
+}
+
+server {
+    listen 8080;
+    location / {
+        proxy_pass http://ollama_nodes;
+        proxy_read_timeout 1h;
+        proxy_send_timeout 1h;
+        proxy_buffering off;
+    }
+
+    location = /health { return 200 "ok\n"; }
+}
+```
+
+Recarregue após editar:
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+---
+
+## 🧩 Backends e versões
+
+| Backend | Suporte | Versão |
+|----------|----------|----------|
+| CPU | genérica | nativo |
+| Vulkan | genérico (AMD/Intel/NVIDIA) | última versão |
+| ROCm | GPUs AMD | última versão |
+| CUDA | GPUs NVIDIA modernas | última versão |
+| CUDA (legacy) | GPUs NVIDIA Compute 6.1 (ex: Tesla P4) | pacote `ollama-cuda-legacy-12.9` |
+
+> **Nota:** Pacotes `ollama-cuda` e `ollama-rocm` sempre se referem à versão mais recente estável disponível
+> nos repositórios oficiais NVIDIA e AMD ROCm, respectivamente.  
+> Versões legadas utilizam o formato `ollama-cuda-legacy-{versão}`.
+
+---
+
+## 🔧 Serviços
 
 ```bash
-sudo restorecon -Rv /etc/ollama /var/lib/ollama /var/log/ollama
-```
-
----
-
-## Serviços (systemd)
-
-Serviço _template_: `ollama@.service`
-
-Ativar por backend:
-```bash
+# Serviços principais
 sudo systemctl enable --now ollama@cpu
 sudo systemctl enable --now ollama@vulkan
 sudo systemctl enable --now ollama@rocm
-sudo systemctl enable --now ollama@cuda-12.9
-sudo systemctl enable --now ollama@cuda-latest
-```
+sudo systemctl enable --now ollama@cuda
+sudo systemctl enable --now ollama@cuda-legacy-12.9
 
-Cada serviço lê um `.env` próprio com porta, `LD_LIBRARY_PATH` e `OLLAMA_MODELS`. Portas padrão:
-
-| Backend | Porta |
-|--------:|------:|
-| CPU | 11434 |
-| Vulkan | 11435 |
-| ROCm | 11436 |
-| CUDA‑12.9 | 11437 |
-| CUDA‑latest | 11438 |
-
-### Hardening sugerido
-No unit file já constam `User=ollama`, `NoNewPrivileges=yes`, `PrivateTmp=yes`, `ProtectSystem=full`, `ProtectHome=read-only`.
-
----
-
-## Balanceador (`ollama-balancer`)
-
-Instala Nginx + `ollama-balancer.service` e o config padrão em `/etc/ollama/balancer/nginx.conf`:
-- _Paths_ por backend: `/cpu/`, `/vulkan/`, `/rocm/`, `/cuda129/`, `/cudalast/`
-- _Health_: `/api/version`
-- Timeouts longos para inferências.
-
-Ativar:
-```bash
+# Balanceador
 sudo systemctl enable --now ollama-balancer
 ```
 
-SELinux/Firewall (se expor porta 8080):
+---
+
+## ✅ Testes
+
 ```bash
-sudo setsebool -P httpd_can_network_connect 1
-sudo firewall-cmd --add-port=8080/tcp --permanent && sudo firewall-cmd --reload
-```
-
-Testes rápidos:
-```bash
-curl http://localhost:8080/health
-curl http://localhost:8080/cpu/api/version
-curl http://localhost:8080/cudalast/api/version
+curl -sSf http://localhost:8080/health
+curl -sSf http://localhost:8080/cpu/api/version
+curl -sSf http://localhost:8080/cuda/api/version
 ```
 
 ---
 
-## Estado da conversa (contexto)
-
-O Ollama é **stateless**: o cliente deve enviar `messages[]` em toda chamada `/api/chat`.  
-Para manter sessões entre backends/hosts, ver **ROADMAP.md** (fase v2: `ollama-sessiond` com SQLite/Redis; fase v3: Postgres + Vector DB).
-
----
-
-## Scripts
-
-- `scripts/apply-cuda129-patch.sh` — **ADMIN** aplica/reverte patch em arquivos do **CUDA 12.9** (backup automático e `--dry-run`).  
-  Exemplo:
-  ```bash
-  sudo ./apply-cuda129-patch.sh     --patch /caminho/para/fix.patch     --target targets/x86_64-linux/include/seu_arquivo.h
-  ```
-- `scripts/detect_cuda.sh` — detecta `nvcc` e gera `buildconfig.inc` (para SRPM/COPR).
-- `scripts/post_install_checks.sh` — _smoke tests_ de versão e health endpoints.
-
----
-
-## Empacotamento (Copr)
-
-- `specs/ollama.spec` — esqueleto com subpacotes (CPU, Vulkan, ROCm, CUDA‑12.9, CUDA‑latest).
-- `specs/ollama-balancer.spec` — Nginx + unit.
-
-Diretrizes:
-- Remover **RPATH/RUNPATH** dos `.so` durante `%install`.
-- **CUDA**: não usar `BuildRequires` no COPR; gere **SRPM** a partir de build local com Toolkit oficial.
-- Variantes CUDA em diretórios separados e (opcionalmente) gerenciar `cuda-current` via `alternatives`.
-
-Exemplos de build do SRPM (local):
-```bash
-rpmbuild -bs packaging/specs/ollama.spec   --define "_sourcedir $(pwd)/packaging"   --define "_srcrpmdir $(pwd)/dist"   --with cpu --with vulkan --with cuda_129 --without rocm
-
-rpmbuild -bs packaging/specs/ollama-balancer.spec   --define "_sourcedir $(pwd)/packaging"   --define "_srcrpmdir $(pwd)/dist"
-```
-
-Submeter ao COPR:
-```bash
-copr-cli build mwprado/ollama dist/ollama-0.12.9-1.fc43.src.rpm
-copr-cli build mwprado/ollama dist/ollama-balancer-0.1.0-1.fc43.src.rpm
-```
-
----
-
-## Estrutura do repositório (neste ZIP)
-
-```
-packaging/
-  README.md
-  ROADMAP.md
-  specs/
-    ollama.spec
-    ollama-balancer.spec
-  sysusers.d/ollama.conf
-  tmpfiles.d/ollama.conf
-  systemd/
-    ollama@.service
-    ollama-balancer.service
-  etc/ollama/
-    cpu.env
-    vulkan.env
-    rocm.env
-    cuda-12.9.env
-    cuda-latest.env
-    balancer/ollama-balancer.env
-  nginx/nginx.conf
-  scripts/
-    apply-cuda129-patch.sh
-    detect_cuda.sh
-    post_install_checks.sh
-  buildconfig.inc
-```
-
----
-
-## Licenças
-
-- Ollama (upstream): Apache‑2.0
-- Empacotamento e scripts deste projeto: MIT
-
----
-
-## Suporte & Contribuição
-
-- Issues e PRs são bem‑vindos
-- Veja também **ROADMAP.md** para a evolução (sessiond, DBs, métricas)
-
----
 ### Disclaimer
 
-OllamaGrid é um projeto comunitário independente e não é afiliado, endossado nem patrocinado por NVIDIA, AMD ou Khronos Group.
-Os logotipos e marcas mencionados (NVIDIA, CUDA, ROCm e Vulkan) são propriedade de seus respectivos detentores.
-Os símbolos utilizados nas ilustrações e materiais gráficos são representações artísticas originais, criadas apenas para fins ilustrativos e educativos,
+OllamaGrid é um projeto comunitário independente e não é afiliado, endossado nem patrocinado por NVIDIA, AMD ou Khronos Group.  
+Os logotipos e marcas mencionados (NVIDIA, CUDA, ROCm e Vulkan) são propriedade de seus respectivos detentores.  
+Os símbolos utilizados nas ilustrações e materiais gráficos são representações artísticas originais, criadas apenas para fins ilustrativos e educativos,  
 visando demonstrar compatibilidade técnica entre diferentes arquiteturas.
 
+---
