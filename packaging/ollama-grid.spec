@@ -81,7 +81,8 @@ Instala libs em %{og_libdir}/cuda-12.9 e wrapper /usr/bin/ollama-cuda-legacy-12.
 %forgesetup
 
 # Extrai o OLLAMAGRID (Source1) em ./ollama-grid-%{gridcommit}
-%setup -q -T -D -a 1
+#%setup -q -T -D -a 1
+tar -xzf %{SOURCE1}
 
 # Duplique a árvore do Ollama para cada backend
 cp -a . ../ollama-0.12.9-vulkan
