@@ -25,6 +25,7 @@ Source1:         %{gridurl}/archive/%{gridcommit}/ollama-grid-%{gridcommit}.tar.
 # --------- Requisitos de build ----------
 BuildRequires:   gcc gcc-c++ cmake make git-core golang patchelf
 BuildRequires:   openmpi-devel
+BuildRequires:   ccache
 
 %if %{with vulkan}
 BuildRequires:   pkgconfig(vulkan)
@@ -36,9 +37,9 @@ BuildRequires:   glslc
 BuildRequires:   rocm-hip-devel
 %endif
 
-#%if %{with cuda_legacy_129}
-#
-#%endif
+%if %{with cuda_legacy_129}
+BuildRequires:   rocm-hip-devel
+%endif
 
 # --------- Destinos ----------
 %global og_libdir   %{_libdir}/ollama
@@ -80,6 +81,7 @@ Instala libs em %{og_libdir}/cuda-12.9 e wrapper /usr/bin/ollama-cuda-legacy-12.
 
 # Extrai o OLLAMAGRID (Source1) em ./ollama-grid-%{gridcommit}
 %setup -q -T -D -a 1
+ls
 #tar -xzf %{SOURCE1}
 
 # Duplique a árvore do Ollama para cada backend
