@@ -4,7 +4,7 @@ Release:        1%{?dist}
 Summary:        Modular Ollama packaging (CPU/Vulkan/ROCm/CUDA legacy) for Fedora/COPR
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/mwprado/ollama-grid
-Source0:        %{name}-%{version}.tar.gz
+Source0:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
 
 %bcond_without vulkan
 %bcond_without rocm
@@ -18,7 +18,8 @@ BuildRequires:  pkgconfig(vulkan) glslang glslc
 BuildRequires:  rocm-hip
 %endif
 %if %{with cuda_legacy_129}
-BuildRequires:  which
+#BuildRequires:  which
+BuildRequires:  cuda-12-9
 %endif
 
 %global og_libdir         %{_libdir}/ollama
