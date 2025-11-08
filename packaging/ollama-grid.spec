@@ -33,7 +33,7 @@ BuildRequires:   glslc
 %endif
 
 %if %{with rocm}
-BuildRequires:   BuildRequires:   rocm-hip-devel
+BuildRequires:   rocm-hip-devel
 %endif
 
 #%if %{with cuda_legacy_129}
