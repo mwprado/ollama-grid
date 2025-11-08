@@ -5,6 +5,7 @@ Summary:        Modular Ollama packaging (CPU/Vulkan/ROCm/CUDA legacy) for Fedor
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/mwprado/ollama-grid
 Source0:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
+Source1:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.zip
 
 %bcond_without vulkan
 %bcond_without rocm
