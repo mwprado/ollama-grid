@@ -90,10 +90,8 @@ cp -a . ../ollama-0.12.9-cuda-12.9
 
 # Copie do Source1 (ollama-grid) os SCRIPTS e o PATCH para dentro da árvore CUDA 12.9
 # >>>>> AJUSTE estes caminhos se no seu repo forem diferentes! <<<<<
-cp -a ollama-grid-%{gridcommit}/packaging/cuda129/apply-cuda129-patch.sh  ../ollama-0.12.9-cuda-12.9/tools/
-cp -a ollama-grid-%{gridcommit}/packaging/cuda129/revert-cuda129-patch.sh ../ollama-0.12.9-cuda-12.9/tools/
-cp -a ollama-grid-%{gridcommit}/packaging/cuda129/cuda129.patch          ../ollama-0.12.9-cuda-12.9/tools/
-chmod +x ../ollama-0.12.9-cuda-12.9/tools/apply-cuda129-patch.sh ../ollama-0.12.9-cuda-12.9/tools/revert-cuda129-patch.sh
+cp -a ollama-grid-%{gridcommit}/scripts/apply-cuda129-patch.sh  ../ollama-0.12.9-cuda-12.9/tools/
+chmod +x ../ollama-0.12.9-cuda-12.9/tools/apply-cuda129-patch.sh
 
 # ----------------- Build -----------------
 %build
