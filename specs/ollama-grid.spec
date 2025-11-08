@@ -36,9 +36,7 @@ BuildRequires:    glslc
 
 # ROCm (ajuste conforme sua base de pacotes ROCm)
 %if %{with rocm}
-BuildRequires:    rocm-hip-runtime
-BuildRequires:    rocm-cmake
-BuildRequires:    hipblas
+BuildRequires:    rocm-hip-devel
 %endif
 
 # CUDA (toolkit deve existir no host de build; não usar repositório NVIDIA no COPR)
@@ -105,6 +103,8 @@ Bibliotecas CUDA (moderno) e wrapper /usr/bin/ollama-cuda. Requer toolkit presen
 %package -n ollama-grid-cuda-legacy-12.9
 Summary:        Backend CUDA 12.9 (legado) para GPUs NVIDIA compute 6.1
 Requires:       ollama-grid-common = %{version}-%{release}
+BuildRequires:    gcc-14
+
 %description -n ollama-grid-cuda-legacy-12.9
 Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-cuda-legacy-12.9.
 O patch é aplicado por script antes do build e revertido após o build.
