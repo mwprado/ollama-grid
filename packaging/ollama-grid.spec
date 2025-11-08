@@ -33,14 +33,12 @@ BuildRequires:   glslc
 %endif
 
 %if %{with rocm}
-BuildRequires:   rocm-hip-runtime
-BuildRequires:   rocm-cmake
-BuildRequires:   hipblas
+BuildRequires:   BuildRequires:   hipblas
 %endif
 
-%if %{with cuda_legacy_129}
-BuildRequires:   which
-%endif
+#%if %{with cuda_legacy_129}
+#
+#%endif
 
 # --------- Destinos ----------
 %global og_libdir   %{_libdir}/ollama
