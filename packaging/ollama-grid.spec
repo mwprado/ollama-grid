@@ -5,14 +5,12 @@ Summary:        Modular Ollama packaging (CPU/Vulkan/ROCm/CUDA legacy) for Fedor
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
 
-# --------- SOURCE0: OLLAMA UPSTREAM ----------
-Source0:          https://github.com/ollama/ollama/archive/refs/tags/v%{version}.zip
+# --------- SOURCE0: OLLAMAGRID (scripts + patch) ----------
+Source0:         https://codeload.github.com/mwprado/ollama-grid/zip/refs/heads/main/ollama-grid-main.zip
 
-# --------- SOURCE1: OLLAMAGRID (scripts + patch) ----------
-# Ajuste o commit/tag do seu repositório de empacotamento:
-%global gridurl      https://github.com/mwprado/ollama-grid
-%global gridcommit   main
-Source1:         %{gridurl}/archive/%{gridcommit}/ollama-grid-%{gridcommit}.tar.gz
+# --------- SOURCE1: OLLAMA UPSTREAM ----------
+Source1:          https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
+
 
 # --------- Alternadores de backend (ative 1 por build) ----------
 %bcond_without vulkan
@@ -20,7 +18,7 @@ Source1:         %{gridurl}/archive/%{gridcommit}/ollama-grid-%{gridcommit}.tar.
 %bcond_without cuda_legacy_129
 
 # --------- Requisitos de build ----------
-BuildRequires:   gcc gcc-c++ cmake make git-core golang patchelf
+BuildRequires:   gcc gcc-c++ cmake make git-core golang patchelf tree
 BuildRequires:   openmpi-devel
 BuildRequires:   ccache
 
@@ -73,14 +71,9 @@ Instala libs em %{og_libdir}/cuda-12.9 e wrapper /usr/bin/ollama-cuda-legacy-12.
 
 # ----------------- Prep -----------------
 %prep
-# Extrai a fonte do OLLAMA (Source0) em ./ (Forge)
-%setup -q -T -c -n src
-tar -xzf %{SOURCE0} -C src --strip-components=1
-
-# Extrai o OLLAMAGRID (Source1) em ./ollama-grid-%{gridcommit}
-%setup -q -T -D -a 1
-ls
-#tar -xzf %{SOURCE1}
+unzip %{SOURCE0}
+tar -xzf %{SOURCE1}
+tree
 
 # Duplique a árvore do Ollama para cada backend
 cp -a . ../ollama-0.12.9-vulkan
