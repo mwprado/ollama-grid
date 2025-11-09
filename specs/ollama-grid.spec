@@ -5,17 +5,12 @@ Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balancea
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
 
-# ====== SOURCE0: OLLAMA (upstream) via Forge macros ======
-%global forgeurl  https://github.com/ollama/ollama
-%global commit    v%{version}
-%forgemeta
-Source0:         %{forgesource}
+# ====== SOURCE0: OLLAMA-GRID (seus assets: scripts/patch/nginx/…) ======
+Source0:        https://github.com/mwprado/ollamad/archive/refs/heads/main.zip
 
-# ====== SOURCE1: OLLAMA-GRID (seus assets: scripts/patch/nginx/…) ======
-# Ajuste gridcommit para um commit/tag do seu repo de empacotamento
-%global gridurl    https://github.com/mwprado/ollama-grid
-%global gridcommit main
-Source1:          %{gridurl}/archive/%{gridcommit}/ollama-grid-%{gridcommit}.tar.gz
+# ====== SOURCE1: OLLAMA (upstream) via Forge macros ======
+Source1:         https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
+
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
 %bcond_without vulkan
@@ -111,11 +106,12 @@ O patch é aplicado por script antes do build e revertido após o build.
 
 # ==================== Prep ====================
 %prep
-# Source0: Ollama upstream
-%forgesetup
-
 # Source1: ollama-grid (assets) em ./ollama-grid-%{gridcommit}
-%setup -q -T -D -a 1
+tar -xzvf  ollama-grid-main.tar.gz
+
+# Source0: Ollama upstream
+tar -xzvf  ollama-v%{version}tar.gz
+tree 
 
 # Duplica a árvore do Ollama para cada backend
 cp -a . ../ollama-0.12.9-vulkan
