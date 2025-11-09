@@ -77,7 +77,7 @@ Instala libs em %{og_libdir}/cuda-12.9 e wrapper /usr/bin/ollama-cuda-legacy-12.
 # ----------------- Prep -----------------
 %prep
 # Extrai a fonte do OLLAMA (Source0) em ./ (Forge)
-%forgesetup
+%forgeautosetup
 
 # Extrai o OLLAMAGRID (Source1) em ./ollama-grid-%{gridcommit}
 %setup -q -T -D -a 1
