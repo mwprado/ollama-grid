@@ -106,16 +106,28 @@ O patch é aplicado por script antes do build e revertido após o build.
 
 # ==================== Prep ====================
 %prep
-%setup
-cd ..
-%setup -a 1
-tree 
+# Cria raiz estável e NÃO extrai nada ainda
+%setup -q -T -c -n %{name}-%{version}
 
-# Duplica a árvore do Ollama para cada backend
-cp -a %{name}-%{version}/ollama %{name}-%{version}/ollama/ollama-0.12.9-vulkan
-cp -a %{name}-%{version}/ollama %{name}-%{version}/ollama/ollama-0.12.9-rocm6
-cp -a %{name}-%{version}/ollama %{name}-%{version}/ollama/ollama-0.12.9-cuda-latest
-cp -a %{name}-%{version}/ollama %{name}-%{version}/ollama/ollama-0.12.9-cuda-12.9
+# Pastas de trabalho
+mkdir -p %{name}-%{version}/sources/grid \
+         %{name}-%{version}/sources/ollama \
+         %{name}-%{version}/build
+
+# Extrai os dois tarballs achatando o topo (independe do nome interno)
+tar -xzf %{SOURCE0} -C %{name}-%{version}/sources/grid --strip-components=1
+tar -xzf %{SOURCE1} -C %{name}-%{version}/sources/ollama --strip-components=1
+
+# Duplica a árvore do OLLAMA para cada backend dentro de build/
+pushd %{name}-%{version}
+cp -a sources/ollama build/ollama-0.12.9-vulkan
+cp -a sources/ollama build/ollama-0.12.9-rocm6
+cp -a sources/ollama build/ollama-0.12.9-cuda-latest
+cp -a sources/ollama build/ollama-0.12.9-cuda-12.9
+popd
+
+# (Opcional) diagnóstico
+# tree %{name}-%{version} || :
 
 # Copia assets do Nginx (se existirem) do Source1
 # (Ajuste este caminho se seu repo usar outro layout)
@@ -124,55 +136,35 @@ cp -a %{name}-%{version}/ollama %{name}-%{version}/ollama/ollama-0.12.9-cuda-12.
 #  cp -a ollama-grid-%{gridcommit}/packaging/nginx/ollama-grid.conf nginx-assets/
 # fi
 
-# Scripts/patch do CUDA 12.9: apply/revert/patch
-if [ -d ../ollama-0.12.9-cuda-12.9 ]; then
-  install -d ../ollama-0.12.9-cuda-12.9/tools
-  # caminhos conforme você informou: scripts/apply-*.sh
-  if [ -f ollama-grid-%{gridcommit}/scripts/apply-cuda129-patch.sh ]; then
-    cp -a ollama-grid-%{gridcommit}/scripts/apply-cuda129-patch.sh ../ollama-0.12.9-cuda-12.9/tools/
-  fi
-  if [ -f ollama-grid-%{gridcommit}/scripts/revert-cuda129-patch.sh ]; then
-    cp -a ollama-grid-%{gridcommit}/scripts/revert-cuda129-patch.sh ../ollama-0.12.9-cuda-12.9/tools/
-  fi
-  # patch preferencialmente em patches/, fallback em scripts/
-  if [ -f ollama-grid-%{gridcommit}/patches/cuda129.patch ]; then
-    cp -a ollama-grid-%{gridcommit}/patches/cuda129.patch ../ollama-0.12.9-cuda-12.9/tools/
-  elif [ -f ollama-grid-%{gridcommit}/scripts/cuda129.patch ]; then
-    cp -a ollama-grid-%{gridcommit}/scripts/cuda129.patch ../ollama-0.12.9-cuda-12.9/tools/
-  fi
-  chmod +x ../ollama-0.12.9-cuda-12.9/tools/*.sh 2>/dev/null || :
-fi
-
 # ==================== Build ====================
 %build
 # ---- Vulkan ----
 %if %{with vulkan}
-pushd ../ollama-0.12.9-vulkan
-  cmake --preset "Vulkan" --fresh
+  pushd %{name}-%{version}/build/ollama-0.12.9-vulkan  cmake --preset "Vulkan" --fresh
   cmake --build build --preset "Vulkan" --parallel 9
-popd
+  popd
 %endif
 
 # ---- ROCm ----
 %if %{with rocm}
-pushd ../ollama-0.12.9-rocm6
+  pushd %{name}-%{version}/build/ollama-0.12.9-vulkan  cmake --preset "ROCm" --fresh
   cmake --preset "ROCm" --fresh -D GPU_TARGETS="gfx803;gfx1032;gfx1035"
   cmake --build build --preset "ROCm" --parallel 8
-popd
+  popd
 %endif
 
 # ---- CUDA moderno (latest) — opcional; toolkit deve estar no PATH/ambiente ----
 %if %{with cuda}
-pushd ../ollama-0.12.9-cuda-latest
+  pushd %{name}-%{version}/build/ollama-0.12.9-cuda  cmake --preset "CUDA" --fresh
   # Se necessário, exporte CUDACXX/NVCC_CCBIN aqui para “latest”
   cmake --preset "CUDA" --fresh
   cmake --build build --preset "CUDA"
-popd
+  popd
 %endif
 
 # ---- CUDA legacy 12.9 — aplica patch ANTES; reverte DEPOIS ----
 %if %{with cuda_legacy_129}
-pushd ../ollama-0.12.9-cuda-12.9
+  pushd %{name}-%{version}/build/ollama-0.12.9-vulkan  cmake --preset "CUDA 12" --fresh
 
   # Ambiente CUDA 12.9 (conforme você definiu)
   export CUDAHOSTCXX=/usr/bin/g++-14
@@ -202,7 +194,7 @@ pushd ../ollama-0.12.9-cuda-12.9
     bash tools/revert-cuda129-patch.sh
   fi
 
-popd
+  popd
 %endif
 
 # ---- Binário Go (compila uma única vez; uso a árvore Vulkan por conveniência) ----
