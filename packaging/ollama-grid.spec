@@ -6,7 +6,7 @@ License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
 
 # --------- SOURCE0: OLLAMAGRID (scripts + patch) ----------
-Source0:         https://codeload.github.com/mwprado/ollama-grid/zip/refs/heads/main/ollama-grid-main.zip
+Source0:         https://codeload.github.com/mwprado/ollama-grid/zip/refs/heads/main/main.zip
 
 # --------- SOURCE1: OLLAMA UPSTREAM ----------
 Source1:          https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
