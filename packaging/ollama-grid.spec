@@ -5,11 +5,8 @@ Summary:        Modular Ollama packaging (CPU/Vulkan/ROCm/CUDA legacy) for Fedor
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
 
-# --------- SOURCE0: OLLAMA UPSTREAM (Forge macros) ----------
-%global forgeurl  https://github.com/ollama/ollama
-%global commit    v%{version}
-%forgemeta
-Source0:         %{forgesource}
+# --------- SOURCE0: OLLAMA UPSTREAM ----------
+Source0:          https://github.com/ollama/ollama/archive/refs/tags/v%{version}.zip
 
 # --------- SOURCE1: OLLAMAGRID (scripts + patch) ----------
 # Ajuste o commit/tag do seu repositório de empacotamento:
@@ -77,7 +74,8 @@ Instala libs em %{og_libdir}/cuda-12.9 e wrapper /usr/bin/ollama-cuda-legacy-12.
 # ----------------- Prep -----------------
 %prep
 # Extrai a fonte do OLLAMA (Source0) em ./ (Forge)
-%forgeautosetup
+%setup -q -T -c -n src
+tar -xzf %{SOURCE0} -C src --strip-components=1
 
 # Extrai o OLLAMAGRID (Source1) em ./ollama-grid-%{gridcommit}
 %setup -q -T -D -a 1
