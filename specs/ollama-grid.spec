@@ -6,10 +6,10 @@ License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
 
 # ====== SOURCE0: OLLAMA-GRID (seus assets: scripts/patch/nginx/…) ======
-Source0:        https://github.com/mwprado/ollamad/archive/refs/heads/main.zip
+Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.zip
 
 # ====== SOURCE1: OLLAMA (upstream) via Forge macros ======
-Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
+Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.gz
 
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
@@ -108,8 +108,8 @@ O patch é aplicado por script antes do build e revertido após o build.
 %prep
 # Cria subpastas para manter os códigos lado a lado
 mkdir -p %{name}-%{version}/ollama-grid %{name}-%{version}/ollama
-tar -xzf %{SOURCE0} -C %{name}-%{version}/ollama --strip-components=1
-tar -xzf %{SOURCE1} -C %{name}-%{version}/ollama-grid --strip-components=1
+tar -xzvf %{SOURCE0} -C %{name}-%{version}/ollama-grid --strip-components=1
+tar -xzvf %{SOURCE1} -C %{name}-%{version}/ollama --strip-components=1
 tree 
 
 # Duplica a árvore do Ollama para cada backend
