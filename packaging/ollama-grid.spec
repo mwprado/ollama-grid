@@ -37,6 +37,7 @@ BuildRequires:    rocm-hip-devel
 # CUDA (toolkit deve existir no host de build; não usar repositório NVIDIA no COPR)
 %if %{with cuda} || %{with cuda_legacy_129}
 BuildRequires:    which
+BuildRequires:    gcc-14
 %endif
 
 # ====== Caminhos de instalação ======
@@ -54,13 +55,15 @@ via Nginx e orquestração por serviços systemd.
 
 # ==================== Subpackages ====================
 
-# (1) Meta-pacote / balancer
-%package
-Summary:        Meta-pacote e balanceador Nginx para OllamaGrid
+# (1) Se o pacote base for o "meta", REMOVA o bloco abaixo.
+#     Caso queira um subpacote meta separado, dê um nome:
+%package -n ollama-balancer
+Summary:        Balanceador Nginx para OllamaGrid
 Requires:       ollama-grid-common = %{version}-%{release}
 Recommends:     nginx
-# Sugerimos pelo menos um backend; admin escolhe conforme hardware
-Recommends:     ollama-grid-vulkan
+%description balancer
+OllamaGrid que instala a configuração do Nginx e arquivos de integração.
+Recomenda-se instalar ao menos um backend (Vulkan/ROCm/CUDA).
 
 %description
 Meta-pacote do OllamaGrid que instala a configuração do Nginx e arquivos de integração.
@@ -103,7 +106,7 @@ Bibliotecas CUDA (moderno) e wrapper /usr/bin/ollama-cuda. Requer toolkit presen
 %package -n ollama-grid-cuda-legacy-12.9
 Summary:        Backend CUDA 12.9 (legado) para GPUs NVIDIA compute 6.1
 Requires:       ollama-grid-common = %{version}-%{release}
-BuildRequires:    gcc-14
+
 
 %description -n ollama-grid-cuda-legacy-12.9
 Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-cuda-legacy-12.9.
