@@ -37,7 +37,7 @@ BuildRequires:    rocm-hip-devel
 # CUDA (toolkit deve existir no host de build; não usar repositório NVIDIA no COPR)
 %if %{with cuda} || %{with cuda_legacy_129}
 BuildRequires:    which
-BuildRequires:    gcc-14
+BuildRequires:    gcc14
 %endif
 
 # ====== Caminhos de instalação ======
