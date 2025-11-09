@@ -1,12 +1,12 @@
 Name:           ollama-grid
 Version:        0.12.9
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
 
 # ====== SOURCE0: OLLAMA-GRID (seus assets: scripts/patch/nginx/…) =====
-Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.zip
+Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.tar.gz
 
 # ====== SOURCE1: OLLAMA (upstream) via Forge macros ======
 Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.gz
