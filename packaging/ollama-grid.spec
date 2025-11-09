@@ -13,8 +13,9 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.g
 
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
-%bcond_without vulkan
-%bcond_without rocm
+%bcond_with cpu
+%bcond_with vulkan
+%bcond_with rocm
 %bcond_without cuda
 %bcond_without cuda_legacy_129
 
@@ -36,7 +37,6 @@ BuildRequires:    rocm-hip-devel
 
 # CUDA (toolkit deve existir no host de build; não usar repositório NVIDIA no COPR)
 %if %{with cuda} || %{with cuda_legacy_129}
-BuildRequires:    which
 BuildRequires:    gcc14
 %endif
 
@@ -46,7 +46,7 @@ BuildRequires:    gcc14
 %global og_nginx_conf /etc/nginx/conf.d/ollama-grid.conf
 
 # Comando comum de build do binário Go (repo root do Ollama)
-%global og_gobuild    go build -trimpath -buildmode=pie -ldflags "-s -w" .
+%global og_gobuild    go build -trimpath -buildmode=pie -ldflags "-s -w" 
 
 %description
 OllamaGrid é um conjunto de pacotes para executar o Ollama em ambientes heterogêneos
@@ -76,7 +76,16 @@ Recommends:     nginx
 Subpacote contendo a configuração do Nginx para o OllamaGrid e arquivos de integração.
 Instale pelo menos um backend (Vulkan/ROCm/CUDA).
 
-# (3) Vulkan
+# (3) CPU
+%package -n ollama-grid-cpu
+Summary:        Backend CPU
+Requires:       ollama-grid-common = %{version}-%{release}
+
+%description -n ollama-grid-cpu
+Bibliotecas Vulkan e wrapper /usr/bin/ollama-cpu.
+
+
+# (4) Vulkan
 %package -n ollama-grid-vulkan
 Summary:        Backend Vulkan (universal GPU: Intel/AMD/NVIDIA)
 Requires:       ollama-grid-common = %{version}-%{release}
@@ -84,7 +93,7 @@ Requires:       ollama-grid-common = %{version}-%{release}
 %description -n ollama-grid-vulkan
 Bibliotecas Vulkan e wrapper /usr/bin/ollama-vulkan.
 
-# (4) ROCm
+# (5) ROCm
 %package -n ollama-grid-rocm
 Summary:        Backend ROCm (GPUs AMD)
 Requires:       ollama-grid-common = %{version}-%{release}
@@ -92,7 +101,7 @@ Requires:       ollama-grid-common = %{version}-%{release}
 %description -n ollama-grid-rocm
 Bibliotecas ROCm (HIP) e wrapper /usr/bin/ollama-rocm.
 
-# (5) CUDA (moderno, sempre “latest” disponível no host de build)
+# (6) CUDA (moderno, sempre “latest” disponível no host de build)
 %package -n ollama-grid-cuda
 Summary:        Backend CUDA (GPUs NVIDIA modernas)
 Requires:       ollama-grid-common = %{version}-%{release}
@@ -100,11 +109,10 @@ Requires:       ollama-grid-common = %{version}-%{release}
 %description -n ollama-grid-cuda
 Bibliotecas CUDA (moderno) e wrapper /usr/bin/ollama-cuda. Requer toolkit presente no host.
 
-# (6) CUDA legacy 12.9 (ex.: Tesla P4, sm_61)
+# (7) CUDA legacy 12.9 (ex.: Tesla P4, sm_61)
 %package -n ollama-grid-cuda-legacy-12.9
 Summary:        Backend CUDA 12.9 (legado) para GPUs NVIDIA compute 6.1
 Requires:       ollama-grid-common = %{version}-%{release}
-
 
 %description -n ollama-grid-cuda-legacy-12.9
 Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-cuda-legacy-12.9.
@@ -113,64 +121,96 @@ O patch é aplicado por script antes do build e revertido após o build.
 # ==================== Prep ====================
 %prep
 # Cria raiz estável e NÃO extrai nada ainda
-%setup -q -T -c -n %{name}-%{version}
+%setup -q -T -c -n wsp
+pwd
 
 # Pastas de trabalho
-mkdir -p %{name}-%{version}/sources/grid \
-         %{name}-%{version}/sources/ollama \
-         %{name}-%{version}/build
+mkdir -p ./source/ollama-grid ./source/ollama ./build
 
 # Extrai os dois tarballs achatando o topo (independe do nome interno)
-tar -xzf %{SOURCE0} -C %{name}-%{version}/sources/grid --strip-components=1
-tar -xzf %{SOURCE1} -C %{name}-%{version}/sources/ollama --strip-components=1
+tar -xzf %{SOURCE0} -C ./source/ollama-grid --strip-components=1
+tar -xzf %{SOURCE1} -C ./source/ollama --strip-components=1
 
 # Duplica a árvore do OLLAMA para cada backend dentro de build/
-pushd %{name}-%{version}
-cp -a sources/ollama build/ollama-0.12.9-vulkan
-cp -a sources/ollama build/ollama-0.12.9-rocm6
-cp -a sources/ollama build/ollama-0.12.9-cuda-latest
-cp -a sources/ollama build/ollama-0.12.9-cuda-12.9
-popd
+cp -a source/ollama source/ollama-0.12.9-cpu 
+cp -a source/ollama source/ollama-0.12.9-vulkan
+cp -a source/ollama source/ollama-0.12.9-rocm
+cp -a source/ollama source/ollama-0.12.9-cuda
+cp -a source/ollama source/ollama-0.12.9-cuda-12.9
 
-# (Opcional) diagnóstico
-# tree %{name}-%{version} || :
+
 
 # Copia assets do Nginx (se existirem) do Source1
 # (Ajuste este caminho se seu repo usar outro layout)
-# if [ -f ollama-grid-%{gridcommit}/packaging/nginx/ollama-grid.conf ]; then
-#  mkdir -p nginx-assets
-#  cp -a ollama-grid-%{gridcommit}/packaging/nginx/ollama-grid.conf nginx-assets/
-# fi
+mkdir -p nginx-assets
+cp -a source/ollama-grid/balancer/ollama-balancer.env nginx-assets/
 
 # ==================== Build ====================
 %build
+
+# ---- CPU ----"
+echo "#---CPU---#"
+%if %{with cpu}
+pushd ./source/ollama-0.12.9-cpu  
+cmake --preset "CPU" --fresh 
+cmake --build build --parallel 8 --preset "CPU"
+%{og_gobuild} -o ../../build/ollama-cpu .
+popd
+%endif
+
 # ---- Vulkan ----
+echo "#---Vulkan---#"
 %if %{with vulkan}
-  pushd %{name}-%{version}/build/ollama-0.12.9-vulkan  cmake --preset "Vulkan" --fresh
-  cmake --build build --preset "Vulkan" --parallel 9
+  pushd ./source/ollama-0.12.9-vulkan  
+  cmake --preset "Vulkan" --fresh 
+  cmake --build build --parallel 8 --preset "Vulkan"
+  %{og_gobuild} -o ../../build/ollama-vulkan .
   popd
 %endif
 
 # ---- ROCm ----
+echo "#---ROCm---#"
 %if %{with rocm}
-  pushd %{name}-%{version}/build/ollama-0.12.9-vulkan  cmake --preset "ROCm" --fresh
-  cmake --preset "ROCm" --fresh -D GPU_TARGETS="gfx803;gfx1032;gfx1035"
-  cmake --build build --preset "ROCm" --parallel 8
+  pushd ./source/ollama-0.12.9-rocm  
+  cmake --preset "ROCm 6" --fresh -D AMDGPU_TARGETS="gfx803;gfx1032;gfx1035" -D GPU_TARGETS="gfx803;gfx1032;gfx1035"
+  cmake --build build --parallel 8 --preset "ROCm 6"
+  %{og_gobuild} -o ../../build/ollama-rocm .
   popd
 %endif
 
-# ---- CUDA moderno (latest) — opcional; toolkit deve estar no PATH/ambiente ----
+# ---- CUDA 13 moderno (latest) — opcional; toolkit deve estar no PATH/ambiente ----
+echo "#---CUDA 13---#"
 %if %{with cuda}
-  pushd %{name}-%{version}/build/ollama-0.12.9-cuda  cmake --preset "CUDA" --fresh
+  pushd ./source/ollama-0.12.9-cuda
+  
+  export CUDAHOSTCXX=/usr/bin/g++
+  export CPATH=/usr/include/openmpi-x86_64:$CPATH
+  export PATH=$PATH:/usr/lib64/openmpi/bin
+  export CC=/usr/bin/gcc
+  export CXX=/usr/bin/g++
+  export NVCC_CCBIN=/usr/bin/g++
+  export CUDACXX=/usr/local/cuda-13.0/bin/nvcc
+  export LD_LIBRARY_PATH=/usr/local/cuda-13.0/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
+  export CPATH=/usr/local/cuda-13.0/targets/x86_64-linux/include:$CPATH
+  export PATH=/usr/local/cuda-13.0/bin:$PATH
+    
   # Se necessário, exporte CUDACXX/NVCC_CCBIN aqui para “latest”
-  cmake --preset "CUDA" --fresh
-  cmake --build build --preset "CUDA"
+  cmake --preset "CUDA 13" --fresh \
+        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE" 
+#        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" \
+        -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc
+  cmake --build build --parallel 8 --preset "CUDA 13" \
+        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE" \
+        -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc \
+        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0"
+  %{og_gobuild} -o ../../build/ollama-cuda .
   popd
 %endif
 
-# ---- CUDA legacy 12.9 — aplica patch ANTES; reverte DEPOIS ----
+# ---- CUDA legacy 12.9 ----
+echo "#---CUDA 12---#"
 %if %{with cuda_legacy_129}
-  pushd %{name}-%{version}/build/ollama-0.12.9-vulkan  cmake --preset "CUDA 12" --fresh
+  pushd ./source/ollama-0.12.9-cuda-12.9
 
   # Ambiente CUDA 12.9 (conforme você definiu)
   export CUDAHOSTCXX=/usr/bin/g++-14
@@ -180,33 +220,28 @@ popd
   export CXX=/usr/bin/g++-14
   export NVCC_CCBIN=/usr/bin/g++-14
   export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
+  
   export LD_LIBRARY_PATH=/usr/local/cuda-12.9/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
   export CPATH=/usr/local/cuda-12.9/targets/x86_64-linux/include:$CPATH
   export PATH=/usr/local/cuda-12.9/bin:$PATH
 
-  # Aplica patch via script (do Source1)
-  if [ -x tools/apply-cuda129-patch.sh ]; then
-    bash tools/apply-cuda129-patch.sh
-  fi
-
   cmake --preset "CUDA 12" --fresh -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
-        -D CMAKE_CUDA_FLAGS=-gencode=arch=compute_61,code=compute_61
-  cmake --build build --preset "CUDA 12" \
+        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE  -gencode=arch=compute_61,code=compute_61" \
+        -D CUDA_ARCHITECTURES="6.1;6.0;5.2;5.0"
+  cmake --build build --parallel 8 --preset "CUDA 12" \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
-        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -gencode=arch=compute_61,code=compute_61"
-
+        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -gencode=arch=compute_61,code=compute_61" 
+        -D CUDA_ARCHITECTURES="6.1;6.0;5.2;5.0"
+        
+  %{og_gobuild} -o ../../build/ollama-cuda-12.9 .
+  
   # Reverte patch após o build
-  if [ -x tools/revert-cuda129-patch.sh ]; then
-    bash tools/revert-cuda129-patch.sh
-  fi
+  #if [ -x tools/revert-cuda129-patch.sh ]; then
+  #  bash tools/revert-cuda129-patch.sh
+  #fi
 
   popd
 %endif
-
-# ---- Binário Go (compila uma única vez; uso a árvore Vulkan por conveniência) ----
-pushd ../ollama-0.12.9-vulkan
-  %{og_gobuild}
-popd
 
 # ==================== Install ====================
 %install
@@ -294,24 +329,8 @@ EOSH
 # ---- Nginx (meta) ----
 # Instala conf padrão se veio no Source1; senão gera uma básica
 install -d %{buildroot}%{_sysconfdir}/nginx/conf.d
-if [ -f nginx-assets/ollama-grid.conf ]; then
-  install -m 0644 nginx-assets/ollama-grid.conf %{buildroot}%{og_nginx_conf}
-else
-  # fallback mínimo
-  cat > %{buildroot}%{og_nginx_conf} <<'NGX'
-upstream ollama_nodes {
-    server 127.0.0.1:11434; # CPU
-    server 127.0.0.1:11435; # Vulkan
-    server 127.0.0.1:11436; # ROCm
-    server 127.0.0.1:11437; # CUDA
-}
-server {
-    listen 8080;
-    location / { proxy_pass http://ollama_nodes; proxy_buffering off; proxy_read_timeout 1h; proxy_send_timeout 1h; }
-    location = /health { return 200 "ok\n"; }
-}
-NGX
-fi
+
+install -m 0644 nginx-assets/ollama-grid.conf %{buildroot}%{og_nginx_conf}
 
 # ==================== Files ====================
 # (1) Meta (balanceador)
