@@ -1,5 +1,5 @@
 Name:           ollama-grid
-Version:        0.12.9
+Version:        1.0.0
 Release:        1%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        Apache-2.0 AND MIT
@@ -9,7 +9,7 @@ URL:            https://github.com/ollama/ollama
 Source0:        https://github.com/mwprado/ollamad/archive/refs/heads/main.zip
 
 # ====== SOURCE1: OLLAMA (upstream) via Forge macros ======
-Source1:         https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
+Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
 
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
@@ -19,7 +19,7 @@ Source1:         https://github.com/ollama/ollama/archive/refs/tags/v%{version}.
 %bcond_without cuda_legacy_129
 
 # ====== BuildRequires gerais ======
-BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf
+BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf tree
 BuildRequires:    openmpi-devel
 
 # Vulkan
@@ -106,25 +106,24 @@ O patch é aplicado por script antes do build e revertido após o build.
 
 # ==================== Prep ====================
 %prep
-# Source1: ollama-grid (assets) em ./ollama-grid-%{gridcommit}
-tar -xzvf  ollama-grid-main.tar.gz
-
-# Source0: Ollama upstream
-tar -xzvf  ollama-v%{version}tar.gz
+# Cria subpastas para manter os códigos lado a lado
+mkdir -p %{name}-%{version}/ollama-grid %{name}-%{version}/ollama
+tar -xzf %{SOURCE0} -C %{name}-%{version}/ollama --strip-components=1
+tar -xzf %{SOURCE1} -C %{name}-%{version}/ollama-grid --strip-components=1
 tree 
 
 # Duplica a árvore do Ollama para cada backend
-cp -a . ../ollama-0.12.9-vulkan
-cp -a . ../ollama-0.12.9-rocm6
-cp -a . ../ollama-0.12.9-cuda-latest
-cp -a . ../ollama-0.12.9-cuda-12.9
+cp -a %{name}-%{version}/ollama %{name}-%{version}/ollama/ollama-0.12.9-vulkan
+cp -a %{name}-%{version}/ollama %{name}-%{version}/ollama/ollama-0.12.9-rocm6
+cp -a %{name}-%{version}/ollama %{name}-%{version}/ollama/ollama-0.12.9-cuda-latest
+cp -a %{name}-%{version}/ollama %{name}-%{version}/ollama/ollama-0.12.9-cuda-12.9
 
 # Copia assets do Nginx (se existirem) do Source1
 # (Ajuste este caminho se seu repo usar outro layout)
-if [ -f ollama-grid-%{gridcommit}/packaging/nginx/ollama-grid.conf ]; then
-  mkdir -p nginx-assets
-  cp -a ollama-grid-%{gridcommit}/packaging/nginx/ollama-grid.conf nginx-assets/
-fi
+# if [ -f ollama-grid-%{gridcommit}/packaging/nginx/ollama-grid.conf ]; then
+#  mkdir -p nginx-assets
+#  cp -a ollama-grid-%{gridcommit}/packaging/nginx/ollama-grid.conf nginx-assets/
+# fi
 
 # Scripts/patch do CUDA 12.9: apply/revert/patch
 if [ -d ../ollama-0.12.9-cuda-12.9 ]; then
