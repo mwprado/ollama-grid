@@ -55,21 +55,7 @@ via Nginx e orquestração por serviços systemd.
 
 # ==================== Subpackages ====================
 
-# (1) Se o pacote base for o "meta", REMOVA o bloco abaixo.
-#     Caso queira um subpacote meta separado, dê um nome:
-%package -n ollama-balancer
-Summary:        Balanceador Nginx para OllamaGrid
-Requires:       ollama-grid-common = %{version}-%{release}
-Recommends:     nginx
-%description balancer
-OllamaGrid que instala a configuração do Nginx e arquivos de integração.
-Recomenda-se instalar ao menos um backend (Vulkan/ROCm/CUDA).
-
-%description
-Meta-pacote do OllamaGrid que instala a configuração do Nginx e arquivos de integração.
-Recomenda-se instalar ao menos um backend (Vulkan/ROCm/CUDA).
-
-# (2) Common (binário e estrutura)
+# (1) Common (binário e estrutura)
 %package -n ollama-grid-common
 Summary:        Arquivos comuns: binário do Ollama, sysusers/tmpfiles, diretórios
 Requires(post): systemd
@@ -77,6 +63,18 @@ Requires(postun): systemd
 
 %description -n ollama-grid-common
 Arquivos comuns ao sistema (binário /usr/bin/ollama, usuários, diretórios, tmpfiles).
+
+# (2) Balancer (apenas Nginx + conf)
+%package -n ollama-grid-balancer
+Summary:        Balanceador Nginx e integração do OllamaGrid
+Requires:       ollama-grid-common = %{version}-%{release}
+Recommends:     nginx
+# Se quiser forçar nginx como dependência dura, troque Recommends: por Requires:
+# Requires:     nginx
+
+%description -n ollama-grid-balancer
+Subpacote contendo a configuração do Nginx para o OllamaGrid e arquivos de integração.
+Instale pelo menos um backend (Vulkan/ROCm/CUDA).
 
 # (3) Vulkan
 %package -n ollama-grid-vulkan
