@@ -5,7 +5,7 @@ Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balancea
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
 
-# ====== SOURCE0: OLLAMA-GRID (seus assets: scripts/patch/nginx/…) ======
+# ====== SOURCE0: OLLAMA-GRID (seus assets: scripts/patch/nginx/…) =====
 Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.zip
 
 # ====== SOURCE1: OLLAMA (upstream) via Forge macros ======
