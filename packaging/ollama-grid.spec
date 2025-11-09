@@ -55,13 +55,13 @@ via Nginx e orquestração por serviços systemd.
 # ==================== Subpackages ====================
 
 # (1) Meta-pacote / balancer
-%package -n ollama-grid
+%package
 Summary:        Meta-pacote e balanceador Nginx para OllamaGrid
 Requires:       ollama-grid-common = %{version}-%{release}
 Recommends:     nginx
 # Sugerimos pelo menos um backend; admin escolhe conforme hardware
 Recommends:     ollama-grid-vulkan
-%description -n ollama-grid
+%description
 Meta-pacote do OllamaGrid que instala a configuração do Nginx e arquivos de integração.
 Recomenda-se instalar ao menos um backend (Vulkan/ROCm/CUDA).
 
@@ -106,10 +106,9 @@ O patch é aplicado por script antes do build e revertido após o build.
 
 # ==================== Prep ====================
 %prep
-# Cria subpastas para manter os códigos lado a lado
-mkdir -p %{name}-%{version}/ollama-grid %{name}-%{version}/ollama
-tar -xzvf %{SOURCE0} -C %{name}-%{version}/ollama-grid --strip-components=1
-tar -xzvf %{SOURCE1} -C %{name}-%{version}/ollama --strip-components=1
+%setup
+cd ..
+%setup -a 1
 tree 
 
 # Duplica a árvore do Ollama para cada backend
