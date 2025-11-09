@@ -3,13 +3,13 @@ Version:        0.12.9
 Release:        1%{?dist}
 Summary:        Modular Ollama packaging (CPU/Vulkan/ROCm/CUDA legacy) for Fedora/COPR
 License:        Apache-2.0 AND MIT
-URL:            https://github.com/ollama/ollama
+URL:            https://github.com/mwprado/ollama-grid
 
 # --------- SOURCE0: OLLAMAGRID (scripts + patch) ----------
-Source0:         https://codeload.github.com/mwprado/ollama-grid/zip/refs/heads/main/main.zip
+Source0:        https://github.com/mwprado/ollama-grid.git
 
 # --------- SOURCE1: OLLAMA UPSTREAM ----------
-Source1:          https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
+Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
 
 
 # --------- Alternadores de backend (ative 1 por build) ----------
@@ -71,8 +71,9 @@ Instala libs em %{og_libdir}/cuda-12.9 e wrapper /usr/bin/ollama-cuda-legacy-12.
 
 # ----------------- Prep -----------------
 %prep
-unzip %{SOURCE0}
-tar -xzf %{SOURCE1}
+%setup
+cd ..
+%setup -a 1
 tree
 
 # Duplique a árvore do Ollama para cada backend
