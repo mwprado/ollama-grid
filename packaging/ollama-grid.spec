@@ -61,6 +61,7 @@ Requires:       ollama-grid-common = %{version}-%{release}
 Recommends:     nginx
 # Sugerimos pelo menos um backend; admin escolhe conforme hardware
 Recommends:     ollama-grid-vulkan
+
 %description
 Meta-pacote do OllamaGrid que instala a configuração do Nginx e arquivos de integração.
 Recomenda-se instalar ao menos um backend (Vulkan/ROCm/CUDA).
@@ -70,6 +71,7 @@ Recomenda-se instalar ao menos um backend (Vulkan/ROCm/CUDA).
 Summary:        Arquivos comuns: binário do Ollama, sysusers/tmpfiles, diretórios
 Requires(post): systemd
 Requires(postun): systemd
+
 %description -n ollama-grid-common
 Arquivos comuns ao sistema (binário /usr/bin/ollama, usuários, diretórios, tmpfiles).
 
@@ -77,6 +79,7 @@ Arquivos comuns ao sistema (binário /usr/bin/ollama, usuários, diretórios, tm
 %package -n ollama-grid-vulkan
 Summary:        Backend Vulkan (universal GPU: Intel/AMD/NVIDIA)
 Requires:       ollama-grid-common = %{version}-%{release}
+
 %description -n ollama-grid-vulkan
 Bibliotecas Vulkan e wrapper /usr/bin/ollama-vulkan.
 
@@ -84,6 +87,7 @@ Bibliotecas Vulkan e wrapper /usr/bin/ollama-vulkan.
 %package -n ollama-grid-rocm
 Summary:        Backend ROCm (GPUs AMD)
 Requires:       ollama-grid-common = %{version}-%{release}
+
 %description -n ollama-grid-rocm
 Bibliotecas ROCm (HIP) e wrapper /usr/bin/ollama-rocm.
 
@@ -91,6 +95,7 @@ Bibliotecas ROCm (HIP) e wrapper /usr/bin/ollama-rocm.
 %package -n ollama-grid-cuda
 Summary:        Backend CUDA (GPUs NVIDIA modernas)
 Requires:       ollama-grid-common = %{version}-%{release}
+
 %description -n ollama-grid-cuda
 Bibliotecas CUDA (moderno) e wrapper /usr/bin/ollama-cuda. Requer toolkit presente no host.
 
