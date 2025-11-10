@@ -13,7 +13,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.g
 
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
-%bcond_without cpu
+# %bcond_without cpu
 %bcond_with vulkan
 %bcond_with rocm
 %bcond_with cuda
@@ -150,13 +150,13 @@ cp -a source/ollama-grid/balancer/ollama-balancer.env nginx-assets/
 
 # ---- CPU ----"
 echo "#---CPU---#"
-%if %{with cpu}
+#% if % {with cpu}
 pushd ./source/ollama-0.12.9-cpu  
 cmake --preset "CPU" --fresh 
 cmake --build build --parallel 8 --preset "CPU"
 %{og_gobuild} -o ../../build/ollama-cpu .
 popd
-%endif
+# % endif
 
 # ---- Vulkan ----
 echo "#---Vulkan---#"
