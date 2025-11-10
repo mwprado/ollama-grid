@@ -247,92 +247,125 @@ echo "#---CUDA 12---#"
 
 # ==================== Install ====================
 %install
-install -d %{buildroot}%{_bindir} %{buildroot}%{og_libdir} %{buildroot}%{_sysusersdir} %{buildroot}%{_tmpfilesdir}
-install -d %{buildroot}%{og_confdir}
+# --- diretórios base ---
+install -d \
+  %{buildroot}%{_bindir} \
+  %{buildroot}%{og_libdir} \
+  %{buildroot}%{_sysusersdir} \
+  %{buildroot}%{_tmpfilesdir} \
+  %{buildroot}%{og_confdir} \
+  %{buildroot}%{_sysconfdir}/nginx/conf.d \
+  %{buildroot}%{_sysconfdir}/ld.so.conf.d
 
-# sysusers / tmpfiles
-cat > %{buildroot}%{_sysusersdir}/ollama-grid.conf <<'EOF'
-u ollama - "Ollama service user" - -
-g ollama - - - -
-EOF
-cat > %{buildroot}%{_tmpfilesdir}/ollama-grid.conf <<'EOF'
-d /var/lib/ollama 0750 ollama ollama -
-d /var/log/ollama-grid 0750 ollama ollama -
-d /run/ollama-grid 0750 ollama ollama -
-EOF
+# --- sysusers / tmpfiles (arquivos do repositório) ---
+install -m 0644 sysusers.d/ollama-grid.conf %{buildroot}%{_sysusersdir}/ollama-grid.conf
+install -m 0644 tmpfiles.d/ollama-grid.conf  %{buildroot}%{_tmpfilesdir}/ollama-grid.conf
 
-# Binário principal
-install -m 0755 ../ollama-0.12.9-vulkan/ollama %{buildroot}%{_bindir}/ollama
+# ============================
+# ld.so.conf.d (um .conf por backend/pacote)
+# ============================
+# CPU (sempre)
+install -m 0644 lib64/ollama-grid-cpu.conf \
+  %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
 
-# Helper para limpar RUNPATH/RPATH
+# Vulkan
+%if %{with vulkan}
+install -m 0644 lib64/ollama-grid-vulkan.conf \
+  %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-vulkan.conf
+%endif
+
+# ROCm
+%if %{with rocm}
+install -m 0644 lib64/ollama-grid-rocm.conf \
+  %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-rocm.conf
+%endif
+
+# CUDA (atual)
+%if %{with cuda}
+install -m 0644 lib64/ollama-grid-cuda.conf \
+  %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda.conf
+%endif
+
+# CUDA 12.9 (legacy)
+%if %{with cuda_legacy_129}
+install -m 0644 lib64/ollama-grid-cuda-12.9.conf \
+  %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda-12.9.conf
+%endif
+
+# --- utilitário para limpar RPATH/RUNPATH (ignora se patchelf não existir) ---
 fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1" || :; }
 
-# ---- Vulkan (.so + wrapper) ----
+# ============================
+# BINÁRIOS (um por backend)
+# ============================
+
+# CPU (sempre) — publica como /usr/bin/ollama-grid-cpu
+install -m 0755 ./build/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
+
+# Conveniência: apontar /usr/bin/ollama-grid para o CPU por padrão (symlink)
+ln -sfn ollama-grid-cpu %{buildroot}%{_bindir}/ollama-grid
+
+# Vulkan
+%if %{with vulkan}
+  install -m 0755 ./build/ollama-vulkan %{buildroot}%{_bindir}/ollama-grid-vulkan
+%endif
+
+# ROCm
+%if %{with rocm}
+  install -m 0755 ./build/ollama-rocm %{buildroot}%{_bindir}/ollama-grid-rocm
+%endif
+
+# CUDA (atual)
+%if %{with cuda}
+  install -m 0755 ./build/ollama-cuda %{buildroot}%{_bindir}/ollama-grid-cuda
+%endif
+
+# CUDA 12.9 (legacy)
+%if %{with cuda_legacy_129}
+  install -m 0755 ./build/ollama-cuda-12.9 %{buildroot}%{_bindir}/ollama-grid-cuda-12.9
+%endif
+
+# ============================
+# BIBLIOTECAS (instaladas por backend)
+# ============================
+
+# Vulkan
 %if %{with vulkan}
   install -d %{buildroot}%{og_libdir}/vulkan
-  install -m 0755 ../ollama-0.12.9-vulkan/build/lib/ollama/libggml-vulkan.so %{buildroot}%{og_libdir}/vulkan/
-  install -m 0755 ../ollama-0.12.9-vulkan/build/lib/ollama/libggml-base.so   %{buildroot}%{og_libdir}/vulkan/
+  install -m 0755 ./source/ollama-0.12.9-vulkan/build/lib/ollama/libggml-vulkan.so %{buildroot}%{og_libdir}/vulkan/
+  install -m 0755 ./source/ollama-0.12.9-vulkan/build/lib/ollama/libggml-base.so   %{buildroot}%{og_libdir}/vulkan/
   for f in %{buildroot}%{og_libdir}/vulkan/*.so; do fix_rpath "$f"; done
-  cat > %{buildroot}%{_bindir}/ollama-vulkan <<'EOSH'
-#!/usr/bin/env bash
-export LD_LIBRARY_PATH="/usr/lib64/ollama/vulkan:${LD_LIBRARY_PATH}"
-exec /usr/bin/ollama "$@"
-EOSH
-  chmod 0755 %{buildroot}%{_bindir}/ollama-vulkan
 %endif
 
-# ---- ROCm (.so + wrapper) ----
+# ROCm
 %if %{with rocm}
   install -d %{buildroot}%{og_libdir}/rocm
-  install -m 0755 ../ollama-0.12.9-rocm6/build/lib/ollama/libggml-hip.so  %{buildroot}%{og_libdir}/rocm/
-  install -m 0755 ../ollama-0.12.9-rocm6/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/rocm/
+  install -m 0755 ./source/ollama-0.12.9-rocm/build/lib/ollama/libggml-hip.so  %{buildroot}%{og_libdir}/rocm/
+  install -m 0755 ./source/ollama-0.12.9-rocm/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/rocm/
   for f in %{buildroot}%{og_libdir}/rocm/*.so; do fix_rpath "$f"; done
-  cat > %{buildroot}%{_bindir}/ollama-rocm <<'EOSH'
-#!/usr/bin/env bash
-export LD_LIBRARY_PATH="/usr/lib64/ollama/rocm:${LD_LIBRARY_PATH}"
-exec /usr/bin/ollama "$@"
-EOSH
-  chmod 0755 %{buildroot}%{_bindir}/ollama-rocm
 %endif
 
-# ---- CUDA moderno (.so + wrapper) ----
+# CUDA (atual)
 %if %{with cuda}
   install -d %{buildroot}%{og_libdir}/cuda
-  # Ajuste os nomes/caminhos caso seu preset "CUDA" gere arquivos diferentes
-  if [ -f ../ollama-0.12.9-cuda-latest/build/lib/ollama/libggml-cuda.so ]; then
-    install -m 0755 ../ollama-0.12.9-cuda-latest/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda/
-  fi
-  if [ -f ../ollama-0.12.9-cuda-latest/build/lib/ollama/libggml-base.so ]; then
-    install -m 0755 ../ollama-0.12.9-cuda-latest/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda/
-  fi
-  for f in %{buildroot}%{og_libdir}/cuda/*.so 2>/dev/null; do test -e "$f" && fix_rpath "$f"; done
-  cat > %{buildroot}%{_bindir}/ollama-cuda <<'EOSH'
-#!/usr/bin/env bash
-export LD_LIBRARY_PATH="/usr/lib64/ollama/cuda:${LD_LIBRARY_PATH}"
-exec /usr/bin/ollama "$@"
-EOSH
-  chmod 0755 %{buildroot}%{_bindir}/ollama-cuda
+  install -m 0755 ./source/ollama-0.12.9-cuda/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda/
+  install -m 0755 ./source/ollama-0.12.9-cuda/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda/
+  for f in %{buildroot}%{og_libdir}/cuda/*.so; do fix_rpath "$f"; done
 %endif
 
-# ---- CUDA 12.9 legacy (.so + wrapper) ----
+# CUDA 12.9 (legacy)
 %if %{with cuda_legacy_129}
   install -d %{buildroot}%{og_libdir}/cuda-12.9
-  install -m 0755 ../ollama-0.12.9-cuda-12.9/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda-12.9/
-  install -m 0755 ../ollama-0.12.9-cuda-12.9/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda-12.9/
+  install -m 0755 ./source/ollama-0.12.9-cuda-12.9/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda-12.9/
+  install -m 0755 ./source/ollama-0.12.9-cuda-12.9/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda-12.9/
   for f in %{buildroot}%{og_libdir}/cuda-12.9/*.so; do fix_rpath "$f"; done
-  cat > %{buildroot}%{_bindir}/ollama-cuda-legacy-12.9 <<'EOSH'
-#!/usr/bin/env bash
-export LD_LIBRARY_PATH="/usr/lib64/ollama/cuda-12.9:${LD_LIBRARY_PATH}"
-exec /usr/bin/ollama "$@"
-EOSH
-  chmod 0755 %{buildroot}%{_bindir}/ollama-cuda-legacy-12.9
 %endif
 
-# ---- Nginx (meta) ----
-# Instala conf padrão se veio no Source1; senão gera uma básica
-install -d %{buildroot}%{_sysconfdir}/nginx/conf.d
-
-install -m 0644 nginx-assets/ollama-grid.conf %{buildroot}%{og_nginx_conf}
+# ============================
+# NGINX (balanceador)
+# ============================
+install -m 0644 nginx/ollama-grid.conf \
+  %{buildroot}%{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
 # ==================== Files ====================
 # (1) Meta (balanceador)
