@@ -13,10 +13,10 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.g
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
 %bcond_without cpu
-%bcond_with vulkan
-%bcond_with rocm
-%bcond_with cuda
-%bcond_with cuda_12_9
+%bcond_without vulkan
+%bcond_without rocm
+%bcond_without cuda
+%bcond_without cuda_12_9
 
 %global og_libdir %{_libdir}/ollama-grid
 %global og_confdir %{_sysconfdir}/ollama-grid
@@ -260,6 +260,7 @@ install -d \
 
 # --- sysusers / tmpfiles (arquivos do repositório) ---
 install -m 0644 source/ollama-grid/sysusers.d/ollama-grid.conf %{buildroot}%{_sysusersdir}/ollama-grid.conf
+install -m 0644 source/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_tmpfilesdir}/ollama-grid.conf
 
 # ============================
 # ld.so.conf.d (um .conf por backend/pacote)
@@ -393,6 +394,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 # ============================
 # Subpacote: Vulkan
 # ============================
+%if %{with vulkan}
 %files -n ollama-grid-vulkan
 # binário do backend
 %{_bindir}/ollama-grid-vulkan
@@ -403,10 +405,12 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # ld.so.conf.d do backend
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-vulkan.conf
+%endif
 
 # ============================
 # Subpacote: ROCm
 # ============================
+%if %{with rocm}
 %files -n ollama-grid-rocm
 # binário do backend
 %{_bindir}/ollama-grid-rocm
@@ -417,10 +421,13 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # ld.so.conf.d do backend
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-rocm.conf
+%endif
 
 # ============================
 # Subpacote: CUDA (atual)
 # ============================
+%if %{with cuda}
+
 %files -n ollama-grid-cuda
 # binário do backend
 %{_bindir}/ollama-grid-cuda
@@ -431,11 +438,12 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # ld.so.conf.d do backend
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda.conf
-
+%endif
 
 # ============================
 # Subpacote: CUDA 12.9 (legacy)
 # ============================
+%if %{with cuda-12-9}
 %files -n ollama-grid-cuda-12-9
 
 # binário do backend
@@ -447,6 +455,8 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # ld.so.conf.d do backend
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda-12.9.conf
+%endif
+
 # ==================== Scriptlets ====================
 
 %changelog
