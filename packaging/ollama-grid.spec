@@ -44,11 +44,11 @@ BuildRequires:    gcc14
 %endif
 
 %if %{with cuda}
-BuildRequires:  cuda-13.0
+BuildRequires:  cuda-toolkit-13-0
 %endif
 
 %if %{with cuda_12_9}
-BuildRequires:    cuda-12-9 cuda-toolkit-12-9
+BuildRequires:    cuda-toolkit-12-9
 %endif
 
 # ====== Caminhos de instalação ======
