@@ -368,59 +368,84 @@ install -m 0644 nginx/ollama-grid.conf \
   %{buildroot}%{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
 # ==================== Files ====================
-# (1) Meta (balanceador)
-%files -n ollama-grid
-%license LICENSE*
-%doc README* ARCHITECTURE* ROADMAP* CONTRIBUTING*
-%config(noreplace) %{og_nginx_conf}
-%dir %{og_confdir}
+%files
+# binários
+%{_bindir}/ollama-grid-cpu
 
-# (2) Common
-%files -n ollama-grid-common
-%{_bindir}/ollama
-%{_sysusersdir}/ollama-grid.conf
-%{_tmpfilesdir}/ollama-grid.conf
+# diretórios base
+%dir %{og_libdir}
+%dir %{_sysusersdir}
+%dir %{_tmpfilesdir}
+%dir %{_sysconfdir}/nginx
+%dir %{_sysconfdir}/nginx/conf.d
 
-# (3) Vulkan
-%if %{with vulkan}
-%files -n ollama-grid-vulkan
-%{_bindir}/ollama-vulkan
+# configs do sistema (preservar customizações do usuário)
+%config(noreplace) %{_sysusersdir}/ollama-grid.conf
+%config(noreplace) %{_tmpfilesdir}/ollama-grid.conf
+%config(noreplace) %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
+
+# ld.so.conf.d para CPU
+%config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
+
+
+# ============================
+# Subpacote: Vulkan
+# ============================
+%files vulkan
+# binário do backend
+%{_bindir}/ollama-grid-vulkan
+
+# libs do backend
 %dir %{og_libdir}/vulkan
-%{og_libdir}/vulkan/libggml-vulkan.so
-%{og_libdir}/vulkan/libggml-base.so
-%endif
+%{og_libdir}/vulkan/*.so
 
-# (4) ROCm
-%if %{with rocm}
-%files -n ollama-grid-rocm
-%{_bindir}/ollama-rocm
+# ld.so.conf.d do backend
+%config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-vulkan.conf
+
+
+# ============================
+# Subpacote: ROCm
+# ============================
+%files rocm
+# binário do backend
+%{_bindir}/ollama-grid-rocm
+
+# libs do backend
 %dir %{og_libdir}/rocm
-%{og_libdir}/rocm/libggml-hip.so
-%{og_libdir}/rocm/libggml-base.so
-%endif
+%{og_libdir}/rocm/*.so
 
-# (5) CUDA (latest)
-%if %{with cuda}
-%files -n ollama-grid-cuda
-%{_bindir}/ollama-cuda
+# ld.so.conf.d do backend
+%config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-rocm.conf
+
+# ============================
+# Subpacote: CUDA (atual)
+# ============================
+%files cuda
+# binário do backend
+%{_bindir}/ollama-grid-cuda
+
+# libs do backend
 %dir %{og_libdir}/cuda
-%{og_libdir}/cuda/libggml-cuda.so
-%{og_libdir}/cuda/libggml-base.so
-%endif
+%{og_libdir}/cuda/*.so
 
-# (6) CUDA 12.9 legacy
-%if %{with cuda_legacy_129}
-%files -n ollama-grid-cuda-legacy-12.9
-%{_bindir}/ollama-cuda-legacy-12.9
+# ld.so.conf.d do backend
+%config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda.conf
+
+
+# ============================
+# Subpacote: CUDA 12.9 (legacy)
+# ============================
+%files cuda_legacy_129
+# binário do backend
+%{_bindir}/ollama-grid-cuda-12.9
+
+# libs do backend
 %dir %{og_libdir}/cuda-12.9
-%{og_libdir}/cuda-12.9/libggml-cuda.so
-%{og_libdir}/cuda-12.9/libggml-base.so
-%endif
+%{og_libdir}/cuda-12.9/*.so
 
+# ld.so.conf.d do backend
+%config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda-12.9.conf
 # ==================== Scriptlets ====================
-%post -n ollama-grid-common
-%sysusers_create_compat %{_sysusersdir}/ollama-grid.conf >/dev/null 2>&1 || :
-%tmpfiles_create %{_tmpfilesdir}/ollama-grid.conf >/dev/null 2>&1 || :
 
 %changelog
 * Sat Nov 08 2025 OllamaGrid <maintainers@ollamagrid.org> - 0.12.9-1
