@@ -16,7 +16,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.g
 %bcond_with cpu
 %bcond_with vulkan
 %bcond_with rocm
-%bcond_without cuda
+%bcond_with cuda
 %bcond_without cuda_legacy_129
 
 # ====== BuildRequires gerais ======
@@ -196,13 +196,13 @@ echo "#---CUDA 13---#"
     
   # Se necessário, exporte CUDACXX/NVCC_CCBIN aqui para “latest”
   cmake --preset "CUDA 13" --fresh \
-        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE" 
-#        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" \
+        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc
+#        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" 
   cmake --build build --parallel 8 --preset "CUDA 13" \
-        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE" \
-        -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc \
-        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0"
+        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
+        -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc 
+#        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0"
   %{og_gobuild} -o ../../build/ollama-cuda .
   popd
 %endif
@@ -226,12 +226,14 @@ echo "#---CUDA 12---#"
   export PATH=/usr/local/cuda-12.9/bin:$PATH
 
   cmake --preset "CUDA 12" --fresh -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
-        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE  -gencode=arch=compute_61,code=compute_61" \
-        -D CUDA_ARCHITECTURES="6.1;6.0;5.2;5.0"
+        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC"
+#        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC -gencode=arch=compute_61,code=compute_61" \ 
+#        -D CUDA_ARCHITECTURES="6.1;6.0;5.2;5.0"
   cmake --build build --parallel 8 --preset "CUDA 12" \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
-        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -gencode=arch=compute_61,code=compute_61" 
-        -D CUDA_ARCHITECTURES="6.1;6.0;5.2;5.0"
+        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC"
+#        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -gencode=arch=compute_61,code=compute_61"
+#        -D CUDA_ARCHITECTURES="6.1;6.0;5.2;5.0"
         
   %{og_gobuild} -o ../../build/ollama-cuda-12.9 .
   
