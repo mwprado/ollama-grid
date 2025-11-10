@@ -140,6 +140,25 @@ cp -a source/ollama source/ollama-0.12.9-cuda
 cp -a source/ollama source/ollama-0.12.9-cuda-12.9
 
 
+%if %{with cuda}
+mkdir source/cuda_include
+cp -a /usr/local/cuda-13.0/targets/x86_64-linux/include/* source/cuda_include/
+cp -a cuda-13-0-math-funcions.h.patch source/cuda_include
+pushd source/cuda_include
+patch math_functions.h cuda-13-0-math-funcions.h.patch
+popd
+%endif
+
+%if %{with cuda_12_9}
+mkdir source/cuda_include-12.9/
+cp -a /usr/local/cuda-12.9/targets/x86_64-linux/include/* source/cuda_include-12.9/
+cp -a cuda-12-9-math-funcions.h.patch source/cuda_include-12.9/
+pushd source/cuda_include
+patch math_functions.h cuda-12-9-math-funcions.h.patch
+popd
+%endif
+
+
 
 # Copia assets do Nginx (se existirem) do Source1
 # (Ajuste este caminho se seu repo usar outro layout)
@@ -192,7 +211,8 @@ echo "#---CUDA 13---#"
   export NVCC_CCBIN=/usr/bin/g++
   export CUDACXX=/usr/local/cuda-13.0/bin/nvcc
   export LD_LIBRARY_PATH=/usr/local/cuda-13.0/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
-  export CPATH=/usr/local/cuda-13.0/targets/x86_64-linux/include:$CPATH
+  #export CPATH=/usr/local/cuda-13.0/targets/x86_64-linux/include:$CPATH
+  export CPATH=$PWD/source/cuda_include/$CPATH
   export PATH=/usr/local/cuda-13.0/bin:$PATH
     
   # Se necessário, exporte CUDACXX/NVCC_CCBIN aqui para “latest”
@@ -223,7 +243,8 @@ echo "#---CUDA 12---#"
   export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
   
   export LD_LIBRARY_PATH=/usr/local/cuda-12.9/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
-  export CPATH=/usr/local/cuda-12.9/targets/x86_64-linux/include:$CPATH
+  #export CPATH=/usr/local/cuda-12.9/targets/x86_64-linux/include:$CPATH
+  export CPATH=$PWD/source/cuda_include-12.9/$CPATH
   export PATH=/usr/local/cuda-12.9/bin:$PATH
 
   cmake --preset "CUDA 12" --fresh -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
