@@ -1,5 +1,5 @@
 --- math_functions.h.old	2025-11-09 15:45:57.075480031 -0300
-+++ math_functions.h.new	2025-11-09 15:50:02.701026976 -0300
++++ math_functions.h	2025-11-09 15:50:02.701026976 -0300
 @@ -626,7 +626,7 @@
   *
   * \note_accuracy_double
