@@ -13,9 +13,9 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.g
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
 %bcond_without cpu
-%bcond_without vulkan
-%bcond_without rocm
-%bcond_without cuda
+%bcond_with vulkan
+%bcond_with rocm
+%bcond_with cuda
 %bcond_without cuda_12_9
 
 %global og_libdir %{_libdir}/ollama-grid
@@ -124,7 +124,6 @@ O patch é aplicado por script antes do build e revertido após o build.
 %prep
 # Cria raiz estável e NÃO extrai nada ainda
 %setup -q -T -c -n wsp
-pwd
 
 # Pastas de trabalho
 mkdir -p ./source/ollama-grid ./source/ollama ./build
@@ -443,7 +442,8 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 # ============================
 # Subpacote: CUDA 12.9 (legacy)
 # ============================
-%if %{with cuda-12-9}
+%if %{with cuda_12_9}
+
 %files -n ollama-grid-cuda-12-9
 
 # binário do backend
