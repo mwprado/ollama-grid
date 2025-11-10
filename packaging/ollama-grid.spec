@@ -13,14 +13,14 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.g
 
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
-%bcond_with cpu
-%bcond_with vulkan
-%bcond_with rocm
-%bcond_with cuda
+%bcond_without cpu
+%bcond_without vulkan
+%bcond_without rocm
+%bcond_without cuda
 %bcond_without cuda_legacy_129
 
 # ====== BuildRequires gerais ======
-BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf tree
+BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf
 BuildRequires:    openmpi-devel
 
 # Vulkan
