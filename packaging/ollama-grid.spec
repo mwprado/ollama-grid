@@ -151,7 +151,7 @@ cp -a source/ollama source/ollama-0.12.9-cuda-12.9
 %if %{with cuda}
 mkdir ./source/cuda_include
 cp -a /usr/local/cuda-13.0/targets/x86_64-linux/include/* ./source/cuda_include/
-cp -a ./source/cuda-13-0-math-functions.h.patch ./source/cuda_include
+cp -a ./source/cuda-13-0-math-functions.h.patch ./source/cuda_include/crt
 pushd ./source/cuda_include
 patch -u < ./cuda-13-0-math-functions.h.patch
 popd
@@ -162,7 +162,7 @@ echo $PWD
 pwd
 mkdir ./source/cuda_include-12.9/
 cp -a /usr/local/cuda-12.9/targets/x86_64-linux/include/* ./source/cuda_include-12.9/
-cp -a ./source/ollama-grid/scripts/cuda-12-9-math-functions.h.patch ./source/cuda_include-12.9/                           
+cp -a ./source/ollama-grid/scripts/cuda-12-9-math-functions.h.patch ./source/cuda_include-12.9/crt/                           
 pushd ./source/cuda_include-12.9/crt
 patch -u < cuda-12-9-math-functions.h.patch
 popd
