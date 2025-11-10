@@ -41,7 +41,7 @@ BuildRequires:    gcc14
 %endif
 
 # ====== Caminhos de instalação ======
-%global og_libdir     %{_libdir}/ollama
+%global og_libdir     %{_libdir}/ollama-grid
 %global og_confdir    /etc/ollama-grid
 %global og_nginx_conf /etc/nginx/conf.d/ollama-grid.conf
 
@@ -303,7 +303,7 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
 install -m 0755 ./build/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
 
 # Conveniência: apontar /usr/bin/ollama-grid para o CPU por padrão (symlink)
-ln -sfn ollama-grid-cpu %{buildroot}%{_bindir}/ollama-grid
+# ln -sfn ollama-grid-cpu %{buildroot}%{_bindir}/ollama-grid
 
 # Vulkan
 %if %{with vulkan}
