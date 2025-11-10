@@ -11,16 +11,19 @@ Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.t
 # ====== SOURCE1: OLLAMA (upstream) via Forge macros ======
 Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.gz
 
-
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
-# %bcond_without cpu
+%bcond_without cpu
 %bcond_with vulkan
 %bcond_with rocm
 %bcond_with cuda
-%bcond_with cuda_legacy_129
+%bcond_with cuda_12_9
+
+%global og_libdir %{_libdir}/ollama-grid
+%global og_confdir %{_sysconfdir}/ollama-grid
+%global og_nginx_conf %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
 # ====== BuildRequires gerais ======
-BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf
+BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf tree
 BuildRequires:    openmpi-devel
 
 # Vulkan
@@ -36,12 +39,12 @@ BuildRequires:    rocm-hip-devel
 %endif
 
 # CUDA (toolkit deve existir no host de build; não usar repositório NVIDIA no COPR)
-%if %{with cuda} || %{with cuda_legacy_129}
+%if %{with cuda} || %{with cuda_12_9}
 BuildRequires:    gcc14
 %endif
 
 # ====== Caminhos de instalação ======
-%global og_libdir     %{_libdir}/ollama-grid
+%global og_libdir     %{_libdir}/ollama
 %global og_confdir    /etc/ollama-grid
 %global og_nginx_conf /etc/nginx/conf.d/ollama-grid.conf
 
@@ -84,7 +87,6 @@ Requires:       ollama-grid-common = %{version}-%{release}
 %description -n ollama-grid-cpu
 Bibliotecas Vulkan e wrapper /usr/bin/ollama-cpu.
 
-
 # (4) Vulkan
 %package -n ollama-grid-vulkan
 Summary:        Backend Vulkan (universal GPU: Intel/AMD/NVIDIA)
@@ -110,12 +112,12 @@ Requires:       ollama-grid-common = %{version}-%{release}
 Bibliotecas CUDA (moderno) e wrapper /usr/bin/ollama-cuda. Requer toolkit presente no host.
 
 # (7) CUDA legacy 12.9 (ex.: Tesla P4, sm_61)
-%package -n ollama-grid-cuda-legacy-12.9
+%package -n ollama-grid-cuda-12-9
 Summary:        Backend CUDA 12.9 (legado) para GPUs NVIDIA compute 6.1
 Requires:       ollama-grid-common = %{version}-%{release}
 
-%description -n ollama-grid-cuda-legacy-12.9
-Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-cuda-legacy-12.9.
+%description -n ollama-grid-cuda-12-9
+Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-cuda-12.9.
 O patch é aplicado por script antes do build e revertido após o build.
 
 # ==================== Prep ====================
@@ -142,21 +144,21 @@ cp -a source/ollama source/ollama-0.12.9-cuda-12.9
 
 # Copia assets do Nginx (se existirem) do Source1
 # (Ajuste este caminho se seu repo usar outro layout)
-mkdir -p nginx-assets
-cp -a source/ollama-grid/balancer/ollama-balancer.env nginx-assets/
+# mkdir -p nginx-assets
+# cp -a ./source/ollama-grid/nginx/ollama-grid.conf nginx-assets/
 
 # ==================== Build ====================
 %build
 
 # ---- CPU ----"
 echo "#---CPU---#"
-#% if % {with cpu}
+%if %{with cpu}
 pushd ./source/ollama-0.12.9-cpu  
 cmake --preset "CPU" --fresh 
 cmake --build build --parallel 8 --preset "CPU"
 %{og_gobuild} -o ../../build/ollama-cpu .
 popd
-# % endif
+%endif
 
 # ---- Vulkan ----
 echo "#---Vulkan---#"
@@ -209,7 +211,7 @@ echo "#---CUDA 13---#"
 
 # ---- CUDA legacy 12.9 ----
 echo "#---CUDA 12---#"
-%if %{with cuda_legacy_129}
+%if %{with cuda_12_9}
   pushd ./source/ollama-0.12.9-cuda-12.9
 
   # Ambiente CUDA 12.9 (conforme você definiu)
@@ -246,7 +248,6 @@ echo "#---CUDA 12---#"
 %endif
 
 # ==================== Install ====================
-%install
 # --- diretórios base ---
 install -d \
   %{buildroot}%{_bindir} \
@@ -258,37 +259,36 @@ install -d \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d
 
 # --- sysusers / tmpfiles (arquivos do repositório) ---
-install -m 0644 sysusers.d/ollama-grid.conf %{buildroot}%{_sysusersdir}/ollama-grid.conf
-install -m 0644 tmpfiles.d/ollama-grid.conf  %{buildroot}%{_tmpfilesdir}/ollama-grid.conf
+install -m 0644 source/ollama-grid/sysusers.d/ollama-grid.conf %{buildroot}%{_sysusersdir}/ollama-grid.conf
 
 # ============================
 # ld.so.conf.d (um .conf por backend/pacote)
 # ============================
 # CPU (sempre)
-install -m 0644 lib64/ollama-grid-cpu.conf \
+install -m 0644 source/ollama-grid/lib64/ollama-grid-cpu.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
 
 # Vulkan
 %if %{with vulkan}
-install -m 0644 lib64/ollama-grid-vulkan.conf \
+install -m 0644 source/ollama-grid/lib64/ollama-grid-vulkan.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-vulkan.conf
 %endif
 
 # ROCm
 %if %{with rocm}
-install -m 0644 lib64/ollama-grid-rocm.conf \
+install -m 0644 source/ollama-grid/lib64/ollama-grid-rocm.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-rocm.conf
 %endif
 
 # CUDA (atual)
 %if %{with cuda}
-install -m 0644 lib64/ollama-grid-cuda.conf \
+install -m 0644 source/ollama-grid/lib64/ollama-grid-cuda.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda.conf
 %endif
 
 # CUDA 12.9 (legacy)
-%if %{with cuda_legacy_129}
-install -m 0644 lib64/ollama-grid-cuda-12.9.conf \
+%if %{with cuda_12_9}
+install -m 0644 source/ollama-grid/lib64/ollama-grid-cuda-12.9.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda-12.9.conf
 %endif
 
@@ -321,7 +321,7 @@ install -m 0755 ./build/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
 %endif
 
 # CUDA 12.9 (legacy)
-%if %{with cuda_legacy_129}
+%if %{with cuda_12_9}
   install -m 0755 ./build/ollama-cuda-12.9 %{buildroot}%{_bindir}/ollama-grid-cuda-12.9
 %endif
 
@@ -354,7 +354,7 @@ install -m 0755 ./build/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
 %endif
 
 # CUDA 12.9 (legacy)
-%if %{with cuda_legacy_129}
+%if %{with cuda_12_9}
   install -d %{buildroot}%{og_libdir}/cuda-12.9
   install -m 0755 ./source/ollama-0.12.9-cuda-12.9/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda-12.9/
   install -m 0755 ./source/ollama-0.12.9-cuda-12.9/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda-12.9/
@@ -364,34 +364,36 @@ install -m 0755 ./build/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
 # ============================
 # NGINX (balanceador)
 # ============================
-install -m 0644 nginx/ollama-grid.conf \
+install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
   %{buildroot}%{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
 # ==================== Files ====================
-%files
-# binários
+%files cpu 
+# binário
 %{_bindir}/ollama-grid-cpu
 
-# diretórios base
-%dir %{og_libdir}
-%dir %{_sysusersdir}
-%dir %{_tmpfilesdir}
-%dir %{_sysconfdir}/nginx
-%dir %{_sysconfdir}/nginx/conf.d
-
-# configs do sistema (preservar customizações do usuário)
-%config(noreplace) %{_sysusersdir}/ollama-grid.conf
-%config(noreplace) %{_tmpfilesdir}/ollama-grid.conf
-%config(noreplace) %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
-
-# ld.so.conf.d para CPU
+# ld.so.conf.d (CPU)
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
 
+%files common
+# diretório raiz das libs do projeto (para evitar disputa entre backends)
+# % dir %{ og_libdir}
+
+# sysusers / tmpfiles
+%config(noreplace) %{_sysusersdir}/ollama-grid.conf
+%config(noreplace) %{_tmpfilesdir}/ollama-grid.conf
+
+# ============================
+# Subpacote: BALANCER (Nginx)
+# ============================
+%files balancer
+# arquivo de configuração do Nginx
+%config(noreplace) %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
 # ============================
 # Subpacote: Vulkan
 # ============================
-%files vulkan
+%files -n ollama-grid-vulkan
 # binário do backend
 %{_bindir}/ollama-grid-vulkan
 
@@ -402,11 +404,10 @@ install -m 0644 nginx/ollama-grid.conf \
 # ld.so.conf.d do backend
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-vulkan.conf
 
-
 # ============================
 # Subpacote: ROCm
 # ============================
-%files rocm
+%files -n ollama-grid-rocm
 # binário do backend
 %{_bindir}/ollama-grid-rocm
 
@@ -420,7 +421,7 @@ install -m 0644 nginx/ollama-grid.conf \
 # ============================
 # Subpacote: CUDA (atual)
 # ============================
-%files cuda
+%files -n ollama-grid-cuda
 # binário do backend
 %{_bindir}/ollama-grid-cuda
 
@@ -435,7 +436,8 @@ install -m 0644 nginx/ollama-grid.conf \
 # ============================
 # Subpacote: CUDA 12.9 (legacy)
 # ============================
-%files cuda_legacy_129
+%files -n ollama-grid-cuda-12-9
+
 # binário do backend
 %{_bindir}/ollama-grid-cuda-12.9
 
