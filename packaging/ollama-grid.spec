@@ -153,7 +153,7 @@ mkdir ./source/cuda_include
 cp -a /usr/local/cuda-13.0/targets/x86_64-linux/include/* ./source/cuda_include/
 cp -a ./source/cuda-13-0-math-functions.h.patch ./source/cuda_include
 pushd ./source/cuda_include
-patch ./math_functions.h ./cuda-13-0-math-functions.h.patch
+patch -u ./math_functions.h ./cuda-13-0-math-functions.h.patch
 popd
 %endif
 
@@ -164,7 +164,7 @@ mkdir ./source/cuda_include-12.9/
 cp -a /usr/local/cuda-12.9/targets/x86_64-linux/include/* ./source/cuda_include-12.9/
 cp -a ./source/ollama-grid/scripts/cuda-12-9-math-functions.h.patch ./source/cuda_include-12.9/                           
 pushd ./source/cuda_include-12.9/
-patch math_functions.h cuda-12-9-math-functions.h.patch
+patch -u math_functions.h cuda-12-9-math-functions.h.patch
 popd
 %endif
 
