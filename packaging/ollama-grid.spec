@@ -48,7 +48,7 @@ BuildRequires:  cuda-13.0
 %endif
 
 %if %{with cuda_12_9}
-BuildRequires:    cuda-12.9.1-1
+BuildRequires:    cuda-12
 %endif
 
 # ====== Caminhos de instalação ======
