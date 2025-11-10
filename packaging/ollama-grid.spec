@@ -158,6 +158,8 @@ popd
 %endif
 
 %if %{with cuda_12_9}
+echo $PWD
+pwd
 mkdir ./source/cuda_include-12.9/
 cp -a ./usr/local/cuda-12.9/targets/x86_64-linux/include/* ./source/cuda_include-12.9/
 cp -a ./source/ollama-grid/scripts/cuda-12-9-math-functions.h.patch ./source/cuda_include-12.9/                           
