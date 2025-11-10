@@ -23,7 +23,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.g
 %global og_nginx_conf %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
 # ====== BuildRequires gerais ======
-BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf tree
+BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf
 BuildRequires:    openmpi-devel
 
 # Vulkan
