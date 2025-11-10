@@ -163,7 +163,7 @@ pwd
 mkdir ./source/cuda_include-12.9/
 cp -a /usr/local/cuda-12.9/targets/x86_64-linux/include/* ./source/cuda_include-12.9/
 cp -a ./source/ollama-grid/scripts/cuda-12-9-math-functions.h.patch ./source/cuda_include-12.9/                           
-pushd ./source/cuda_include-12.9/
+pushd ./source/cuda_include-12.9/crt
 patch -u < cuda-12-9-math-functions.h.patch
 popd
 %endif
