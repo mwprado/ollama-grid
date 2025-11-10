@@ -43,6 +43,14 @@ BuildRequires:    rocm-hip-devel
 BuildRequires:    gcc14
 %endif
 
+%if %{with cuda}
+BuildRequires:  cuda-13.0
+%endif
+
+%if %{with cuda_12_9}
+BuildRequires:    cuda-12.9
+%endif
+
 # ====== Caminhos de instalação ======
 %global og_libdir     %{_libdir}/ollama
 %global og_confdir    /etc/ollama-grid
