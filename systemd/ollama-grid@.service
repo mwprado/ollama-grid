@@ -1,5 +1,6 @@
 [Unit]
-Description=Ollama (%i)
+Description=Ollama Grid Node (%i)
+Documentation=https://github.com/mwprado/ollama-grid
 After=network.target
 
 [Service]
