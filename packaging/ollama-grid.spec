@@ -16,7 +16,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.g
 %bcond_with vulkan
 %bcond_with rocm
 %bcond_with cuda
-%bcond_without cuda_12_9
+%bcond_with cuda_12_9
 
 %global og_libdir %{_libdir}/ollama-grid
 %global og_confdir %{_sysconfdir}/ollama-grid
