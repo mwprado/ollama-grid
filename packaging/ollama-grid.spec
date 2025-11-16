@@ -284,13 +284,16 @@ install -d \
   %{buildroot}%{og_libdir} \
   %{buildroot}%{_sysusersdir} \
   %{buildroot}%{_tmpfilesdir} \
+  %{buildroot}%{_unitdirr} \
   %{buildroot}%{og_confdir} \
   %{buildroot}%{_sysconfdir}/nginx/conf.d \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d
+  
 
 # --- sysusers / tmpfiles (arquivos do repositório) ---
 install -m 0644 source/ollama-grid/sysusers.d/ollama-grid.conf %{buildroot}%{_sysusersdir}/ollama-grid.conf
 install -m 0644 source/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_tmpfilesdir}/ollama-grid.conf
+install -m 0644 source/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
 
 # ============================
 # ld.so.conf.d (um .conf por backend/pacote)
