@@ -1,0 +1,12 @@
+[Unit]
+Description=Ollama Grid Balancer (Nginx reverse proxy)
+After=network.target nginx.service
+Requires=nginx.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl reload nginx
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
