@@ -493,6 +493,16 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda-12.9.conf
 %endif
 
+
+%post
+%systemd_post ollama@.service ollama-balancer.service
+
+%preun
+%systemd_preun ollama@.service ollama-balancer.service
+
+%postun
+%systemd_postun_with_restart ollama@.service ollama-balancer.service
+
 # ==================== Scriptlets ====================
 
 %changelog
