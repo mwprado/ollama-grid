@@ -296,6 +296,12 @@ install -m 0644 source/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_tm
 install -Dpm644 source/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
 install -Dpm644 source/ollama-grid/systemd/ollama-grid-balancer.service %{buildroot}%{_unitdir}/ollama-grid-balancer.service
 
+install -Dpm0640 source/etc/cpu.env    %{buildroot}/etc/ollama-grid/cpu.conf
+install -Dpm0640 source/etc/cuda.env   %{buildroot}/etc/ollama-grid/cuda.conf
+install -Dpm0640 source/etc/rocm.env   %{buildroot}/etc/ollama-grid/rocm.conf
+install -Dpm0640 source/etc/vulkan.env %{buildroot}/etc/ollama-grid/vulkan.conf
+
+
 
 # ============================
 # ld.so.conf.d (um .conf por backend/pacote)
@@ -407,6 +413,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 %files cpu 
 # binário
 %{_bindir}/ollama-grid-cpu
+%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cpu.conf
 
 # ld.so.conf.d (CPU)
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
@@ -435,6 +442,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 %files -n ollama-grid-vulkan
 # binário do backend
 %{_bindir}/ollama-grid-vulkan
+%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/vulkan.conf
 
 # libs do backend
 %dir %{og_libdir}/vulkan
@@ -451,6 +459,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 %files -n ollama-grid-rocm
 # binário do backend
 %{_bindir}/ollama-grid-rocm
+%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/rocm.conf
 
 # libs do backend
 %dir %{og_libdir}/rocm
@@ -468,6 +477,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 %files -n ollama-grid-cuda
 # binário do backend
 %{_bindir}/ollama-grid-cuda
+%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cuda.conv
 
 # libs do backend
 %dir %{og_libdir}/cuda
@@ -486,6 +496,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # binário do backend
 %{_bindir}/ollama-grid-cuda-12.9
+%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cuda.conf
 
 # libs do backend
 %dir %{og_libdir}/cuda-12.9
