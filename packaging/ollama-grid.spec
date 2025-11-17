@@ -426,7 +426,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 %files balancer
 # arquivo de configuração do Nginx
 %config(noreplace) %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
-%{_unitdir}/ollama-balancer.service
+%{_unitdir}/ollama-grid-balancer.service
 
 # ============================
 # Subpacote: Vulkan
