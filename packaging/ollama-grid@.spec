@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.12.11
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
@@ -418,6 +418,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 # sysusers / tmpfiles
 %config(noreplace) %{_sysusersdir}/ollama-grid.conf
 %config(noreplace) %{_tmpfilesdir}/ollama-grid.conf
+%{_unitdir}/ollama-grid@.service
 
 # ============================
 # Subpacote: BALANCER (Nginx)
@@ -425,6 +426,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 %files balancer
 # arquivo de configuração do Nginx
 %config(noreplace) %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
+%{_unitdir}/ollama-balancer.service
 
 # ============================
 # Subpacote: Vulkan
