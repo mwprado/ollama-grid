@@ -6,7 +6,7 @@ After=network.target
 [Service]
 User=ollama
 Group=ollama
-EnvironmentFile=-/etc/ollama-grid/%i.env
+EnvironmentFile=-/etc/ollama-grid/%i.conf
 ExecStart=/usr/bin/ollama-grid-%i serve
 Restart=always
 Nice=5
