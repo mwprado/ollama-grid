@@ -296,10 +296,10 @@ install -m 0644 source/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_tm
 install -Dpm644 source/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
 install -Dpm644 source/ollama-grid/systemd/ollama-grid-balancer.service %{buildroot}%{_unitdir}/ollama-grid-balancer.service
 
-install -Dpm0640 source/etc/cpu.conf    %{buildroot}/etc/ollama-grid/cpu.conf
-install -Dpm0640 source/etc/cuda.conf   %{buildroot}/etc/ollama-grid/cuda.conf
-install -Dpm0640 source/etc/rocm.conf   %{buildroot}/etc/ollama-grid/rocm.conf
-install -Dpm0640 source/etc/vulkan.conf %{buildroot}/etc/ollama-grid/vulkan.conf
+install -Dpm0640 source/etc/ollama-grid/cpu.conf    %{buildroot}/etc/ollama-grid/cpu.conf
+install -Dpm0640 source/etc/ollama-grid/cuda.conf   %{buildroot}/etc/ollama-grid/cuda.conf
+install -Dpm0640 source/etc/ollama-grid/rocm.conf   %{buildroot}/etc/ollama-grid/rocm.conf
+install -Dpm0640 source/etc/ollama-grid/vulkan.conf %{buildroot}/etc/ollama-grid/vulkan.conf
 
 
 
