@@ -4,8 +4,8 @@ Documentation=https://github.com/mwprado/ollama-grid
 After=network.target
 
 [Service]
-User=ollama
-Group=ollama
+User=ollama-grid
+Group=ollama-grid
 EnvironmentFile=/etc/ollama-grid/%i.conf
 ExecStart=/usr/bin/ollama-grid-%i serve
 Restart=always
