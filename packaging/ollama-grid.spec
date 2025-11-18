@@ -296,11 +296,6 @@ install -m 0644 source/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_tm
 install -Dpm644 source/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
 install -Dpm644 source/ollama-grid/systemd/ollama-grid-balancer.service %{buildroot}%{_unitdir}/ollama-grid-balancer.service
 
-install -Dpm0640 source/ollama-grid/etc/ollama-grid/cpu.conf    %{buildroot}%{og_confdir}/cpu.conf
-install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda.conf   %{buildroot}%{og_confdir}/cuda.conf
-install -Dpm0640 source/ollama-grid/etc/ollama-grid/rocm.conf   %{buildroot}%{og_confdir}/rocm.conf
-install -Dpm0640 source/ollama-grid/etc/ollama-grid/vulkan.conf %{buildroot}%{og_confdir}/vulkan.conf
-
 
 
 # ============================
@@ -309,29 +304,36 @@ install -Dpm0640 source/ollama-grid/etc/ollama-grid/vulkan.conf %{buildroot}%{og
 # CPU (sempre)
 install -m 0644 source/ollama-grid/lib64/ollama-grid-cpu.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
+install -Dpm0640 source/ollama-grid/etc/ollama-grid/cpu.conf    %{buildroot}%{og_confdir}/cpu.conf
 
 # Vulkan
 %if %{with vulkan}
 install -m 0644 source/ollama-grid/lib64/ollama-grid-vulkan.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-vulkan.conf
+install -Dpm0640 source/ollama-grid/etc/ollama-grid/vulkan.conf %{buildroot}%{og_confdir}/vulkan.conf
+
+
 %endif
 
 # ROCm
 %if %{with rocm}
 install -m 0644 source/ollama-grid/lib64/ollama-grid-rocm.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-rocm.conf
+install -Dpm0640 source/ollama-grid/etc/ollama-grid/rocm.conf   %{buildroot}%{og_confdir}/rocm.conf
 %endif
 
 # CUDA (atual)
 %if %{with cuda}
 install -m 0644 source/ollama-grid/lib64/ollama-grid-cuda.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda.conf
+install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda.conf   %{buildroot}%{og_confdir}/cuda.conf
 %endif
 
 # CUDA 12.9 (legacy)
 %if %{with cuda_12_9}
 install -m 0644 source/ollama-grid/lib64/ollama-grid-cuda-12.9.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda-12.9.conf
+install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda-12.9.conf   %{buildroot}%{og_confdir}/cuda.conf
 %endif
 
 # --- utilitário para limpar RPATH/RUNPATH (ignora se patchelf não existir) ---
