@@ -13,7 +13,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.g
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
 %bcond_without cpu
-%bcond_without vulkan
+%bcond_with vulkan
 %bcond_with rocm
 %bcond_with cuda
 %bcond_with cuda_12_9
