@@ -13,7 +13,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
 %bcond_without cpu
-%bcond_without vulkan
+%bcond_with vulkan
 %bcond_with rocm
 %bcond_with cuda
 %bcond_with cuda_12_9
@@ -412,7 +412,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
   %{buildroot}%{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
 # ==================== Files ====================
-%files cpu 
+%files -n ollama-grid-cpu 
 # binário
 %{_bindir}/ollama-grid-cpu
 %config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cpu.conf
@@ -420,7 +420,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 # ld.so.conf.d (CPU)
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
 
-%files common
+%files -n ollama-grid-common
 # diretório raiz das libs do projeto (para evitar disputa entre backends)
 # % dir %{ og_libdir}
 
@@ -432,7 +432,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 # ============================
 # Subpacote: BALANCER (Nginx)
 # ============================
-%files balancer
+%files -n ollama-grid-balancer
 # arquivo de configuração do Nginx
 %config(noreplace) %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 %{_unitdir}/ollama-grid-balancer.service
@@ -533,6 +533,7 @@ if [ $1 -eq 0 ] ; then
 fi
 
 # ---- CPU ----
+
 %if %{with cpu}
 %post -n ollama-grid-cpu
 if [ $1 -eq 1 ] ; then
@@ -548,7 +549,8 @@ if [ $1 -eq 0 ] ; then
     # remoção → desativa e para a instância
     systemctl disable --now ollama-grid@cpu.service >/dev/null 2>&1 || :
 fi
-%enif
+%endif
+
 # ---- cuda ----
 %if %{with cuda}
 %post -n ollama-grid-cuda
@@ -564,7 +566,7 @@ fi
 %endif
 
 # ---- cuda-12.9 ----
-%if %{with cuda-12.9}
+%if %{with cuda_12_9}
 %post -n ollama-grid-cuda-12.9
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@cuda-12.9.service >/dev/null 2>&1 || :
