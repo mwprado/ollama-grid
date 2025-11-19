@@ -508,15 +508,103 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda-12.9.conf
 %endif
 
+# ---- Common ----
 
-%post
-%systemd_post ollama@.service ollama-balancer.service
+%post -n ollama-grid-common
+# cria usuário, diretórios persistentes e temporários
+%sysusers_create_compat %{_sysusersdir}/ollama-grid.conf || :
+%tmpfiles_create %{_tmpfilesdir}/ollama-grid.conf || :
 
-%preun
-%systemd_preun ollama@.service ollama-balancer.service
+# registra o TEMPLATE no systemd
+%systemd_post ollama-grid@.service
 
-%postun
-%systemd_postun_with_restart ollama@.service ollama-balancer.service
+%preun -n ollama-grid-common
+%systemd_preun ollama-grid@.service
+
+%postun -n ollama-grid-common
+%systemd_postun_with_restart ollama-grid@.service
+
+# ---- Balancer ----
+
+%preun -n ollama-grid-balancer
+if [ $1 -eq 0 ] ; then
+    # remoção (não upgrade) → desabilita e para o balancer
+    systemctl disable --now ollama-balancer.service >/dev/null 2>&1 || :
+fi
+
+# ---- CPU ----
+
+%post -n ollama-grid-cpu
+if [ $1 -eq 1 ] ; then
+    # instalação nova → cria e inicia a instância CPU
+    systemctl enable --now ollama-grid@cpu.service >/dev/null 2>&1 || :
+else
+    # upgrade → tenta reiniciar a instância se existir
+    systemctl try-restart ollama-grid@cpu.service >/dev/null 2>&1 || :
+fi
+
+%preun -n ollama-grid-cpu
+if [ $1 -eq 0 ] ; then
+    # remoção → desativa e para a instância
+    systemctl disable --now ollama-grid@cpu.service >/dev/null 2>&1 || :
+fi
+
+# ---- cuda ----
+
+%post -n ollama-grid-cuda
+if [ $1 -eq 1 ] ; then
+    systemctl enable --now ollama-grid@cuda.service >/dev/null 2>&1 || :
+else
+    systemctl try-restart ollama-grid@cuda.service >/dev/null 2>&1 || :
+fi
+%preun -n ollama-grid-backend-cuda
+if [ $1 -eq 0 ] ; then
+    systemctl disable --now ollama-grid@cuda.service >/dev/null 2>&1 || :
+fi
+
+# ---- cuda-12.9 ----
+
+%post -n ollama-grid-cuda-12.9
+if [ $1 -eq 1 ] ; then
+    systemctl enable --now ollama-grid@cuda-12.9.service >/dev/null 2>&1 || :
+else
+    systemctl try-restart ollama-grid@cuda-12.9.service >/dev/null 2>&1 || :
+fi
+%preun -n ollama-grid-backend-cuda-12.9
+if [ $1 -eq 0 ] ; then
+    systemctl disable --now ollama-grid@cuda-12.9.service >/dev/null 2>&1 || :
+fi
+
+# ---- ROCm ----
+
+%post -n ollama-grid-backend-rocm
+if [ $1 -eq 1 ] ; then
+    systemctl enable --now ollama-grid@rocm.service >/dev/null 2>&1 || :
+else
+    systemctl try-restart ollama-grid@rocm.service >/dev/null 2>&1 || :
+fi
+
+%preun -n ollama-grid-backend-rocm
+if [ $1 -eq 0 ] ; then
+    systemctl disable --now ollama-grid@rocm.service >/dev/null 2>&1 || :
+fi
+
+# ---- Vulkan ----
+
+%post -n ollama-grid-backend-vulkan
+if [ $1 -eq 1 ] ; then
+    systemctl enable --now ollama-grid@vulkan.service >/dev/null 2>&1 || :
+else
+    systemctl try-restart ollama-grid@vulkan.service >/dev/null 2>&1 || :
+fi
+
+%preun -n ollama-grid-backend-vulkan
+if [ $1 -eq 0 ] ; then
+    systemctl disable --now ollama-grid@vulkan.service >/dev/null 2>&1 || :
+fi
+
+
+
 
 # ==================== Scriptlets ====================
 
