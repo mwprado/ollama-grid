@@ -533,7 +533,7 @@ if [ $1 -eq 0 ] ; then
 fi
 
 # ---- CPU ----
-
+%if %{with cpu}
 %post -n ollama-grid-cpu
 if [ $1 -eq 1 ] ; then
     # instalação nova → cria e inicia a instância CPU
@@ -548,9 +548,9 @@ if [ $1 -eq 0 ] ; then
     # remoção → desativa e para a instância
     systemctl disable --now ollama-grid@cpu.service >/dev/null 2>&1 || :
 fi
-
+%enif
 # ---- cuda ----
-
+%if %{with cuda}
 %post -n ollama-grid-cuda
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@cuda.service >/dev/null 2>&1 || :
@@ -561,9 +561,10 @@ fi
 if [ $1 -eq 0 ] ; then
     systemctl disable --now ollama-grid@cuda.service >/dev/null 2>&1 || :
 fi
+%endif
 
 # ---- cuda-12.9 ----
-
+%if %{with cuda-12.9}
 %post -n ollama-grid-cuda-12.9
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@cuda-12.9.service >/dev/null 2>&1 || :
@@ -574,9 +575,10 @@ fi
 if [ $1 -eq 0 ] ; then
     systemctl disable --now ollama-grid@cuda-12.9.service >/dev/null 2>&1 || :
 fi
+%endif
 
 # ---- ROCm ----
-
+%if %{with rocm}
 %post -n ollama-grid-backend-rocm
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@rocm.service >/dev/null 2>&1 || :
@@ -588,21 +590,22 @@ fi
 if [ $1 -eq 0 ] ; then
     systemctl disable --now ollama-grid@rocm.service >/dev/null 2>&1 || :
 fi
+%endif
 
 # ---- Vulkan ----
-
-%post -n ollama-grid-backend-vulkan
+%if %{with vulkan}
+%post -n ollama-grid-vulkan
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@vulkan.service >/dev/null 2>&1 || :
 else
     systemctl try-restart ollama-grid@vulkan.service >/dev/null 2>&1 || :
 fi
 
-%preun -n ollama-grid-backend-vulkan
+%preun -n ollama-grid-vulkan
 if [ $1 -eq 0 ] ; then
     systemctl disable --now ollama-grid@vulkan.service >/dev/null 2>&1 || :
 fi
-
+%endif
 
 
 
