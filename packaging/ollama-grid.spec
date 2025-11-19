@@ -9,7 +9,7 @@ URL:            https://github.com/ollama/ollama
 Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.tar.gz
 
 # ====== SOURCE1: OLLAMA (upstream) via Forge macros ======
-Source1:        https://github.com/ollama/ollama/archive/refs/tags/v0.12.9.tar.gz
+Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
 %bcond_without cpu
@@ -141,11 +141,11 @@ tar -xzf %{SOURCE0} -C ./source/ollama-grid --strip-components=1
 tar -xzf %{SOURCE1} -C ./source/ollama --strip-components=1
 
 # Duplica a árvore do OLLAMA para cada backend dentro de build/
-cp -a source/ollama source/ollama-0.12.9-cpu 
-cp -a source/ollama source/ollama-0.12.9-vulkan
-cp -a source/ollama source/ollama-0.12.9-rocm
-cp -a source/ollama source/ollama-0.12.9-cuda
-cp -a source/ollama source/ollama-0.12.9-cuda-12.9
+cp -a source/ollama source/ollama-%{version}-cpu 
+cp -a source/ollama source/ollama-%{version}-vulkan
+cp -a source/ollama source/ollama-%{version}-rocm
+cp -a source/ollama source/ollama-%{version}-cuda
+cp -a source/ollama source/ollama-%{version}-cuda-12.9
 
 
 %if %{with cuda}
@@ -181,7 +181,7 @@ popd
 # ---- CPU ----"
 echo "#---CPU---#"
 %if %{with cpu}
-pushd ./source/ollama-0.12.9-cpu  
+pushd ./source/ollama-%{version}-cpu  
 cmake --preset "CPU" --fresh 
 cmake --build build --parallel 8 --preset "CPU"
 %{og_gobuild} -o ../../build/ollama-cpu .
@@ -191,7 +191,7 @@ popd
 # ---- Vulkan ----
 echo "#---Vulkan---#"
 %if %{with vulkan}
-  pushd ./source/ollama-0.12.9-vulkan  
+  pushd ./source/ollama-%{version}-vulkan  
   cmake --preset "Vulkan" --fresh 
   cmake --build build --parallel 8 --preset "Vulkan"
   %{og_gobuild} -o ../../build/ollama-vulkan .
@@ -201,7 +201,7 @@ echo "#---Vulkan---#"
 # ---- ROCm ----
 echo "#---ROCm---#"
 %if %{with rocm}
-  pushd ./source/ollama-0.12.9-rocm  
+  pushd ./source/ollama-%{version}-rocm  
   cmake --preset "ROCm 6" --fresh -D AMDGPU_TARGETS="gfx803;gfx1032;gfx1035" -D GPU_TARGETS="gfx803;gfx1032;gfx1035"
   cmake --build build --parallel 8 --preset "ROCm 6"
   %{og_gobuild} -o ../../build/ollama-rocm .
@@ -211,7 +211,7 @@ echo "#---ROCm---#"
 # ---- CUDA 13 moderno (latest) — opcional; toolkit deve estar no PATH/ambiente ----
 echo "#---CUDA 13---#"
 %if %{with cuda}
-  pushd ./source/ollama-0.12.9-cuda
+  pushd ./source/ollama-%{version}-cuda
   
   export CUDAHOSTCXX=/usr/bin/g++
   export CPATH=/usr/include/openmpi-x86_64:$CPATH
@@ -241,7 +241,7 @@ echo "#---CUDA 13---#"
 # ---- CUDA legacy 12.9 ----
 echo "#---CUDA 12---#"
 %if %{with cuda_12_9}
-  pushd ./source/ollama-0.12.9-cuda-12.9
+  pushd ./source/ollama-%{version}-cuda-12.9
 
   # Ambiente CUDA 12.9 (conforme você definiu)
   export CUDAHOSTCXX=/usr/bin/g++-14
@@ -376,32 +376,32 @@ install -m 0755 ./build/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
 # Vulkan
 %if %{with vulkan}
   install -d %{buildroot}%{og_libdir}/vulkan
-  install -m 0755 ./source/ollama-0.12.9-vulkan/build/lib/ollama/libggml-vulkan.so %{buildroot}%{og_libdir}/vulkan/
-  install -m 0755 ./source/ollama-0.12.9-vulkan/build/lib/ollama/libggml-base.so   %{buildroot}%{og_libdir}/vulkan/
+  install -m 0755 ./source/ollama-%{version}-vulkan/build/lib/ollama/libggml-vulkan.so %{buildroot}%{og_libdir}/vulkan/
+  install -m 0755 ./source/ollama-%{version}-vulkan/build/lib/ollama/libggml-base.so   %{buildroot}%{og_libdir}/vulkan/
   for f in %{buildroot}%{og_libdir}/vulkan/*.so; do fix_rpath "$f"; done
 %endif
 
 # ROCm
 %if %{with rocm}
   install -d %{buildroot}%{og_libdir}/rocm
-  install -m 0755 ./source/ollama-0.12.9-rocm/build/lib/ollama/libggml-hip.so  %{buildroot}%{og_libdir}/rocm/
-  install -m 0755 ./source/ollama-0.12.9-rocm/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/rocm/
+  install -m 0755 ./source/ollama-%{version}-rocm/build/lib/ollama/libggml-hip.so  %{buildroot}%{og_libdir}/rocm/
+  install -m 0755 ./source/ollama-%{version}-rocm/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/rocm/
   for f in %{buildroot}%{og_libdir}/rocm/*.so; do fix_rpath "$f"; done
 %endif
 
 # CUDA (atual)
 %if %{with cuda}
   install -d %{buildroot}%{og_libdir}/cuda
-  install -m 0755 ./source/ollama-0.12.9-cuda/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda/
-  install -m 0755 ./source/ollama-0.12.9-cuda/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda/
+  install -m 0755 ./source/ollama-%{version}-cuda/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda/
+  install -m 0755 ./source/ollama-%{version}-cuda/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda/
   for f in %{buildroot}%{og_libdir}/cuda/*.so; do fix_rpath "$f"; done
 %endif
 
 # CUDA 12.9 (legacy)
 %if %{with cuda_12_9}
   install -d %{buildroot}%{og_libdir}/cuda-12.9
-  install -m 0755 ./source/ollama-0.12.9-cuda-12.9/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda-12.9/
-  install -m 0755 ./source/ollama-0.12.9-cuda-12.9/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda-12.9/
+  install -m 0755 ./source/ollama-%{version}-cuda-12.9/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda-12.9/
+  install -m 0755 ./source/ollama-%{version}-cuda-12.9/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda-12.9/
   for f in %{buildroot}%{og_libdir}/cuda-12.9/*.so; do fix_rpath "$f"; done
 %endif
 
