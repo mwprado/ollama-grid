@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.12.11
-Release:        13%{?dist}
+Release:        14%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
@@ -13,14 +13,22 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
 %bcond_without cpu
-%bcond_with vulkan
-%bcond_with rocm
+%bcond_without vulkan
+%bcond_without rocm
 %bcond_with cuda
 %bcond_with cuda_12_9
 
+# ====== Caminhos de instalação ======
 %global og_libdir %{_libdir}/ollama-grid
 %global og_confdir %{_sysconfdir}/ollama-grid
 %global og_nginx_conf %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
+
+%global og_licensedir %{_licensedir}/ollama-grid
+
+# Comando comum de build do binário Go (repo root do Ollama)
+%global og_gobuild    go build -trimpath -buildmode=pie -ldflags "-s -w" 
+
+
 
 # ====== BuildRequires gerais ======
 BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf systemd-rpm-macros
@@ -35,7 +43,8 @@ BuildRequires:    glslc
 
 # ROCm (ajuste conforme sua base de pacotes ROCm)
 %if %{with rocm}
-BuildRequires:    rocm-hip-devel
+BuildRequires:    rocm-devel
+#BuildRequires:    rocm-hip-devel hipblas-devel 
 %endif
 
 # CUDA (toolkit deve existir no host de build; não usar repositório NVIDIA no COPR)
@@ -51,13 +60,6 @@ BuildRequires:  cuda-toolkit-13-0
 BuildRequires:    cuda-toolkit-12-9
 %endif
 
-# ====== Caminhos de instalação ======
-%global og_libdir     %{_libdir}/ollama
-%global og_confdir    /etc/ollama-grid
-%global og_nginx_conf /etc/nginx/conf.d/ollama-grid.conf
-
-# Comando comum de build do binário Go (repo root do Ollama)
-%global og_gobuild    go build -trimpath -buildmode=pie -ldflags "-s -w" 
 
 %description
 OllamaGrid é um conjunto de pacotes para executar o Ollama em ambientes heterogêneos
@@ -68,12 +70,12 @@ via Nginx e orquestração por serviços systemd.
 
 # (1) Common (binário e estrutura)
 %package -n ollama-grid-common
-Summary:        Arquivos comuns: binário do Ollama, sysusers/tmpfiles, diretórios
 Requires(post): systemd
 Requires(postun): systemd
 
+Summary:        Arquivos comuns: sysusers/tmpfiles, diretórios e units systemd
 %description -n ollama-grid-common
-Arquivos comuns ao sistema (binário /usr/bin/ollama, usuários, diretórios, tmpfiles).
+Arquivos comuns ao sistema (usuário/grupo ollama-grid, diretórios padrão, tmpfiles e template de serviço systemd).
 
 # (2) Balancer (apenas Nginx + conf)
 %package -n ollama-grid-balancer
@@ -93,7 +95,7 @@ Summary:        Backend CPU
 Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-cpu
-Bibliotecas Vulkan e wrapper /usr/bin/ollama-cpu.
+Bibliotecas Vulkan e wrapper /usr/bin/ollama-grid-cpu.
 
 # (4) Vulkan
 %package -n ollama-grid-vulkan
@@ -101,7 +103,7 @@ Summary:        Backend Vulkan (universal GPU: Intel/AMD/NVIDIA)
 Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-vulkan
-Bibliotecas Vulkan e wrapper /usr/bin/ollama-vulkan.
+Bibliotecas Vulkan e wrapper /usr/bin/ollama-grid-vulkan.
 
 # (5) ROCm
 %package -n ollama-grid-rocm
@@ -109,7 +111,7 @@ Summary:        Backend ROCm (GPUs AMD)
 Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-rocm
-Bibliotecas ROCm (HIP) e wrapper /usr/bin/ollama-rocm.
+Bibliotecas ROCm (HIP) e wrapper /usr/bin/ollama-grid-rocm.
 
 # (6) CUDA (moderno, sempre “latest” disponível no host de build)
 %package -n ollama-grid-cuda
@@ -117,7 +119,7 @@ Summary:        Backend CUDA (GPUs NVIDIA modernas)
 Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-cuda
-Bibliotecas CUDA (moderno) e wrapper /usr/bin/ollama-cuda. Requer toolkit presente no host.
+Bibliotecas CUDA (moderno) e wrapper /usr/bin/ollama-grid-cuda. Requer toolkit presente no host.
 
 # (7) CUDA legacy 12.9 (ex.: Tesla P4, sm_61)
 %package -n ollama-grid-cuda-12-9
@@ -125,7 +127,7 @@ Summary:        Backend CUDA 12.9 (legado) para GPUs NVIDIA compute 6.1
 Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-cuda-12-9
-Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-cuda-12.9.
+Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-grid-cuda-12.9.
 O patch é aplicado por script antes do build e revertido após o build.
 
 # ==================== Prep ====================
@@ -278,24 +280,34 @@ echo "#---CUDA 12---#"
 %endif
 
 # ==================== Install ====================
+%install
+rm -rf %{buildroot}
+
 # --- diretórios base ---
 install -d \
   %{buildroot}%{_bindir} \
   %{buildroot}%{og_libdir} \
   %{buildroot}%{_sysusersdir} \
   %{buildroot}%{_tmpfilesdir} \
-  %{buildroot}%{_unitdirr} \
+  %{buildroot}%{_unitdir} \
   %{buildroot}%{og_confdir} \
+  %{buildroot}%{og_licensedir} \
   %{buildroot}%{_sysconfdir}/nginx/conf.d \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d
   
-
 # --- sysusers / tmpfiles (arquivos do repositório) ---
 install -m 0644 source/ollama-grid/sysusers.d/ollama-grid.conf %{buildroot}%{_sysusersdir}/ollama-grid.conf
 install -m 0644 source/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_tmpfilesdir}/ollama-grid.conf
 install -Dpm644 source/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
 install -Dpm644 source/ollama-grid/systemd/ollama-grid-balancer.service %{buildroot}%{_unitdir}/ollama-grid-balancer.service
 
+# Licença do Ollama (Apache 2.0)
+install -m 0644 source/ollama/LICENSE \
+    %{buildroot}%{og_licensedir}/LICENSE.ollama
+
+# Licença do ollama-grid (MIT)
+install -m 0644 source/ollama-grid/LICENSE \
+    %{buildroot}%{og_licensedir}/LICENSE.ollama-grid
 
 
 # ============================
@@ -333,7 +345,7 @@ install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda.conf   %{buildroot}%{og
 %if %{with cuda_12_9}
 install -m 0644 source/ollama-grid/lib64/ollama-grid-cuda-12.9.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda-12.9.conf
-install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda-12.9.conf   %{buildroot}%{og_confdir}/cuda.conf
+install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda-12.9.conf   %{buildroot}%{og_confdir}/cuda-12.9.conf
 %endif
 
 # --- utilitário para limpar RPATH/RUNPATH (ignora se patchelf não existir) ---
@@ -412,18 +424,18 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
   %{buildroot}%{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
 # ==================== Files ====================
-%files -n ollama-grid-cpu 
-# binário
-%{_bindir}/ollama-grid-cpu
-%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cpu.conf
 
-# ld.so.conf.d (CPU)
-%config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
+# ============================
+# Subpacote: COMMON
+# ============================
 
 %files -n ollama-grid-common
-# diretório raiz das libs do projeto (para evitar disputa entre backends)
-# % dir %{ og_libdir}
 
+%dir %{og_licensedir}
+%license %{og_licensedir}/LICENSE.ollama
+%license %{og_licensedir}/LICENSE.ollama-grid
+
+%dir %{og_confdir}
 # sysusers / tmpfiles
 %config(noreplace) %{_sysusersdir}/ollama-grid.conf
 %config(noreplace) %{_tmpfilesdir}/ollama-grid.conf
@@ -436,6 +448,17 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 # arquivo de configuração do Nginx
 %config(noreplace) %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 %{_unitdir}/ollama-grid-balancer.service
+
+# ============================
+# Subpacote: CPU
+# ============================
+%files -n ollama-grid-cpu 
+# binário
+%{_bindir}/ollama-grid-cpu
+%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cpu.conf
+
+# ld.so.conf.d (CPU)
+%config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
 
 # ============================
 # Subpacote: Vulkan
@@ -498,7 +521,7 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # binário do backend
 %{_bindir}/ollama-grid-cuda-12.9
-%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cuda.conf
+%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cuda-12.9.conf
 
 # libs do backend
 %dir %{og_libdir}/cuda-12.9
@@ -526,12 +549,17 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # ---- Balancer ----
 
-%preun -n ollama-grid-balancer
-if [ $1 -eq 0 ] ; then
-    # remoção (não upgrade) → desabilita e para o balancer
-    systemctl disable --now ollama-balancer.service >/dev/null 2>&1 || :
+%post -n ollama-grid-balancer
+if [ $1 -eq 1 ] ; then
+    systemctl enable --now ollama-grid-balancer.service >/dev/null 2>&1 || :
+else
+    systemctl try-restart ollama-grid-balancer.service >/dev/null 2>&1 || :
 fi
 
+%preun -n ollama-grid-balancer
+if [ $1 -eq 0 ] ; then
+    systemctl disable --now ollama-grid-balancer.service >/dev/null 2>&1 || :
+fi
 # ---- CPU ----
 
 %if %{with cpu}
@@ -559,7 +587,7 @@ if [ $1 -eq 1 ] ; then
 else
     systemctl try-restart ollama-grid@cuda.service >/dev/null 2>&1 || :
 fi
-%preun -n ollama-grid-backend-cuda
+%preun -n ollama-grid-cuda
 if [ $1 -eq 0 ] ; then
     systemctl disable --now ollama-grid@cuda.service >/dev/null 2>&1 || :
 fi
@@ -567,13 +595,13 @@ fi
 
 # ---- cuda-12.9 ----
 %if %{with cuda_12_9}
-%post -n ollama-grid-cuda-12.9
+%post -n ollama-grid-cuda-12-9
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@cuda-12.9.service >/dev/null 2>&1 || :
 else
     systemctl try-restart ollama-grid@cuda-12.9.service >/dev/null 2>&1 || :
 fi
-%preun -n ollama-grid-backend-cuda-12.9
+%preun -n ollama-grid-cuda-12-9
 if [ $1 -eq 0 ] ; then
     systemctl disable --now ollama-grid@cuda-12.9.service >/dev/null 2>&1 || :
 fi
@@ -581,14 +609,14 @@ fi
 
 # ---- ROCm ----
 %if %{with rocm}
-%post -n ollama-grid-backend-rocm
+%post -n ollama-grid-rocm
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@rocm.service >/dev/null 2>&1 || :
 else
     systemctl try-restart ollama-grid@rocm.service >/dev/null 2>&1 || :
 fi
 
-%preun -n ollama-grid-backend-rocm
+%preun -n ollama-grid-rocm
 if [ $1 -eq 0 ] ; then
     systemctl disable --now ollama-grid@rocm.service >/dev/null 2>&1 || :
 fi
@@ -609,11 +637,12 @@ if [ $1 -eq 0 ] ; then
 fi
 %endif
 
-
-
 # ==================== Scriptlets ====================
-
 %changelog
+* Wed Nov 19 2025 Moacyr Prado <seuemail@exemplo> - 0.12.11-12
+- Refatoração do spec para múltiplos backends (CPU/Vulkan/ROCm/CUDA/CUDA-12.9)
+- Integração com sysusers/tmpfiles e serviços systemd (template + backends + balancer)
+
 * Sat Nov 08 2025 OllamaGrid <maintainers@ollamagrid.org> - 0.12.9-1
 - Estrutura meta (ollama-grid) + common + backends (vulkan/rocm/cuda/cuda-12.9)
 - Source0 = Ollama upstream; Source1 = ollama-grid (scripts/patch/nginx)
