@@ -246,23 +246,27 @@ echo "#---CUDA 12---#"
   pushd ./source/ollama-%{version}-cuda-12.9
 
   # Ambiente CUDA 12.9
-  export CUDAHOSTCXX=/usr/bin/g++-14
-  export CPATH=/usr/include/openmpi-x86_64:$CPATH
-  export PATH=$PATH:/usr/lib64/openmpi/bin
   export CC=/usr/bin/gcc-14
   export CXX=/usr/bin/g++-14
+  export CUDAHOSTCXX=/usr/bin/g++-14
   export NVCC_CCBIN=/usr/bin/g++-14
   export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
-
-  export LD_LIBRARY_PATH=/usr/local/cuda-12.9/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
   export PATH=/usr/local/cuda-12.9/bin:$PATH
+# export PATH=$PATH:/usr/lib64/openmpi/bin  
+# export CPATH=/usr/include/openmpi-x86_64:$CPATH
+  
+
+  #export LD_LIBRARY_PATH=/usr/local/cuda-12.9/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
+  #export PATH=/usr/local/cuda-12.9/bin:$PATH
 
   # >>> ADICIONE ISTO: include overlay do patch (tem que vir antes)
-  export CUDA_COMPAT_INC="$PWD/cuda-compat/targets/x86_64-linux/include"
+  export CUDA_COMPAT_INC="%{_builddir}/wsp/source/cuda_include-12.9"
   # (opcional) ajuda em alguns casos, mas o principal é o CMAKE_CUDA_FLAGS abaixo
-  export CPPFLAGS="-I${CUDA_COMPAT_INC} $CPPFLAGS"
-  export CXXFLAGS="-I${CUDA_COMPAT_INC} $CXXFLAGS"
+  # export CPPFLAGS="-I${CUDA_COMPAT_INC} $CPPFLAGS"
+  #export CXXFLAGS="-I${CUDA_COMPAT_INC} $CXXFLAGS"
 
+  export CUDA_SHADOW_INC="%{_builddir}/wsp/source/cuda_include-12.9"
+  
   cmake --preset "CUDA 12" --fresh \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
         -D CMAKE_CUDA_FLAGS="-I${CUDA_COMPAT_INC} -Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
