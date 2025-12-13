@@ -12,9 +12,9 @@ Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.t
 Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
-%bcond_with cpu
+%bcond_without cpu
 %bcond_with vulkan
-%bcond_with rocm
+%bcond_without rocm
 %bcond_with cuda
 %bcond_without cuda_12_9
 
