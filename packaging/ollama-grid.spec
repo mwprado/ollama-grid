@@ -245,7 +245,7 @@ echo "#---CUDA 12---#"
 %if %{with cuda_12_9}
   pushd ./source/ollama-%{version}-cuda-12.9
 
-  # Ambiente CUDA 12.9 (conforme você definiu)
+  # Ambiente CUDA 12.9
   export CUDAHOSTCXX=/usr/bin/g++-14
   export CPATH=/usr/include/openmpi-x86_64:$CPATH
   export PATH=$PATH:/usr/lib64/openmpi/bin
@@ -253,28 +253,24 @@ echo "#---CUDA 12---#"
   export CXX=/usr/bin/g++-14
   export NVCC_CCBIN=/usr/bin/g++-14
   export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
-  
+
   export LD_LIBRARY_PATH=/usr/local/cuda-12.9/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
-  #export CPATH=/usr/local/cuda-12.9/targets/x86_64-linux/include:$CPATH
-  export CPATH=$PWD/source/cuda_include-12.9/$CPATH
   export PATH=/usr/local/cuda-12.9/bin:$PATH
 
-  cmake --preset "CUDA 12" --fresh -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
-        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC"
-#        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC -gencode=arch=compute_61,code=compute_61" \ 
-#        -D CUDA_ARCHITECTURES="6.1;6.0;5.2;5.0"
-  cmake --build build --parallel 8 --preset "CUDA 12" \
+  # >>> ADICIONE ISTO: include overlay do patch (tem que vir antes)
+  export CUDA_COMPAT_INC="$PWD/cuda-compat/targets/x86_64-linux/include"
+  # (opcional) ajuda em alguns casos, mas o principal é o CMAKE_CUDA_FLAGS abaixo
+  export CPPFLAGS="-I${CUDA_COMPAT_INC} $CPPFLAGS"
+  export CXXFLAGS="-I${CUDA_COMPAT_INC} $CXXFLAGS"
+
+  cmake --preset "CUDA 12" --fresh \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
-        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC"
-#        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -gencode=arch=compute_61,code=compute_61"
-#        -D CUDA_ARCHITECTURES="6.1;6.0;5.2;5.0"
-        
+        -D CMAKE_CUDA_FLAGS="-I${CUDA_COMPAT_INC} -Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
+        -D CMAKE_CXX_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_CXX_FLAGS"
+
+  cmake --build build --parallel 8 --preset "CUDA 12"
+
   %{og_gobuild} -o ../../build/ollama-cuda-12.9 .
-  
-  # Reverte patch após o build
-  #if [ -x tools/revert-cuda129-patch.sh ]; then
-  #  bash tools/revert-cuda129-patch.sh
-  #fi
 
   popd
 %endif
