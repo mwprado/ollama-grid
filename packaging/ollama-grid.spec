@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.13.3
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
@@ -50,7 +50,6 @@ BuildRequires:    rocm-devel
 # CUDA (toolkit deve existir no host de build; não usar repositório NVIDIA no COPR)
 %if %{with cuda} || %{with cuda_12_9}
 BuildRequires:    gcc14
-BuildRequires:    gcc14-c++
 %endif
 
 %if %{with cuda}
@@ -240,6 +239,7 @@ echo "#---CUDA 13---#"
   %{og_gobuild} -o ../../build/ollama-cuda .
   popd
 %endif
+
 # ---- CUDA legacy 12.9 ----
 echo "#---CUDA 12---#"
 %if %{with cuda_12_9}
@@ -382,6 +382,16 @@ install -m 0755 ./build/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
 # BIBLIOTECAS (instaladas por backend)
 # ============================
 
+%if %{with cpu}
+  install -d %{buildroot}%{og_libdir}/cpu
+
+  # base + variantes CPU
+  install -m 0755 ./source/ollama-%{version}-cpu/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cpu/
+  install -m 0755 ./source/ollama-%{version}-cpu/build/lib/ollama/libggml-cpu-*.so %{buildroot}%{og_libdir}/cpu/
+
+  for f in %{buildroot}%{og_libdir}/cpu/*.so; do fix_rpath "$f"; done
+%endif
+
 # Vulkan
 %if %{with vulkan}
   install -d %{buildroot}%{og_libdir}/vulkan
@@ -453,6 +463,10 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 # binário
 %{_bindir}/ollama-grid-cpu
 %config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cpu.conf
+
+# libs do backend
+%dir %{og_libdir}/cpu
+%{og_libdir}/cpu/*.so
 
 # ld.so.conf.d (CPU)
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
