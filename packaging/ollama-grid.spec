@@ -1,6 +1,6 @@
 Name:           ollama-grid
-Version:        0.13.3
-Release:        4%{?dist}
+Version:        0.13.4
+Release:        1%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
@@ -226,6 +226,7 @@ echo "#---CUDA 13---#"
   #export CPATH=/usr/local/cuda-13.0/targets/x86_64-linux/include:$CPATH
   export CPATH=$PWD/source/cuda_include/$CPATH
   export PATH=/usr/local/cuda-13.0/bin:$PATH
+  export GGML_VULKAN_DISABLE=1
     
   # Se necessário, exporte CUDACXX/NVCC_CCBIN aqui para “latest”
   cmake --preset "CUDA 13" --fresh \
@@ -252,6 +253,7 @@ echo "#---CUDA 12---#"
   export NVCC_CCBIN=/usr/bin/g++-14
   export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
   export PATH=/usr/local/cuda-12.9/bin:$PATH
+  export GGML_VULKAN_DISABLE=1
 
   #export LD_LIBRARY_PATH=/usr/local/cuda-12.9/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
 
@@ -306,6 +308,9 @@ install -m 0644 source/ollama/LICENSE \
 install -m 0644 source/ollama-grid/LICENSE \
     %{buildroot}%{og_licensedir}/LICENSE.ollama-grid
 
+# pais (base package vai "possuir")
+install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid
+install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid
 
 # ============================
 # ld.so.conf.d (um .conf por backend/pacote)
@@ -315,12 +320,17 @@ install -m 0644 source/ollama-grid/lib64/ollama-grid-cpu.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
 install -Dpm0640 source/ollama-grid/etc/ollama-grid/cpu.conf    %{buildroot}%{og_confdir}/cpu.conf
 
+install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cpu
+install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cpu
+
 # Vulkan
 %if %{with vulkan}
 install -m 0644 source/ollama-grid/lib64/ollama-grid-vulkan.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-vulkan.conf
 install -Dpm0640 source/ollama-grid/etc/ollama-grid/vulkan.conf %{buildroot}%{og_confdir}/vulkan.conf
 
+install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/vulkan
+install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/vulkan
 
 %endif
 
@@ -329,6 +339,9 @@ install -Dpm0640 source/ollama-grid/etc/ollama-grid/vulkan.conf %{buildroot}%{og
 install -m 0644 source/ollama-grid/lib64/ollama-grid-rocm.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-rocm.conf
 install -Dpm0640 source/ollama-grid/etc/ollama-grid/rocm.conf   %{buildroot}%{og_confdir}/rocm.conf
+
+install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/rocm
+install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/rocm
 %endif
 
 # CUDA (atual)
@@ -336,6 +349,10 @@ install -Dpm0640 source/ollama-grid/etc/ollama-grid/rocm.conf   %{buildroot}%{og
 install -m 0644 source/ollama-grid/lib64/ollama-grid-cuda.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda.conf
 install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda.conf   %{buildroot}%{og_confdir}/cuda.conf
+
+install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cuda
+install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cuda
+
 %endif
 
 # CUDA 12.9 (legacy)
@@ -343,6 +360,10 @@ install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda.conf   %{buildroot}%{og
 install -m 0644 source/ollama-grid/lib64/ollama-grid-cuda-12.9.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda-12.9.conf
 install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda-12.9.conf   %{buildroot}%{og_confdir}/cuda-12.9.conf
+
+install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cuda-12.9
+install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cuda-12.9
+
 %endif
 
 # --- utilitário para limpar RPATH/RUNPATH (ignora se patchelf não existir) ---
@@ -471,6 +492,9 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 # ld.so.conf.d (CPU)
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
 
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cpu
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cpu
+
 # ============================
 # Subpacote: Vulkan
 # ============================
@@ -486,6 +510,10 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # ld.so.conf.d do backend
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-vulkan.conf
+
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/vulkan
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/vulkan
+
 %endif
 
 # ============================
@@ -505,6 +533,9 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-rocm.conf
 %endif
 
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/rocm
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/rocm
+
 # ============================
 # Subpacote: CUDA (atual)
 # ============================
@@ -521,6 +552,10 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # ld.so.conf.d do backend
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda.conf
+
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda
+
 %endif
 
 # ============================
@@ -540,6 +575,10 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # ld.so.conf.d do backend
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda-12.9.conf
+
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda-12.9
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda-12.9
+
 %endif
 
 # ---- Common ----
