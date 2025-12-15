@@ -230,6 +230,7 @@ echo "#---CUDA 13---#"
     
   # Se necessário, exporte CUDACXX/NVCC_CCBIN aqui para “latest”
   cmake --preset "CUDA 13" --fresh \
+        -D GGML_VULKAN=OFF \
         -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc
 #        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" 
@@ -266,6 +267,7 @@ echo "#---CUDA 12---#"
   
   cmake --preset "CUDA 12" --fresh \
         -D CMAKE_POSITION_INDEPENDENT_CODE=ON \
+        -D GGML_VULKAN=OFF \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
         -D CMAKE_CUDA_FLAGS="-I${CUDA_COMPAT_INC} -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
         -D CMAKE_CXX_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_CXX_FLAGS -fPIC" \
