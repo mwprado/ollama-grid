@@ -15,7 +15,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %bcond_without cpu
 %bcond_without vulkan
 %bcond_without rocm
-%bcond_without cuda
+%bcond_with cuda
 %bcond_without cuda_12_9
 
 # ====== Caminhos de instalação ======
