@@ -186,7 +186,7 @@ echo "#---CPU---#"
 %if %{with cpu}
 pushd ./source/ollama-%{version}-cpu  
 cmake --preset "CPU" --fresh 
-cmake --build build --parallel 8 --preset "CPU"
+cmake --build build --parallel %{?_smp_mflags} --preset "CPU"
 %{og_gobuild} -o ../../build/ollama-cpu .
 popd
 %endif
@@ -196,7 +196,7 @@ echo "#---Vulkan---#"
 %if %{with vulkan}
   pushd ./source/ollama-%{version}-vulkan  
   cmake --preset "Vulkan" --fresh 
-  cmake --build build --parallel 8 --preset "Vulkan"
+  cmake --build build --parallel %{?_smp_mflags} --preset "Vulkan"
   %{og_gobuild} -o ../../build/ollama-vulkan .
   popd
 %endif
@@ -206,7 +206,7 @@ echo "#---ROCm---#"
 %if %{with rocm}
   pushd ./source/ollama-%{version}-rocm  
   cmake --preset "ROCm 6" --fresh -D AMDGPU_TARGETS="gfx803;gfx1032;gfx1035" -D GPU_TARGETS="gfx803;gfx1032;gfx1035"
-  cmake --build build --parallel 8 --preset "ROCm 6"
+  cmake --build build --parallel %{?_smp_mflags} --preset "ROCm 6"
   %{og_gobuild} -o ../../build/ollama-rocm .
   popd
 %endif
@@ -235,7 +235,7 @@ echo "#---CUDA 13---#"
         -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc
 #        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" 
-  cmake --build build --parallel 8 --preset "CUDA 13" \
+  cmake --build build --parallel %{?_smp_mflags} --preset "CUDA 13" \
         -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc 
 #        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0"
@@ -268,18 +268,12 @@ echo "#---CUDA 12---#"
   
   cmake --preset "CUDA 12" --fresh \
         -D CMAKE_POSITION_INDEPENDENT_CODE=ON \
-        -D GGML_VULKAN=OFF \
-        -D GGML_CUDA=ON \
-        -D GGML_VULKAN=OFF \
-        -D GGML_OPENCL=OFF \
-        -D GGML_METAL=OFF \
-        -D GGML_HIP=OFF \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
         -D CMAKE_CUDA_FLAGS="-I${CUDA_COMPAT_INC} -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
         -D CMAKE_CXX_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_CXX_FLAGS -fPIC" \
         -D CMAKE_C_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_C_FLAGS -fPIC" 
 
-  cmake --build build --parallel 8 --preset "CUDA 12"
+  cmake --build build --parallel %{?_smp_mflags} --preset "CUDA 12"
 
   %{og_gobuild} -o ../../build/ollama-cuda-12.9 .
 
