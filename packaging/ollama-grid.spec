@@ -13,8 +13,8 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
 %bcond_without cpu
-%bcond_without vulkan
-%bcond_without rocm
+%bcond_with vulkan
+%bcond_with rocm
 %bcond_with cuda
 %bcond_without cuda_12_9
 
@@ -186,7 +186,7 @@ echo "#---CPU---#"
 %if %{with cpu}
 pushd ./source/ollama-%{version}-cpu  
 cmake --preset "CPU" --fresh 
-cmake --build build --parallel %{?_smp_mflags} --preset "CPU"
+cmake --build build --parallel --preset "CPU"
 %{og_gobuild} -o ../../build/ollama-cpu .
 popd
 %endif
@@ -196,7 +196,7 @@ echo "#---Vulkan---#"
 %if %{with vulkan}
   pushd ./source/ollama-%{version}-vulkan  
   cmake --preset "Vulkan" --fresh 
-  cmake --build build --parallel %{?_smp_mflags} --preset "Vulkan"
+  cmake --build build --parallel --preset "Vulkan"
   %{og_gobuild} -o ../../build/ollama-vulkan .
   popd
 %endif
@@ -206,7 +206,7 @@ echo "#---ROCm---#"
 %if %{with rocm}
   pushd ./source/ollama-%{version}-rocm  
   cmake --preset "ROCm 6" --fresh -D AMDGPU_TARGETS="gfx803;gfx1032;gfx1035" -D GPU_TARGETS="gfx803;gfx1032;gfx1035"
-  cmake --build build --parallel %{?_smp_mflags} --preset "ROCm 6"
+  cmake --build build --parallel --preset "ROCm 6"
   %{og_gobuild} -o ../../build/ollama-rocm .
   popd
 %endif
@@ -235,7 +235,7 @@ echo "#---CUDA 13---#"
         -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc
 #        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" 
-  cmake --build build --parallel %{?_smp_mflags} --preset "CUDA 13" \
+  cmake --build build --parallel --preset "CUDA 13" \
         -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc 
 #        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0"
@@ -248,34 +248,39 @@ echo "#---CUDA 12---#"
 %if %{with cuda_12_9}
   pushd ./source/ollama-%{version}-cuda-12.9
 
+  cmake -S . -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \  
+    -DCMAKE_C_COMPILER=/usr/bin/gcc-14 \
+    -DCMAKE_CXX_COMPILER=/usr/bin/g++-14 \
+    -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
+    -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-14 \
+    -DCMAKE_CUDA_ARCHITECTURES="50;52;60;61;70;75;80;86;89;90;90a;120" \
+    -DCMAKE_CUDA_FLAGS="-I%{_builddir}/wsp/source/cuda_include-12.9 -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+    -DCMAKE_CXX_FLAGS="-I%{_builddir}/wsp/source/cuda_include-12.9 -fPIC" \
+    -DCMAKE_C_FLAGS="-I%{_builddir}/wsp/source/cuda_include-12.9 -fPIC"
+
+  cmake --build build-cuda-12 --parallel --target ggml-cuda
+
   # Ambiente CUDA 12.9
-  export CC=/usr/bin/gcc-14
-  export CXX=/usr/bin/g++-14
-  export CUDAHOSTCXX=/usr/bin/g++-14
-  export NVCC_CCBIN=/usr/bin/g++-14
-  export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
-  export PATH=/usr/local/cuda-12.9/bin:$PATH
-  export GGML_VULKAN_DISABLE=1
+  #export CC=/usr/bin/gcc-14
+  #export CXX=/usr/bin/g++-14
+  #export CUDAHOSTCXX=/usr/bin/g++-14
+  #export NVCC_CCBIN=/usr/bin/g++-14
+  #export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
+  #export PATH=/usr/local/cuda-12.9/bin:$PATH
+  #export CUDA_COMPAT_INC="%{_builddir}/wsp/source/cuda_include-12.9"
 
-  #export LD_LIBRARY_PATH=/usr/local/cuda-12.9/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
+  #cmake --preset "CUDA 12" --fresh \
+  #      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+  #      -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
+  #      -DCMAKE_CUDA_FLAGS="-I${CUDA_COMPAT_INC} -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+  #      -DCMAKE_CXX_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_CXX_FLAGS -fPIC" \
+  #      -DCMAKE_C_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_C_FLAGS -fPIC" 
 
-  # export PATH=$PATH:/usr/lib64/openmpi/bin  
-  # export CPATH=/usr/include/openmpi-x86_64:$CPATH
-  
-  export CUDA_COMPAT_INC="%{_builddir}/wsp/source/cuda_include-12.9"
+  #cmake --build build --parallel --preset "CUDA 12"
 
-  #  export CUDA_SHADOW_INC="%{_builddir}/wsp/source/cuda_include-12.9"
-  
-  cmake --preset "CUDA 12" --fresh \
-        -D CMAKE_POSITION_INDEPENDENT_CODE=ON \
-        -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
-        -D CMAKE_CUDA_FLAGS="-I${CUDA_COMPAT_INC} -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
-        -D CMAKE_CXX_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_CXX_FLAGS -fPIC" \
-        -D CMAKE_C_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_C_FLAGS -fPIC" 
-
-  cmake --build build --parallel %{?_smp_mflags} --preset "CUDA 12"
-
-  %{og_gobuild} -o ../../build/ollama-cuda-12.9 .
+  #%{og_gobuild} -o ../../build/ollama-cuda-12.9 .
 
   popd
 %endif
