@@ -49,6 +49,7 @@ BuildRequires:    rocm-devel
 
 # CUDA (toolkit deve existir no host de build; não usar repositório NVIDIA no COPR)
 %if %{with cuda} || %{with cuda_12_9}
+BuildRequires:    gcc14-g++14
 BuildRequires:    gcc14
 %endif
 
