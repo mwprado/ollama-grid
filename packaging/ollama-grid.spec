@@ -260,7 +260,7 @@ echo "#---CUDA 12---#"
     -DCMAKE_CXX_FLAGS="-I%{_builddir}/wsp/source/cuda_include-12.9 -fPIC" \
     -DCMAKE_C_FLAGS="-I%{_builddir}/wsp/source/cuda_include-12.9 -fPIC"
 
-  cmake --build build-cuda-12 --parallel --target ggml-cuda
+  cmake --build build --parallel
 
   # Ambiente CUDA 12.9
   #export CC=/usr/bin/gcc-14
