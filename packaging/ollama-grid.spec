@@ -269,6 +269,11 @@ echo "#---CUDA 12---#"
   cmake --preset "CUDA 12" --fresh \
         -D CMAKE_POSITION_INDEPENDENT_CODE=ON \
         -D GGML_VULKAN=OFF \
+        -D GGML_CUDA=ON \
+        -D GGML_VULKAN=OFF \
+        -D GGML_OPENCL=OFF \
+        -D GGML_METAL=OFF \
+        -D GGML_HIP=OFF \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
         -D CMAKE_CUDA_FLAGS="-I${CUDA_COMPAT_INC} -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
         -D CMAKE_CXX_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_CXX_FLAGS -fPIC" \
