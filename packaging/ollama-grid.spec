@@ -250,7 +250,12 @@ echo "#---CUDA 12---#"
 
   cmake -S . -B build \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \  
+    -DGGML_CUDA=ON \
+    -DGGML_VULKAN=OFF \
+    -DGGML_OPENCL=OFF \
+    -DGGML_METAL=OFF \
+    -DGGML_HIP=OFF \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
     -DCMAKE_C_COMPILER=/usr/bin/gcc-14 \
     -DCMAKE_CXX_COMPILER=/usr/bin/g++-14 \
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
