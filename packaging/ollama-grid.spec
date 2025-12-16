@@ -534,10 +534,13 @@ install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
 
 # ld.so.conf.d do backend
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/ollama-grid-rocm.conf
-%endif
 
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/rocm
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/rocm
+
+%endif
+
+
 
 # ============================
 # Subpacote: CUDA (atual)
