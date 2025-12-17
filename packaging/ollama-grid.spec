@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.13.4
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
@@ -185,8 +185,8 @@ popd
 echo "#---CPU---#"
 %if %{with cpu}
 pushd ./source/ollama-%{version}-cpu  
-cmake --preset "CPU" --fresh 
-cmake --build build --parallel --preset "CPU"
+cmake --preset "CPU" --fresh -DCMAKE_HIP_COMPILER=NOTFOUND -DCMAKE_CUDA_COMPILER=NOTFOUND -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE 
+cmake --build build --parallel
 %{og_gobuild} -o ../../build/ollama-cpu .
 popd
 %endif
@@ -250,7 +250,7 @@ echo "#---CUDA 12---#"
   pushd ./source/ollama-%{version}-cuda-12.9
 
    
-  cmake -S . -B build \
+  cmake -S . -B build --fresh \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
