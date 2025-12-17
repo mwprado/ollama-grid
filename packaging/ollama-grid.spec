@@ -232,6 +232,7 @@ echo "#---CUDA 13---#"
   # Se necessário, exporte CUDACXX/NVCC_CCBIN aqui para “latest”
   cmake --preset "CUDA 13" --fresh \
         -D GGML_VULKAN=OFF \
+        -DDISABLE_VULKAN=ON \
         -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
         -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc
 #        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" 
@@ -248,39 +249,22 @@ echo "#---CUDA 12---#"
 %if %{with cuda_12_9}
   pushd ./source/ollama-%{version}-cuda-12.9
 
+   
   cmake -S . -B build \
+    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+    -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
     -DCMAKE_C_COMPILER=/usr/bin/gcc-14 \
     -DCMAKE_CXX_COMPILER=/usr/bin/g++-14 \
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
     -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-14 \
-    -DCMAKE_CUDA_ARCHITECTURES="50;52;60;61;70;75;80;86;89;90;90a;120" \
     -DCMAKE_CUDA_FLAGS="-I%{_builddir}/wsp/source/cuda_include-12.9 -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_CXX_FLAGS="-I%{_builddir}/wsp/source/cuda_include-12.9 -fPIC" \
     -DCMAKE_C_FLAGS="-I%{_builddir}/wsp/source/cuda_include-12.9 -fPIC"
 
-  cmake --build build --parallel
-
-  # Ambiente CUDA 12.9
-  #export CC=/usr/bin/gcc-14
-  #export CXX=/usr/bin/g++-14
-  #export CUDAHOSTCXX=/usr/bin/g++-14
-  #export NVCC_CCBIN=/usr/bin/g++-14
-  #export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
-  #export PATH=/usr/local/cuda-12.9/bin:$PATH
-  #export CUDA_COMPAT_INC="%{_builddir}/wsp/source/cuda_include-12.9"
-
-  #cmake --preset "CUDA 12" --fresh \
-  #      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-  #      -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
-  #      -DCMAKE_CUDA_FLAGS="-I${CUDA_COMPAT_INC} -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
-  #      -DCMAKE_CXX_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_CXX_FLAGS -fPIC" \
-  #      -DCMAKE_C_FLAGS="-I${CUDA_COMPAT_INC} $CMAKE_C_FLAGS -fPIC" 
-
-  #cmake --build build --parallel --preset "CUDA 12"
-
-  #%{og_gobuild} -o ../../build/ollama-cuda-12.9 .
+    cmake --build build --parallel
+    %{og_gobuild} -o ../../build/ollama-cuda-12.9 .
 
   popd
 %endif
@@ -441,6 +425,7 @@ install -m 0755 ./build/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
   install -d %{buildroot}%{og_libdir}/cuda
   install -m 0755 ./source/ollama-%{version}-cuda/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda/
   install -m 0755 ./source/ollama-%{version}-cuda/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda/
+  install -m 0755 ./source/ollama-%{version}-cuda/build/lib/ollama/libggml-cpu-*.so %{buildroot}%{og_libdir}/cuda/
   for f in %{buildroot}%{og_libdir}/cuda/*.so; do fix_rpath "$f"; done
 %endif
 
@@ -449,6 +434,7 @@ install -m 0755 ./build/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
   install -d %{buildroot}%{og_libdir}/cuda-12.9
   install -m 0755 ./source/ollama-%{version}-cuda-12.9/build/lib/ollama/libggml-cuda.so %{buildroot}%{og_libdir}/cuda-12.9/
   install -m 0755 ./source/ollama-%{version}-cuda-12.9/build/lib/ollama/libggml-base.so %{buildroot}%{og_libdir}/cuda-12.9/
+  install -m 0755 ./source/ollama-%{version}-cuda-12.9/build/lib/ollama/libggml-cpu-*.so %{buildroot}%{og_libdir}/cuda-12.9/
   for f in %{buildroot}%{og_libdir}/cuda-12.9/*.so; do fix_rpath "$f"; done
 %endif
 
