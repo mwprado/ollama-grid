@@ -158,7 +158,7 @@ popd
 %if %{with cuda_12_9}
 mkdir %{bdir}/cuda12_include/
 cp -a /usr/local/cuda-12.9/targets/x86_64-linux/include/* %{bdir}/cuda12_include/
-cp -a %{bdir}/ollama-grid/scripts/cuda12-math-functions.h.patch ./source/cuda12_include/crt/                           
+cp -a %{bdir}/ollama-grid/scripts/cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
 pushd %{bdir}/cuda12_include/crt
 patch -u < cuda12-math-functions.h.patch
 popd
@@ -206,34 +206,26 @@ echo "#---ROCm---#"
 
 echo "#---CUDA 13---#"
 %if %{with cuda}
-  pushd ./source/ollama-%{version}-cuda
   
-  export CUDAHOSTCXX=/usr/bin/g++
-  export CPATH=/usr/include/openmpi-x86_64:$CPATH
-  export PATH=$PATH:/usr/lib64/openmpi/bin
-  export CC=/usr/bin/gcc
-  export CXX=/usr/bin/g++
-  export NVCC_CCBIN=/usr/bin/g++
-  export CUDACXX=/usr/local/cuda-13.0/bin/nvcc
-  export LD_LIBRARY_PATH=/usr/local/cuda-13.0/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
-  #export CPATH=/usr/local/cuda-13.0/targets/x86_64-linux/include:$CPATH
-  export CPATH=$PWD/source/cuda_include/$CPATH
-  export PATH=/usr/local/cuda-13.0/bin:$PATH
-  export GGML_VULKAN_DISABLE=1
-    
-  # Se necessário, exporte CUDACXX/NVCC_CCBIN aqui para “latest”
-  cmake --preset "CUDA 13" --fresh \
-        -D GGML_VULKAN=OFF \
-        -DDISABLE_VULKAN=ON \
-        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
-        -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc
-#        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" 
-  cmake --build build --parallel --preset "CUDA 13" \
-        -D CMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler -fPIE -fPIC" \
-        -D CMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc 
-#        -D CUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0"
-  %{og_gobuild} -o ../../build/ollama-cuda .
-  popd
+  mkdir -p %{bdir}/build-cuda12
+  cmake -S %{bdir}/ollama -B %{bdir}/build-cuda --fresh --preset "CUDA" \
+    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+    -DCUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" \
+    -DCMAKE_HIP_COMPILER=NOTFOUND \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+    -DCMAKE_C_COMPILER=/usr/bin/gcc-14 \
+    -DCMAKE_CXX_COMPILER=/usr/bin/g++-14 \
+    -DCMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc \
+    -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-14 \
+    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+    -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda_include -fPIC" \
+    -DCMAKE_C_FLAGS="-I%{bdir}/cuda_include -fPIC"
+
+    cmake --build %{bdir}/build-cuda --parallel
+    pushd %{bdir}/build-cuda
+      %{og_gobuild}  .
+    popd
 %endif
 
 echo "#---CUDA 12---#"
@@ -277,17 +269,17 @@ install -d \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d
   
 # --- sysusers / tmpfiles (arquivos do repositório) ---
-install -m 0644 source/ollama-grid/sysusers.d/ollama-grid.conf %{buildroot}%{_sysusersdir}/ollama-grid.conf
-install -m 0644 source/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_tmpfilesdir}/ollama-grid.conf
-install -Dpm644 source/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
-install -Dpm644 source/ollama-grid/systemd/ollama-grid-balancer.service %{buildroot}%{_unitdir}/ollama-grid-balancer.service
+install -m 0644 %{bdir}/ollama-grid/sysusers.d/ollama-grid.conf %{buildroot}%{_sysusersdir}/ollama-grid.conf
+install -m 0644 %{bdir}/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_tmpfilesdir}/ollama-grid.conf
+install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
+install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid-balancer.service %{buildroot}%{_unitdir}/ollama-grid-balancer.service
 
 # Licença do Ollama (Apache 2.0)
-install -m 0644 source/ollama/LICENSE \
+install -m 0644 %{bdir}/ollama/LICENSE \
     %{buildroot}%{og_licensedir}/LICENSE.ollama
 
 # Licença do ollama-grid (MIT)
-install -m 0644 source/ollama-grid/LICENSE \
+install -m 0644 %{bdir}/ollama-grid/LICENSE \
     %{buildroot}%{og_licensedir}/LICENSE.ollama-grid
 
 # pais (base package vai "possuir")
@@ -298,18 +290,18 @@ install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid
 # ld.so.conf.d (um .conf por backend/pacote)
 # ============================
 # CPU (sempre)
-install -m 0644 source/ollama-grid/lib64/ollama-grid-cpu.conf \
+install -m 0644 %{bdir}/ollama-grid/lib64/ollama-grid-cpu.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cpu.conf
-install -Dpm0640 source/ollama-grid/etc/ollama-grid/cpu.conf    %{buildroot}%{og_confdir}/cpu.conf
+install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cpu.conf    %{buildroot}%{og_confdir}/cpu.conf
 
 install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cpu
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cpu
 
 # Vulkan
 %if %{with vulkan}
-install -m 0644 source/ollama-grid/lib64/ollama-grid-vulkan.conf \
+install -m 0644 %{bdir}/ollama-grid/lib64/ollama-grid-vulkan.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-vulkan.conf
-install -Dpm0640 source/ollama-grid/etc/ollama-grid/vulkan.conf %{buildroot}%{og_confdir}/vulkan.conf
+install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/vulkan.conf %{buildroot}%{og_confdir}/vulkan.conf
 
 install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/vulkan
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/vulkan
@@ -318,9 +310,9 @@ install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/vulkan
 
 # ROCm
 %if %{with rocm}
-install -m 0644 source/ollama-grid/lib64/ollama-grid-rocm.conf \
+install -m 0644 %{bdir}/ollama-grid/lib64/ollama-grid-rocm.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-rocm.conf
-install -Dpm0640 source/ollama-grid/etc/ollama-grid/rocm.conf   %{buildroot}%{og_confdir}/rocm.conf
+install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/rocm.conf   %{buildroot}%{og_confdir}/rocm.conf
 
 install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/rocm
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/rocm
@@ -328,9 +320,9 @@ install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/rocm
 
 # CUDA (atual)
 %if %{with cuda}
-install -m 0644 source/ollama-grid/lib64/ollama-grid-cuda.conf \
+install -m 0644 %{bdir}/ollama-grid/lib64/ollama-grid-cuda.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda.conf
-install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda.conf   %{buildroot}%{og_confdir}/cuda.conf
+install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cuda.conf   %{buildroot}%{og_confdir}/cuda.conf
 
 install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cuda
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cuda
@@ -339,9 +331,9 @@ install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cuda
 
 # CUDA 12.9 (legacy)
 %if %{with cuda_12_9}
-install -m 0644 source/ollama-grid/lib64/ollama-grid-cuda12.conf \
+install -m 0644 %{bdir}/ollama-grid/lib64/ollama-grid-cuda12.conf \
   %{buildroot}%{_sysconfdir}/ld.so.conf.d/ollama-grid-cuda12.conf
-install -Dpm0640 source/ollama-grid/etc/ollama-grid/cuda12.conf   %{buildroot}%{og_confdir}/cuda12.conf
+install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cuda12.conf   %{buildroot}%{og_confdir}/cuda12.conf
 
 install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cuda12
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cuda12
@@ -423,7 +415,7 @@ install -m 0755 %{bdir}/build-cpu/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-
 # ============================
 # NGINX (balanceador)
 # ============================
-install -m 0644 source/ollama-grid/nginx/ollama-grid.conf \
+install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
   %{buildroot}%{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
 # ==================== Files ====================
