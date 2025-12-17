@@ -252,6 +252,7 @@ echo "#---CUDA 12---#"
    
   cmake -S . -B build --fresh \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+    -DCUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0"
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
