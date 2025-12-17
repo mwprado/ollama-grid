@@ -131,7 +131,7 @@ Summary:        Backend CUDA 12.9 (legado) para GPUs NVIDIA compute 6.1
 Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-cuda-12-9
-Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-grid-cuda-12.9.
+Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-grid-cuda12.
 O patch é aplicado por script antes do build e revertido após o build.
 
 echo "# ==================== Prep ==================== #"
@@ -174,7 +174,7 @@ cmake -S %{bdir}/ollama -B %{bdir}/build-cpu --fresh --preset "CPU" \
    -DCMAKE_HIP_COMPILER=NOTFOUND \
    -DCMAKE_CUDA_COMPILER=NOTFOUND \
    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE
-cmake --build %{bdir}/build-cpu --parallel
+cmake --build %{bdir}/build-cpu --parallel %{?_smp_build_ncpus}
 pushd %{bdir}/build-cpu  
 %{og_gobuild} .
 popd
@@ -186,7 +186,7 @@ echo "#---Vulkan---#"
   cmake -S %{bdir}/ollama -B %{bdir}/build-vulkan --fresh --preset "Vulkan" \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_COMPILER=NOTFOUND
-  cmake --build %{bdir}/build-vulkan --parallel
+  cmake --build %{bdir}/build-vulkan --parallel %{?_smp_build_ncpus}
   pushd %{bdir}/build-vulkan
   %{og_gobuild} .
   popd
@@ -198,7 +198,7 @@ echo "#---ROCm---#"
   cmake -S %{bdir}/ollama -B %{bdir}/build-rocm --fresh --preset "ROCm 6" \
        -DAMDGPU_TARGETS="gfx803;gfx1032;gfx1035" \
        -DGPU_TARGETS="gfx803;gfx1032;gfx1035"
-  cmake --build %{bdir}/build-rocm --parallel
+  cmake --build %{bdir}/build-rocm --parallel %{?_smp_build_ncpus}
   pushd %{bdir}/build-rocm
     %{og_gobuild} .
   popd
@@ -207,7 +207,7 @@ echo "#---ROCm---#"
 echo "#---CUDA 13---#"
 %if %{with cuda}
   
-  mkdir -p %{bdir}/build-cuda12
+  mkdir -p %{bdir}/build-cuda
   cmake -S %{bdir}/ollama -B %{bdir}/build-cuda --fresh --preset "CUDA" \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" \
@@ -222,7 +222,7 @@ echo "#---CUDA 13---#"
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda_include -fPIC" \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda_include -fPIC"
 
-    cmake --build %{bdir}/build-cuda --parallel
+    cmake --build %{bdir}/build-cuda --parallel %{?_smp_build_ncpus}
     pushd %{bdir}/build-cuda
       %{og_gobuild}  .
     popd
@@ -246,7 +246,7 @@ echo "#---CUDA 12---#"
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda12_include -fPIC" \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda12_include -fPIC"
 
-    cmake --build %{bdir}/build-cuda12 --parallel
+    cmake --build %{bdir}/build-cuda12 --parallel %{?_smp_build_ncpus}
     pushd %{bdir}/build-cuda12
       %{og_gobuild}  .
     popd
@@ -254,7 +254,7 @@ echo "#---CUDA 12---#"
 
 echo "# ==================== Install ==================== #"
 %install
-rm -rf %{bdir}
+rm -rf %{buildroot}
 
 # --- diretórios base ---
 install -d \
