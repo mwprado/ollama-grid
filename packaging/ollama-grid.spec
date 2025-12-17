@@ -292,7 +292,7 @@ install -m 0644 source/ollama-grid/LICENSE \
 
 # pais (base package vai "possuir")
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid
-install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid
+#install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid
 
 # ============================
 # ld.so.conf.d (um .conf por backend/pacote)
