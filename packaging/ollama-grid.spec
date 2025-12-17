@@ -504,11 +504,10 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 
 %endif
 
-
-
 # ============================
 # Subpacote: CUDA (atual)
 # ============================
+
 %if %{with cuda}
 
 %files -n ollama-grid-cuda
@@ -531,6 +530,7 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 # ============================
 # Subpacote: CUDA 12.9 (legacy)
 # ============================
+
 %if %{with cuda_12_9}
 
 %files -n ollama-grid-cuda-12-9
