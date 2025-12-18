@@ -164,9 +164,15 @@ popd
 %if %{with cuda_12_9}
 mkdir %{bdir}/cuda12_include/
 cp -a /usr/local/cuda-12.9/targets/x86_64-linux/include/* %{bdir}/cuda12_include/
-cp -a %{bdir}/ollama-grid/scripts/cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
+
 pushd %{bdir}/cuda12_include/crt
-  patch -u < cuda12-math-functions.h.patch
+  %if 0%{?fedora} == 43
+    cp -a %{bdir}/ollama-grid/scripts/cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
+    patch -u < cuda12-math-functions.h.patch
+  %elsif 0%{?fedora} == 42
+    cp -a %{bdir}/ollama-grid/scripts/f42-cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
+    patch -u < f42-cuda12-math-functions.h.patch
+  %endif
 popd
 %endif
 
