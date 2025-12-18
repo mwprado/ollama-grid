@@ -155,21 +155,23 @@ tar -xzf %{SOURCE1} -C %{bdir}/ollama --strip-components=1
 %if %{with cuda}
 mkdir %{bdir}/cuda13_include
 cp -a /usr/local/cuda-13.0/targets/x86_64-linux/include/* %{bdir}/cuda13_include/
-cp -a %{bdir}/ollama-grid/scripts/cuda13-math-functions.h.patch %{bdir}/cuda13_include/crt/
-pushd %{bdir}/cuda13_include/crt
-  patch -u < ./cuda13-math-functions.h.patch
-popd
+%if 0%{?fedora} == 43
+    cp -a %{bdir}/ollama-grid/scripts/cuda13-math-functions.h.patch %{bdir}/cuda13_include/crt/
+    patch -u < cuda13-math-functions.h.patch
+  %elif 0%{?fedora} == 42
+    cp -a %{bdir}/ollama-grid/scripts/f42-cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
+    patch -u < f42-cuda12-math-functions.h.patch
+  %endif
 %endif
 
 %if %{with cuda_12_9}
 mkdir %{bdir}/cuda12_include/
 cp -a /usr/local/cuda-12.9/targets/x86_64-linux/include/* %{bdir}/cuda12_include/
-
 pushd %{bdir}/cuda12_include/crt
   %if 0%{?fedora} == 43
     cp -a %{bdir}/ollama-grid/scripts/cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
     patch -u < cuda12-math-functions.h.patch
-  %elsif 0%{?fedora} == 42
+  %esif 0%{?fedora} == 42
     cp -a %{bdir}/ollama-grid/scripts/f42-cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
     patch -u < f42-cuda12-math-functions.h.patch
   %endif
