@@ -36,7 +36,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 # ====== BuildRequires gerais ======
 BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf systemd-rpm-macros
 BuildRequires:    openmpi-devel
-
+BuildRequires:    util-linux
 # Vulkan
 %if %{with vulkan}
 BuildRequires:    pkgconfig(vulkan)
