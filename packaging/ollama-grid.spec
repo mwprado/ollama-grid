@@ -102,13 +102,16 @@ Requires:       ollama-grid-common = %{version}-%{release}
 Bibliotecas Vulkan e wrapper /usr/bin/ollama-grid-cpu.
 
 # (4) Vulkan
+%if %{with vulkan}
 %package -n ollama-grid-vulkan
 Summary:        Backend Vulkan (universal GPU: Intel/AMD/NVIDIA)
 Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-vulkan
 Bibliotecas Vulkan e wrapper /usr/bin/ollama-grid-vulkan.
+%endif
 
+%if %{with rocm}
 # (5) ROCm
 %package -n ollama-grid-rocm
 Summary:        Backend ROCm (GPUs AMD)
@@ -116,7 +119,9 @@ Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-rocm
 Bibliotecas ROCm (HIP) e wrapper /usr/bin/ollama-grid-rocm.
+%endif
 
+%if %{with cuda}
 # (6) CUDA (moderno, sempre “latest” disponível no host de build)
 %package -n ollama-grid-cuda
 Summary:        Backend CUDA (GPUs NVIDIA modernas)
@@ -124,7 +129,9 @@ Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-cuda
 Bibliotecas CUDA (moderno) e wrapper /usr/bin/ollama-grid-cuda. Requer toolkit presente no host.
+%endif
 
+%if %{with cuda_12_9}
 # (7) CUDA legacy 12.9 (ex.: Tesla P4, sm_61)
 %package -n ollama-grid-cuda12
 Summary:        Backend CUDA 12.9 (legado) para GPUs NVIDIA compute 6.1
@@ -133,6 +140,7 @@ Requires:       ollama-grid-common = %{version}-%{release}
 %description -n ollama-grid-cuda12
 Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-grid-cuda12.
 O patch é aplicado por script antes do build e revertido após o build.
+%endif
 
 echo "# ==================== Prep ==================== #"
 %prep
@@ -149,9 +157,9 @@ tar -xzf %{SOURCE1} -C %{bdir}/ollama --strip-components=1
 %if %{with cuda}
 mkdir %{bdir}/cuda13_include
 cp -a /usr/local/cuda-13.0/targets/x86_64-linux/include/* %{bdir}/cuda13_include/
-cp -a %{bdir}/cuda13-math-functions.h.patch %{bdir}/cuda13_include/crt
+cp -a %{bdir}/ollama-grid/scripts/cuda13-math-functions.h.patch %{bdir}/cuda13_include/crt/
 pushd %{bdir}/cuda13_include
-patch -u < ./cuda13-math-functions.h.patch
+  patch -u < ./cuda13-math-functions.h.patch
 popd
 %endif
 
@@ -160,7 +168,7 @@ mkdir %{bdir}/cuda12_include/
 cp -a /usr/local/cuda-12.9/targets/x86_64-linux/include/* %{bdir}/cuda12_include/
 cp -a %{bdir}/ollama-grid/scripts/cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
 pushd %{bdir}/cuda12_include/crt
-patch -u < cuda12-math-functions.h.patch
+  patch -u < cuda12-math-functions.h.patch
 popd
 %endif
 
