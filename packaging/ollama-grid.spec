@@ -175,9 +175,12 @@ cmake -S %{bdir}/ollama -B %{bdir}/build-cpu --fresh --preset "CPU" \
    -DCMAKE_CUDA_COMPILER=NOTFOUND \
    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE
 cmake --build %{bdir}/build-cpu --parallel %{?_smp_build_ncpus}
-pushd %{bdir}/build-cpu  
-%{og_gobuild} .
-popd
+export CC=gcc
+export CXX=g++
+export CGO_ENABLED=1
+export LD_LIBRARY_PATH=%{bdir}/build-cpu
+%{og_gobuild} -o %{bdir}/build-cpu/ollama-grid-cpu  .
+
 %endif
 
 echo "#---Vulkan---#"
@@ -187,9 +190,11 @@ echo "#---Vulkan---#"
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_COMPILER=NOTFOUND
   cmake --build %{bdir}/build-vulkan --parallel %{?_smp_build_ncpus}
-  pushd %{bdir}/build-vulkan
-  %{og_gobuild} .
-  popd
+  export CC=gcc
+  export CXX=g++
+  export CGO_ENABLED=1
+  export LD_LIBRARY_PATH=%{bdir}/build-cpu
+  %{og_gobuild} -o %{bdir}/build-vulkan/ollama-grid-vulkan
 %endif
 
 echo "#---ROCm---#"
@@ -199,9 +204,11 @@ echo "#---ROCm---#"
        -DAMDGPU_TARGETS="gfx803;gfx1032;gfx1035" \
        -DGPU_TARGETS="gfx803;gfx1032;gfx1035"
   cmake --build %{bdir}/build-rocm --parallel %{?_smp_build_ncpus}
-  pushd %{bdir}/build-rocm
-    %{og_gobuild} .
-  popd
+  export CC=gcc
+  export CXX=g++
+  export CGO_ENABLED=1
+  export LD_LIBRARY_PATH=%{bdir}/build-rocm
+  %{og_gobuild} -o %{bdir}/build-rocm/ollama-grid-rocm   
 %endif
 
 echo "#---CUDA 13---#"
@@ -222,10 +229,12 @@ echo "#---CUDA 13---#"
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda_include -fPIC" \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda_include -fPIC"
 
-    cmake --build %{bdir}/build-cuda --parallel %{?_smp_build_ncpus}
-    pushd %{bdir}/build-cuda
-      %{og_gobuild}  .
-    popd
+  cmake --build %{bdir}/build-cuda --parallel %{?_smp_build_ncpus}
+  export CC=/usr/bin/gcc-14
+  export CXX=/usr/bin/g++-14
+  export CGO_ENABLED=1
+  export LD_LIBRARY_PATH=%{bdir}/build-cuda
+  %{og_gobuild} -o %{bdir}/build-cuda/ollama-grid-cuda
 %endif
 
 echo "#---CUDA 12---#"
@@ -246,10 +255,12 @@ echo "#---CUDA 12---#"
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda12_include -fPIC" \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda12_include -fPIC"
 
-    cmake --build %{bdir}/build-cuda12 --parallel %{?_smp_build_ncpus}
-    pushd %{bdir}/build-cuda12
-      %{og_gobuild}  .
-    popd
+  cmake --build %{bdir}/build-cuda12 --parallel %{?_smp_build_ncpus}
+  export CC=/usr/bin/gcc-14
+  export CXX=/usr/bin/g++-14
+  export CGO_ENABLED=1
+  export LD_LIBRARY_PATH=%{bdir}/build-cuda12
+  %{og_gobuild} -o %{bdir}/build-cuda12/ollama-grid-cuda12
 %endif
 
 echo "# ==================== Install ==================== #"
