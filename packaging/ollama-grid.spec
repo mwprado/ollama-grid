@@ -193,7 +193,7 @@ echo "#---Vulkan---#"
   export CC=gcc
   export CXX=g++
   export CGO_ENABLED=1
-  export LD_LIBRARY_PATH=%{bdir}/build-cpu
+  export LD_LIBRARY_PATH=%{bdir}/build-vulkan
   %{og_gobuild} -o %{bdir}/build-vulkan/ollama-grid-vulkan
 %endif
 
@@ -217,7 +217,6 @@ echo "#---CUDA 13---#"
   mkdir -p %{bdir}/build-cuda
   cmake -S %{bdir}/ollama -B %{bdir}/build-cuda --fresh --preset "CUDA" \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
-    -DCUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -225,9 +224,9 @@ echo "#---CUDA 13---#"
     -DCMAKE_CXX_COMPILER=/usr/bin/g++-14 \
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc \
     -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-14 \
-    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
-    -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda_include -fPIC" \
-    -DCMAKE_C_FLAGS="-I%{bdir}/cuda_include -fPIC"
+    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+    -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda13_include -fPIC" \
+    -DCMAKE_C_FLAGS="-I%{bdir}/cuda13_include -fPIC"
 
   cmake --build %{bdir}/build-cuda --parallel %{?_smp_build_ncpus}
   export CC=/usr/bin/gcc-14
@@ -243,7 +242,6 @@ echo "#---CUDA 12---#"
   mkdir -p %{bdir}/build-cuda12
   cmake -S %{bdir}/ollama -B %{bdir}/build-cuda12 --fresh --preset "CUDA 12" \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
-    -DCUDA_ARCHITECTURES="12.0;9.0;8.9;8.6;8.0;7.5;7.0" \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -359,26 +357,26 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
 # ============================
 
 # CPU (sempre) — publica como /usr/bin/ollama-grid-cpu
-install -m 0755 %{bdir}/build-cpu/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
+install -m 0755 %{bdir}/build-cpu/ollama-grid-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
 
 # Vulkan
 %if %{with vulkan}
-  install -m 0755 %{bdir}/build-vulkan %{buildroot}%{_bindir}/ollama-grid-vulkan
+  install -m 0755 %{bdir}/build-vulkan/olama-grid-vulkan %{buildroot}%{_bindir}/ollama-grid-vulkan
 %endif
 
 # ROCm
 %if %{with rocm}
-  install -m 0755 %{bdir}/build-rocm %{buildroot}%{_bindir}/ollama-grid-rocm
+  install -m 0755 %{bdir}/build-rocm/olama-grid-rocm %{buildroot}%{_bindir}/ollama-grid-rocm
 %endif
 
 # CUDA (atual)
 %if %{with cuda}
-  install -m 0755 %{bdir}/build-cuda %{buildroot}%{_bindir}/ollama-grid-cuda
+  install -m 0755 %{bdir}/build-cuda/olama-grid-cuda %{buildroot}%{_bindir}/ollama-grid-cuda
 %endif
 
 # CUDA 12.9 (legacy)
 %if %{with cuda_12_9}
-  install -m 0755 %{bdir}/build-cuda12 %{buildroot}%{_bindir}/ollama-grid-cuda12
+  install -m 0755 %{bdir}/build-cuda12/olama-grid-cuda12 %{buildroot}%{_bindir}/ollama-grid-cuda12
 %endif
 
 # ============================
@@ -412,7 +410,7 @@ install -m 0755 %{bdir}/build-cpu/ollama-cpu %{buildroot}%{_bindir}/ollama-grid-
 # CUDA (atual)
 %if %{with cuda}
   install -d %{buildroot}%{og_libdir}/cuda
-  install -m 0755 %{bdir}/build-cuda/build/lib/ollama/libggml-*.so %{buildroot}%{og_libdir}/cuda/
+  install -m 0755 %{bdir}/build-cuda/lib/ollama/libggml-*.so %{buildroot}%{og_libdir}/cuda/
   for f in %{buildroot}%{og_libdir}/cuda/*.so; do fix_rpath "$f"; done
 %endif
 
