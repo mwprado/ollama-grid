@@ -178,7 +178,7 @@ cmake --build %{bdir}/build-cpu --parallel %{?_smp_build_ncpus}
 export CC=gcc
 export CXX=g++
 export CGO_ENABLED=1
-export LD_LIBRARY_PATH=%{bdir}/build-cpu
+export LD_LIBRARY_PATH=%{bdir}/build-cpu/lib/ollama:$LD_LIBRARY_PATH
 pushd %{bdir}/ollama
   %{og_gobuild} -o %{bdir}/build-cpu/ollama-grid-cpu  .
 popd
@@ -195,7 +195,7 @@ echo "#---Vulkan---#"
   export CC=gcc
   export CXX=g++
   export CGO_ENABLED=1
-  export LD_LIBRARY_PATH=%{bdir}/build-vulkan
+  export LD_LIBRARY_PATH=%{bdir}/build-vulkan/lib/ollama:$LD_LIBRARY_PATH
   pushd %{bdir}/ollama
     %{og_gobuild} -o %{bdir}/build-vulkan/ollama-grid-vulkan
 popd
@@ -205,13 +205,15 @@ echo "#---ROCm---#"
 %if %{with rocm}
   mkdir -p %{bdir}/build-rocm
   cmake -S %{bdir}/ollama -B %{bdir}/build-rocm --fresh --preset "ROCm 6" \
+       -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+       -DCMAKE_CUDA_COMPILER=NOTFOUND \
        -DAMDGPU_TARGETS="gfx803;gfx1032;gfx1035" \
        -DGPU_TARGETS="gfx803;gfx1032;gfx1035"
   cmake --build %{bdir}/build-rocm --parallel %{?_smp_build_ncpus}
   export CC=gcc
   export CXX=g++
   export CGO_ENABLED=1
-  export LD_LIBRARY_PATH=%{bdir}/build-rocm
+  export LD_LIBRARY_PATH=%{bdir}/build-rocm/lib/ollama:$LD_LIBRARY_PATH
   pushd %{bdir}/ollama
     %{og_gobuild} -o %{bdir}/build-rocm/ollama-grid-rocm   
   popd
@@ -238,7 +240,7 @@ echo "#---CUDA 13---#"
   export CC=/usr/bin/gcc-14
   export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
-  export LD_LIBRARY_PATH=%{bdir}/build-cuda
+  export LD_LIBRARY_PATH=%{bdir}/build-cuda/lib/ollama:$LD_LIBRARY_PATH
   pushd %{bdir}/ollama
     %{og_gobuild} -o %{bdir}/build-cuda/ollama-grid-cuda
   popd
@@ -264,7 +266,7 @@ echo "#---CUDA 12---#"
   export CC=/usr/bin/gcc-14
   export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
-  export LD_LIBRARY_PATH=%{bdir}/build-cuda12
+  export LD_LIBRARY_PATH=%{bdir}/build-cuda12/lib/ollama:$LD_LIBRARY_PATH
   pushd %{bdir}/ollama
     %{og_gobuild} -o %{bdir}/build-cuda12/ollama-grid-cuda12
   popd
