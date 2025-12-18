@@ -137,7 +137,7 @@ O patch é aplicado por script antes do build e revertido após o build.
 echo "# ==================== Prep ==================== #"
 %prep
 # Cria raiz estável e NÃO extrai nada ainda
-%setup -q -T -c 
+%setup -q -T -c
 
 # Pastas de trabalho
 mkdir -p %{bdir}/ollama-grid %{bdir}/ollama 
@@ -149,7 +149,7 @@ tar -xzf %{SOURCE1} -C %{bdir}/ollama --strip-components=1
 %if %{with cuda}
 mkdir %{bdir}/cuda13_include
 cp -a /usr/local/cuda-13.0/targets/x86_64-linux/include/* %{bdir}/cuda13_include/
-cp -a %{bdir}/cuda-13-0-math-functions.h.patch %{bdir}/cuda13_include/crt
+cp -a %{bdir}/cuda13-math-functions.h.patch %{bdir}/cuda13_include/crt
 pushd %{bdir}/cuda13_include
 patch -u < ./cuda13-math-functions.h.patch
 popd
@@ -179,7 +179,9 @@ export CC=gcc
 export CXX=g++
 export CGO_ENABLED=1
 export LD_LIBRARY_PATH=%{bdir}/build-cpu
-%{og_gobuild} -o %{bdir}/build-cpu/ollama-grid-cpu  .
+pushd %{bdir}/ollama
+  %{og_gobuild} -o %{bdir}/build-cpu/ollama-grid-cpu  .
+popd
 
 %endif
 
@@ -194,7 +196,9 @@ echo "#---Vulkan---#"
   export CXX=g++
   export CGO_ENABLED=1
   export LD_LIBRARY_PATH=%{bdir}/build-vulkan
-  %{og_gobuild} -o %{bdir}/build-vulkan/ollama-grid-vulkan
+  pushd %{bdir}/ollama
+    %{og_gobuild} -o %{bdir}/build-vulkan/ollama-grid-vulkan
+popd
 %endif
 
 echo "#---ROCm---#"
@@ -208,7 +212,9 @@ echo "#---ROCm---#"
   export CXX=g++
   export CGO_ENABLED=1
   export LD_LIBRARY_PATH=%{bdir}/build-rocm
-  %{og_gobuild} -o %{bdir}/build-rocm/ollama-grid-rocm   
+  pushd %{bdir}/ollama
+    %{og_gobuild} -o %{bdir}/build-rocm/ollama-grid-rocm   
+  popd
 %endif
 
 echo "#---CUDA 13---#"
@@ -233,7 +239,9 @@ echo "#---CUDA 13---#"
   export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
   export LD_LIBRARY_PATH=%{bdir}/build-cuda
-  %{og_gobuild} -o %{bdir}/build-cuda/ollama-grid-cuda
+  pushd %{bdir}/ollama
+    %{og_gobuild} -o %{bdir}/build-cuda/ollama-grid-cuda
+  popd
 %endif
 
 echo "#---CUDA 12---#"
@@ -252,13 +260,14 @@ echo "#---CUDA 12---#"
     -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda12_include -fPIC" \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda12_include -fPIC"
-
   cmake --build %{bdir}/build-cuda12 --parallel %{?_smp_build_ncpus}
   export CC=/usr/bin/gcc-14
   export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
   export LD_LIBRARY_PATH=%{bdir}/build-cuda12
-  %{og_gobuild} -o %{bdir}/build-cuda12/ollama-grid-cuda12
+  pushd %{bdir}/ollama
+    %{og_gobuild} -o %{bdir}/build-cuda12/ollama-grid-cuda12
+  popd
 %endif
 
 echo "# ==================== Install ==================== #"
@@ -361,22 +370,22 @@ install -m 0755 %{bdir}/build-cpu/ollama-grid-cpu %{buildroot}%{_bindir}/ollama-
 
 # Vulkan
 %if %{with vulkan}
-  install -m 0755 %{bdir}/build-vulkan/olama-grid-vulkan %{buildroot}%{_bindir}/ollama-grid-vulkan
+  install -m 0755 %{bdir}/build-vulkan/ollama-grid-vulkan %{buildroot}%{_bindir}/ollama-grid-vulkan
 %endif
 
 # ROCm
 %if %{with rocm}
-  install -m 0755 %{bdir}/build-rocm/olama-grid-rocm %{buildroot}%{_bindir}/ollama-grid-rocm
+  install -m 0755 %{bdir}/build-rocm/ollama-grid-rocm %{buildroot}%{_bindir}/ollama-grid-rocm
 %endif
 
 # CUDA (atual)
 %if %{with cuda}
-  install -m 0755 %{bdir}/build-cuda/olama-grid-cuda %{buildroot}%{_bindir}/ollama-grid-cuda
+  install -m 0755 %{bdir}/build-cuda/ollama-grid-cuda %{buildroot}%{_bindir}/ollama-grid-cuda
 %endif
 
 # CUDA 12.9 (legacy)
 %if %{with cuda_12_9}
-  install -m 0755 %{bdir}/build-cuda12/olama-grid-cuda12 %{buildroot}%{_bindir}/ollama-grid-cuda12
+  install -m 0755 %{bdir}/build-cuda12/ollama-grid-cuda12 %{buildroot}%{_bindir}/ollama-grid-cuda12
 %endif
 
 # ============================
