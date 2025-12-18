@@ -203,7 +203,7 @@ echo "#---Vulkan---#"
   export CGO_ENABLED=1
   export LD_LIBRARY_PATH=%{bdir}/build-vulkan/lib/ollama:$LD_LIBRARY_PATH
   pushd %{bdir}/ollama
-    %{og_gobuild} -o %{bdir}/build-vulkan/ollama-grid-vulkan
+    %{og_gobuild} -o %{bdir}/build-vulkan/ollama-grid-vulkan .
 popd
 %endif
 
@@ -221,7 +221,7 @@ echo "#---ROCm---#"
   export CGO_ENABLED=1
   export LD_LIBRARY_PATH=%{bdir}/build-rocm/lib/ollama:$LD_LIBRARY_PATH
   pushd %{bdir}/ollama
-    %{og_gobuild} -o %{bdir}/build-rocm/ollama-grid-rocm   
+    %{og_gobuild} -o %{bdir}/build-rocm/ollama-grid-rocm .
   popd
 %endif
 
@@ -248,7 +248,7 @@ echo "#---CUDA 13---#"
   export CGO_ENABLED=1
   export LD_LIBRARY_PATH=%{bdir}/build-cuda/lib/ollama:$LD_LIBRARY_PATH
   pushd %{bdir}/ollama
-    %{og_gobuild} -o %{bdir}/build-cuda/ollama-grid-cuda
+    %{og_gobuild} -o %{bdir}/build-cuda/ollama-grid-cuda .
   popd
 %endif
 
@@ -274,7 +274,7 @@ echo "#---CUDA 12---#"
   export CGO_ENABLED=1
   export LD_LIBRARY_PATH=%{bdir}/build-cuda12/lib/ollama:$LD_LIBRARY_PATH
   pushd %{bdir}/ollama
-    %{og_gobuild} -o %{bdir}/build-cuda12/ollama-grid-cuda12
+    %{og_gobuild} -o %{bdir}/build-cuda12/ollama-grid-cuda12 .
   popd
 %endif
 
