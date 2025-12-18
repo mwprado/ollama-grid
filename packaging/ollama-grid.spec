@@ -57,7 +57,7 @@ BuildRequires:    gcc14
 %endif
 
 %if %{with cuda}
-BuildRequires:  cuda-toolkit-13-0
+BuildRequires:    cuda-toolkit-13-0
 %endif
 
 %if %{with cuda_12_9}
@@ -126,11 +126,11 @@ Requires:       ollama-grid-common = %{version}-%{release}
 Bibliotecas CUDA (moderno) e wrapper /usr/bin/ollama-grid-cuda. Requer toolkit presente no host.
 
 # (7) CUDA legacy 12.9 (ex.: Tesla P4, sm_61)
-%package -n ollama-grid-cuda-12-9
+%package -n ollama-grid-cuda12
 Summary:        Backend CUDA 12.9 (legado) para GPUs NVIDIA compute 6.1
 Requires:       ollama-grid-common = %{version}-%{release}
 
-%description -n ollama-grid-cuda-12-9
+%description -n ollama-grid-cuda12
 Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-grid-cuda12.
 O patch é aplicado por script antes do build e revertido após o build.
 
@@ -533,7 +533,7 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 
 %if %{with cuda_12_9}
 
-%files -n ollama-grid-cuda-12-9
+%files -n ollama-grid-cuda12
 
 # binário do backend
 %{_bindir}/ollama-grid-cuda12
@@ -615,13 +615,13 @@ fi
 
 # ---- cuda-12.9 ----
 %if %{with cuda_12_9}
-%post -n ollama-grid-cuda-12-9
+%post -n ollama-grid-cuda12
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@cuda12.service >/dev/null 2>&1 || :
 else
     systemctl try-restart ollama-grid@cuda12.service >/dev/null 2>&1 || :
 fi
-%preun -n ollama-grid-cuda-12-9
+%preun -n ollama-grid-cuda12
 if [ $1 -eq 0 ] ; then
     systemctl disable --now ollama-grid@cuda12.service >/dev/null 2>&1 || :
 fi
