@@ -85,9 +85,7 @@ Arquivos comuns ao sistema (usuário/grupo ollama-grid, diretórios padrão, tmp
 %package -n ollama-grid-balancer
 Summary:        Balanceador Nginx e integração do OllamaGrid
 Requires:       ollama-grid-common = %{version}-%{release}
-Recommends:     nginx
-# Se quiser forçar nginx como dependência dura, troque Recommends: por Requires:
-# Requires:     nginx
+Requires:     nginx
 
 %description -n ollama-grid-balancer
 Subpacote contendo a configuração do Nginx para o OllamaGrid e arquivos de integração.
@@ -158,7 +156,7 @@ tar -xzf %{SOURCE1} -C %{bdir}/ollama --strip-components=1
 mkdir %{bdir}/cuda13_include
 cp -a /usr/local/cuda-13.0/targets/x86_64-linux/include/* %{bdir}/cuda13_include/
 cp -a %{bdir}/ollama-grid/scripts/cuda13-math-functions.h.patch %{bdir}/cuda13_include/crt/
-pushd %{bdir}/cuda13_include
+pushd %{bdir}/cuda13_include/crt
   patch -u < ./cuda13-math-functions.h.patch
 popd
 %endif
