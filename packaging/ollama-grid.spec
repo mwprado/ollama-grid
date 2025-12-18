@@ -563,6 +563,7 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 # ---- Common ----
 
 %post -n ollama-grid-common
+ldconfig
 # cria usuário, diretórios persistentes e temporários
 %sysusers_create_compat %{_sysusersdir}/ollama-grid.conf || :
 %tmpfiles_create %{_tmpfilesdir}/ollama-grid.conf || :
@@ -579,6 +580,7 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 # ---- Balancer ----
 
 %post -n ollama-grid-balancer
+ldconfig
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid-balancer.service >/dev/null 2>&1 || :
 else
@@ -593,6 +595,7 @@ fi
 
 %if %{with cpu}
 %post -n ollama-grid-cpu
+ldconfig
 if [ $1 -eq 1 ] ; then
     # instalação nova → cria e inicia a instância CPU
     systemctl enable --now ollama-grid@cpu.service >/dev/null 2>&1 || :
@@ -611,6 +614,7 @@ fi
 # ---- cuda ----
 %if %{with cuda}
 %post -n ollama-grid-cuda
+ldconfig
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@cuda.service >/dev/null 2>&1 || :
 else
@@ -625,6 +629,7 @@ fi
 # ---- cuda-12.9 ----
 %if %{with cuda_12_9}
 %post -n ollama-grid-cuda12
+ldconfig
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@cuda12.service >/dev/null 2>&1 || :
 else
@@ -639,6 +644,7 @@ fi
 # ---- ROCm ----
 %if %{with rocm}
 %post -n ollama-grid-rocm
+ldconfig
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@rocm.service >/dev/null 2>&1 || :
 else
@@ -654,6 +660,7 @@ fi
 # ---- Vulkan ----
 %if %{with vulkan}
 %post -n ollama-grid-vulkan
+ldconfig
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@vulkan.service >/dev/null 2>&1 || :
 else
