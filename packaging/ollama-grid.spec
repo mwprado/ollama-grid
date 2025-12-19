@@ -14,9 +14,9 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
 %bcond_without cpu
 %bcond_without vulkan
-%bcond_with rocm
-%bcond_with cuda
-%bcond_with cuda_12_9
+%bcond_without rocm
+%bcond_without cuda
+%bcond_without cuda_12_9
 
 # ====== Caminhos de instalação ======
 %global og_libdir %{_libdir}/ollama-grid
