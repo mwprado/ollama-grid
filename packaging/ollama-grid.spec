@@ -30,7 +30,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 # Comando comum de build do binário Go (repo root do Ollama)
 %global og_go_ldflag_vulkan -ldflags "-s -w -linkmode=external -extldflags '-Wl,--enable-new-dtags -Wl,-rpath,\$ORIGIN'"
-%global og_go_ldflag_cuda   -ldflags "-s -w -linkmode=external -extldflags '-Wl,--enable-new-dtags -Wl,-rpath,\$ORIGIN/'"
+%global og_go_ldflag_cuda   -ldflags "-s -w -linkmode=external -extldflags '-Wl,--enable-new-dtags -Wl,-rpath,\$ORIGIN'"
 %global og_go_ldflag_cuda12 -ldflags "-s -w -linkmode=external -extldflags '-Wl,--enable-new-dtags -Wl,-rpath,\$ORIGIN'"
 %global og_go_ldflag_cpu    -ldflags "-s -w -linkmode=external -extldflags '-Wl,--enable-new-dtags -Wl,-rpath,\$ORIGIN'"
 %global og_go_ldflag_rocm   -ldflags "-s -w -linkmode=external -extldflags '-Wl,--enable-new-dtags -Wl,-rpath,\$ORIGIN'"
