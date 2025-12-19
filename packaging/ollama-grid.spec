@@ -203,7 +203,7 @@ export CXX=g++
 export CGO_ENABLED=1
 export LD_LIBRARY_PATH=%{bdir}/build-cpu/lib/ollama:$LD_LIBRARY_PATH
 pushd %{bdir}/ollama
-  %{og_gobuild} %{og_go_ldflag_CPU} -o %{bdir}/build-cpu/ollama-grid-cpu  .
+  %{og_gobuild} %{og_go_ldflag_cpu} -o %{bdir}/build-cpu/ollama-grid-cpu  .
 popd
 
 %endif
