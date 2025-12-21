@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.13.5
-Release:        4%{?dist}
+Release:        10%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        Apache-2.0 AND MIT
 URL:            https://github.com/ollama/ollama
@@ -36,6 +36,9 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %global og_go_ldflag_rocm   -ldflags "-s -w -linkmode=external"
 
 %global og_gobuild go build -trimpath -buildmode=pie
+
+%global ogbinfolder ollama-grid/bin
+%global oglibfolder ollama-grid/lib
 
 
 %global c_compiler gcc-14
@@ -197,14 +200,16 @@ mkdir -p  %{bdir}/ollama/build
 cmake --fresh --preset "CPU" \
    -DCMAKE_HIP_COMPILER=NOTFOUND \
    -DCMAKE_CUDA_COMPILER=NOTFOUND \
-   -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE
-cmake --build --parallel %{?_smp_build_ncpus} --preset "CPU" 
+   -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+   -B %{bdir}/ollama/build
+cmake --build %{bdir}/build --parallel %{?_smp_build_ncpus} --preset "CPU"
 export CC=gcc-14
 export CXX=g++-14
 export CGO_ENABLED=1
   %{og_gobuild} %{og_go_ldflag_cpu} -o %{bdir}/ollama/build/ollama-grid-cpu  .
 popd
 mv %{bdir}/ollama/build %{bdir}/build-cpu 
+mkdir -p %{og_binfolder} 
 %endif
 
 echo "#---Vulkan---#"
@@ -213,8 +218,9 @@ echo "#---Vulkan---#"
   mkdir -p %{bdir}/ollama/build
   cmake --fresh --preset "Vulkan" \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
-    -DCMAKE_CUDA_COMPILER=NOTFOUND
-  cmake --build --parallel %{?_smp_build_ncpus} --preset "Vulkan"
+    -DCMAKE_CUDA_COMPILER=NOTFOUND \
+    -B %{bdir}/ollama/build
+  cmake --build %{bdir}/build --parallel %{?_smp_build_ncpus} --preset "Vulkan"
   export CC=gcc-14
   export CXX=g++-14
   export CGO_ENABLED=1
@@ -222,7 +228,7 @@ echo "#---Vulkan---#"
   popd
   mv %{bdir}/ollama/build %{bdir}/build-vulkan
 %endif
-
+fail
 echo "#---ROCm---#"
 %if %{with rocm}
   pushd %{bdir}/ollama
@@ -364,33 +370,33 @@ install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cuda12.conf    %{buildroot}
 %endif
 
 # --- utilitário para limpar RPATH/RUNPATH (ignora se patchelf não existir) ---
-fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1" || :; }
+#fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1" || :; }
 
 # ============================
 # BINÁRIOS (um por backend)
 # ============================
 
 # CPU (sempre) — publica como /usr/bin/ollama-grid-cpu
-install -m 0755 %{bdir}/build-cpu/ollama-grid-cpu %{buildroot}%{_libexecdir}/ollama-grid/cpu/ollama-grid-cpu
+install -m 0755 %{bdir}/build-cpu/ollama-grid-cpu %{buildroot}%{_libexecdir}/ollama-grid/cpu/bin/ollama-grid-cpu
 
 # Vulkan
 %if %{with vulkan}
-  install -m 0755 %{bdir}/build-vulkan/ollama-grid-vulkan %{buildroot}%{_libexecdir}/ollama-grid/vulkan/ollama-grid-vulkan
+  install -m 0755 %{bdir}/build-vulkan/ollama-grid-vulkan %{buildroot}%{_libexecdir}/ollama-grid/vulkan/bin/ollama-grid-vulkan
 %endif
 
 # ROCm
 %if %{with rocm}
-  install -m 0755 %{bdir}/build-rocm/ollama-grid-rocm %{buildroot}%{_libexecdir}/ollama-grid/rocm/ollama-grid-rocm
+  install -m 0755 %{bdir}/build-rocm/ollama-grid-rocm %{buildroot}%{_libexecdir}/ollama-grid/rocm/bin/ollama-grid-rocm
 %endif
 
 # CUDA (atual)
 %if %{with cuda}
-  install -m 0755 %{bdir}/build-cuda/ollama-grid-cuda %{buildroot}%{_libexecdir}/ollama-grid/cuda/ollama-grid-cuda
+  install -m 0755 %{bdir}/build-cuda/ollama-grid-cuda %{buildroot}%{_libexecdir}/ollama-grid/cuda/bin/ollama-grid-cuda
 %endif
 
 # CUDA 12.9 (legacy)
 %if %{with cuda_12_9}
-  install -m 0755 %{bdir}/build-cuda12/ollama-grid-cuda12 %{buildroot}%{_libexecdir}/ollama-grid/cuda12/ollama-grid-cuda12
+  install -m 0755 %{bdir}/build-cuda12/ollama-grid-cuda12 %{buildroot}%{_libexecdir}/ollama-grid/cuda12/bin/ollama-grid-cuda12
 %endif
 
 # ============================
@@ -398,57 +404,47 @@ install -m 0755 %{bdir}/build-cpu/ollama-grid-cpu %{buildroot}%{_libexecdir}/oll
 # ============================
 
 %if %{with cpu}
-  install -d %{buildroot}%{_libexecdir}/ollama-grid/cpu
-
-  # base + variantes CPU
-  install -m 0755 %{bdir}/build-cpu/lib/ollama/libggml-base.so %{buildroot}%{_libexecdir}/ollama-grid/cpu/
-  install -m 0755 %{bdir}/build-cpu/lib/ollama/libggml-cpu-*.so %{buildroot}%{_libexecdir}/ollama-grid/cpu/
-
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cpu/*.so; do fix_rpath "$f"; done
+  install -d %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/
+  install -d %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/ollama/
+  install -m 0755 %{bdir}/build-cpu/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/ollama/
   
-  ln -sr %{_libexecdir}/ollama-grid/cpu/ollama-grid-cpu \
-  %{buildroot}%{_bindir}/ollama-grid-cpu
-  
+  ln -sr %{_libexecdir}/ollama-grid/cpu/bin/ollama-grid-cpu %{buildroot}%{_bindir}/ollama-grid-cpu  
 %endif
 
 # Vulkan
 %if %{with vulkan}
-  install -d %{buildroot}%{_libexecdir}/ollama-grid/vulkan
-  install -m 0755 %{bdir}/build-vulkan/lib/ollama/libggml-vulkan.so %{buildroot}%{_libexecdir}/ollama-grid/vulkan/
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/vulkan/*.so; do fix_rpath "$f"; done
+  install -d %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/
+  install -d %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/
+  install -m 0755 %{bdir}/build-vulkan/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/
   
-  ln -sr %{_libexecdir}/ollama-grid/vulkan/ollama-grid-vulkan \
-  %{buildroot}%{_bindir}/ollama-grid-vulkan
+  ln -sr %{_libexecdir}/ollama-grid/vulkan/bin/ollama-grid-vulkan %{buildroot}%{_bindir}/ollama-grid-vulkan  
 %endif
 
 # ROCm
 %if %{with rocm}
-  install -d %{buildroot}%{_libexecdir}/ollama-grid/rocm
-  install -m 0755 %{bdir}/build-rocm/lib/ollama/libggml-rocm.so  %{buildroot}%{_libexecdir}/ollama-grid/rocm/
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/rocm/*.so; do fix_rpath "$f"; done
+  install -d %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/
+  install -d %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/
+  install -m 0755 %{bdir}/build-rocm/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/
   
-  ln -sr %{_libexecdir}/ollama-grid/rocm/ollama-grid-rocm \
-  %{buildroot}%{_bindir}/ollama-grid-rocm
+  ln -sr %{_libexecdir}/ollama-grid/rocm/bin/ollama-grid-rocm %{buildroot}%{_bindir}/ollama-grid-rocm  
 %endif
 
 # CUDA (atual)
 %if %{with cuda}
-  install -d %{buildroot}%{_libexecdir}/ollama-grid/cuda
-  install -m 0755 %{bdir}/build-cuda/lib/ollama/libggml-cuda.so %{buildroot}%{_libexecdir}/ollama-grid/cuda/
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda/*.so; do fix_rpath "$f"; done
+  install -d %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/
+  install -d %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/
+  install -m 0755 %{bdir}/build-cuda/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/
   
-  ln -sr %{_libexecdir}/ollama-grid/cuda/ollama-grid-cuda \
-  %{buildroot}%{_bindir}/ollama-grid-cuda
+  ln -sr %{_libexecdir}/ollama-grid/cuda/bin/ollama-grid-cuda %{buildroot}%{_bindir}/ollama-grid-cuda  
 %endif
 
 # CUDA 12.9 (legacy)
 %if %{with cuda_12_9}
-  install -d %{buildroot}%{_libexecdir}/ollama-grid/cuda12
-  install -m 0755 %{bdir}/build-cuda12/lib/ollama/libggml-cuda.so %{buildroot}%{_libexecdir}/ollama-grid/cuda12/
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda12/*.so; do fix_rpath "$f"; done
+  install -d %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/
+  install -d %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/
+  install -m 0755 %{bdir}/build-cuda12/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/
   
-  ln -sr %{_libexecdir}/ollama-grid/cuda12/ollama-grid-cuda12 \
-  %{buildroot}%{_bindir}/ollama-grid-cuda12
+  ln -sr %{_libexecdir}/ollama-grid/cuda12/bin/ollama-grid-cuda12 %{buildroot}%{_bindir}/ollama-grid-cuda12  
 %endif
 
 # ============================
