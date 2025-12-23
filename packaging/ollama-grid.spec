@@ -43,10 +43,10 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 
 %global c_compiler gcc-14
-%global cpp_compler gcc-14
+%global cpp_compler g++-14
   
 # ====== BuildRequires gerais ======
-BuildRequires:    gcc14 cmake make git-core golang patchelf systemd-rpm-macros
+BuildRequires:    gcc14 gcc-14 g++-14 cmake make git-core golang patchelf systemd-rpm-macros
 BuildRequires:    openmpi-devel
 BuildRequires:    util-linux
 # Vulkan
