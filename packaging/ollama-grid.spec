@@ -204,8 +204,8 @@ cmake --fresh --preset "CPU" \
    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
    -B %{bdir}/ollama/build
 cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "CPU"
-export CC=gcc-14
-export CXX=g++-14
+export CC=/usr/bin/gcc-14
+export CXX=/usr/bin/g++-14
 export CGO_ENABLED=1
   %{og_gobuild} %{og_go_ldflag_cpu} -o %{bdir}/ollama/build/ollama-grid-cpu .
 popd
@@ -221,8 +221,8 @@ echo "#---Vulkan---#"
     -DCMAKE_CUDA_COMPILER=NOTFOUND \
     -B %{bdir}/ollama/build
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "Vulkan"
-  export CC=gcc-14
-  export CXX=g++-14
+  export CC=/usr/bin/gcc-14
+  export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
     %{og_gobuild} %{og_go_ldflag_vulkan} -o %{bdir}/ollama/build/ollama-grid-vulkan .    
   popd
@@ -239,8 +239,8 @@ echo "#---ROCm---#"
        -DAMDGPU_TARGETS="gfx803;gfx1032;gfx1035" \
        -DGPU_TARGETS="gfx803;gfx1032;gfx1035"
   cmake --build --parallel %{?_smp_build_ncpus} --preset "ROCm 6"
-  export CC=gcc-14
-  export CXX=g++-14
+  export CC=/usr/bin/gcc-14
+  export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
     %{og_gobuild} %{og_go_ldflag_rocm} -o %{bdir}/ollama/build/ollama-grid-rocm . 
   popd
