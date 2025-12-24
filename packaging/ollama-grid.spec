@@ -1,5 +1,5 @@
 Name:           ollama-grid
-Version:        0.13.5
+Version:        0.13.6
 Release:        15%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        Apache-2.0 AND MIT
@@ -202,6 +202,7 @@ cmake --fresh --preset "CPU" \
    -DCMAKE_HIP_COMPILER=NOTFOUND \
    -DCMAKE_CUDA_COMPILER=NOTFOUND \
    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+   -DCMAKE_BUILD_TYPE=Release \
    -B %{bdir}/ollama/build
 cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "CPU"
 export CC=/usr/bin/gcc-14
@@ -219,6 +220,7 @@ echo "#---Vulkan---#"
   cmake --fresh --preset "Vulkan" \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_COMPILER=NOTFOUND \
+    -DCMAKE_BUILD_TYPE=Release \
     -B %{bdir}/ollama/build
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "Vulkan"
   export CC=/usr/bin/gcc-14
@@ -238,6 +240,7 @@ echo "#---ROCm---#"
        -DCMAKE_CUDA_COMPILER=NOTFOUND \
        -DAMDGPU_TARGETS="gfx803;gfx1032;gfx1035" \
        -DGPU_TARGETS="gfx803;gfx1032;gfx1035"
+       -DCMAKE_BUILD_TYPE=Release \
   cmake --build --parallel %{?_smp_build_ncpus} --preset "ROCm 6"
   export CC=/usr/bin/gcc-14
   export CXX=/usr/bin/g++-14
@@ -262,6 +265,7 @@ echo "#---CUDA 13---#"
     -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-14 \
     -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda13_include -fPIC" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda13_include -fPIC"
 
   cmake --build --parallel %{?_smp_build_ncpus} --preset "CUDA 13" 
@@ -288,6 +292,7 @@ echo "#---CUDA 12---#"
     -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-14 \
     -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda12_include -fPIC" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda12_include -fPIC"
   cmake --build --parallel %{?_smp_build_ncpus} --preset "CUDA 12"
   export CC=/usr/bin/gcc-14
