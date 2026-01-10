@@ -68,11 +68,11 @@ BuildRequires:    gcc14
 %endif
 
 %if %{with cuda}
-BuildRequires:    cuda-toolkit-13-0
+Recommends:    cuda-toolkit-13-0
 %endif
 
 %if %{with cuda12}
-BuildRequires:    cuda-toolkit-12-9
+Recommends:    cuda-toolkit-12-9
 %endif
 
 
