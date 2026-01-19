@@ -57,7 +57,7 @@ BuildRequires:    glslc
 %endif
 
 # ROCm (ajuste conforme sua base de pacotes ROCm)
-%if %{with rocm}
+%if %{with rocm} && "%{_arch}" == "x86_64"
 BuildRequires:    rocm-devel
 #BuildRequires:    rocm-hip-devel hipblas-devel 
 %endif
@@ -120,7 +120,7 @@ Requires:       ollama-grid-common = %{version}-%{release}
 Bibliotecas Vulkan e wrapper /usr/bin/ollama-grid-vulkan.
 %endif
 
-%if %{with rocm}
+%if %{with rocm} && "%{_arch}" == "x86_64"
 # (5) ROCm
 %package -n ollama-grid-rocm
 Summary:        Backend ROCm (GPUs AMD)
@@ -232,7 +232,7 @@ echo "#---Vulkan---#"
 %endif
 
 echo "#---ROCm---#"
-%if %{with rocm}
+%if %{with rocm} && "%{_arch}" == "x86_64"
   pushd %{bdir}/ollama
   mkdir -p %{bdir}/ollama/build
   cmake --fresh --preset "ROCm 6" \
@@ -334,7 +334,7 @@ install -d \
   %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib \
   %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama 
 %endif
-%if %{with rocm}
+%if %{with rocm} && "%{_arch}" == "x86_64"
 install -d \
   %{buildroot}%{_libexecdir}/ollama-grid/rocm \
   %{buildroot}%{_libexecdir}/ollama-grid/rocm/bin \
@@ -392,7 +392,7 @@ install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/vulkan.conf    %{buildroot}
 %endif
 
 # ROCm
-%if %{with rocm}
+%if %{with rocm} && "%{_arch}" == "x86_64"
 install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/rocm
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/rocm
 install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/rocm.conf    %{buildroot}%{og_confdir}/rocm.conf
@@ -433,7 +433,7 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
 %endif
 
 # ROCm
-%if %{with rocm}
+%if %{with rocm} && "%{_arch}" == "x86_64"
   install -m 0755 %{bdir}/build-rocm/ollama-grid-rocm     %{buildroot}%{_libexecdir}/ollama-grid/rocm/bin/ollama-grid-rocm
   ln -sr %{_libexecdir}/ollama-grid/rocm/bin/ollama-grid-rocm %{buildroot}%{_bindir}/ollama-grid-rocm
     
@@ -467,7 +467,7 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
 %endif
 
 # ROCm
-%if %{with rocm}
+%if %{with rocm} && "%{_arch}" == "x86_64"
   install -m 0644 %{bdir}/build-rocm/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/
   for f in %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/*.so; do fix_rpath "$f"; done
 %endif
@@ -564,7 +564,7 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 # ============================
 # Subpacote: ROCm
 # ============================
-%if %{with rocm}
+%if %{with rocm} && "%{_arch}" == "x86_64"
 %files -n ollama-grid-rocm
 
 # binário do backend
@@ -712,7 +712,7 @@ fi
 %endif
 
 # ---- ROCm ----
-%if %{with rocm}
+%if %{with rocm} && "%{_arch}" == "x86_64"
 %post -n ollama-grid-rocm
 if [ $1 -eq 1 ] ; then
     systemctl enable --now ollama-grid@rocm.service >/dev/null 2>&1 || :
