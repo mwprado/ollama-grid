@@ -239,7 +239,7 @@ echo "#---ROCm---#"
        -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
        -DCMAKE_CUDA_COMPILER=NOTFOUND \
        -DAMDGPU_TARGETS="gfx803;gfx1032;gfx1035" \
-       -DGPU_TARGETS="gfx803;gfx1032;gfx1035"
+       -DGPU_TARGETS="gfx803;gfx1032;gfx1035" \
        -DCMAKE_BUILD_TYPE=Release \
   cmake --build --parallel %{?_smp_build_ncpus} --preset "ROCm 6"
   export CC=/usr/bin/gcc-14
