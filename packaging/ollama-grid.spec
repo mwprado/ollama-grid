@@ -242,7 +242,7 @@ echo "#---ROCm---#"
        -DGPU_TARGETS="gfx803;gfx1032;gfx1035" \
        -DCMAKE_BUILD_TYPE=Release \
        -B %{bdir}/ollama/build
-  cmake --build --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "ROCm 6"
+  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "ROCm 6"
   export CC=/usr/bin/gcc-14
   export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
