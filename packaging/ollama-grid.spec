@@ -205,8 +205,8 @@ cmake --fresh --preset "CPU" \
    -DCMAKE_BUILD_TYPE=Release \
    -B %{bdir}/ollama/build
 cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "CPU"
-export CC=/usr/bin/gcc-14
-export CXX=/usr/bin/g++-14
+export CC=/usr/bin/gcc
+export CXX=/usr/bin/g++
 export CGO_ENABLED=1
   %{og_gobuild} %{og_go_ldflag_cpu} -o %{bdir}/ollama/build/ollama-grid-cpu .
 popd
@@ -223,8 +223,8 @@ echo "#---Vulkan---#"
     -DCMAKE_BUILD_TYPE=Release \
     -B %{bdir}/ollama/build
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "Vulkan"
-  export CC=/usr/bin/gcc-14
-  export CXX=/usr/bin/g++-14
+  export CC=/usr/bin/gcc
+  export CXX=/usr/bin/g++
   export CGO_ENABLED=1
     %{og_gobuild} %{og_go_ldflag_vulkan} -o %{bdir}/ollama/build/ollama-grid-vulkan .    
   popd
@@ -243,8 +243,8 @@ echo "#---ROCm---#"
        -DCMAKE_BUILD_TYPE=Release \
        -B %{bdir}/ollama/build
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "ROCm 6"
-  export CC=/usr/bin/gcc-14
-  export CXX=/usr/bin/g++-14
+  export CC=/usr/bin/gcc
+  export CXX=/usr/bin/g++
   export CGO_ENABLED=1
     %{og_gobuild} %{og_go_ldflag_rocm} -o %{bdir}/ollama/build/ollama-grid-rocm . 
   popd
