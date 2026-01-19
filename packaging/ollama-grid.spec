@@ -42,11 +42,11 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %global og_gobuild go build -trimpath -buildmode=pie
 
 
-%global c_compiler gcc-14
-%global cpp_compler g++-14
+%global c_compiler gcc
+%global cpp_compler g++
   
 # ====== BuildRequires gerais ======
-BuildRequires:    gcc14 gcc14-c++ cmake make git-core golang patchelf systemd-rpm-macros
+BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf systemd-rpm-macros
 BuildRequires:    openmpi-devel
 BuildRequires:    util-linux
 # Vulkan
