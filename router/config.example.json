@@ -1,0 +1,36 @@
+{
+  "listen": "127.0.0.1:8090",
+  "health_check_interval_seconds": 10,
+  "backends": [
+    {
+      "name": "cpu",
+      "url": "http://127.0.0.1:11434",
+      "weight": 1,
+      "enabled": true
+    },
+    {
+      "name": "vulkan",
+      "url": "http://127.0.0.1:11435",
+      "weight": 4,
+      "enabled": true
+    },
+    {
+      "name": "rocm",
+      "url": "http://127.0.0.1:11436",
+      "weight": 7,
+      "enabled": true
+    },
+    {
+      "name": "cuda12",
+      "url": "http://127.0.0.1:11437",
+      "weight": 6,
+      "enabled": true
+    },
+    {
+      "name": "cuda",
+      "url": "http://127.0.0.1:11438",
+      "weight": 10,
+      "enabled": true
+    }
+  ]
+}
