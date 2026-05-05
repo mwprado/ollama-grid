@@ -1,0 +1,132 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OllamaGrid Maintainers <maintainers@example.invalid>
+Date: Tue, 5 May 2026 00:00:00 -0300
+Subject: [PATCH] rpm: handle systemd template instances safely
+
+The template unit ollama-grid@.service is not a runnable service by
+itself. RPM scriptlets should not call systemd_post, systemd_preun or
+systemd_postun_with_restart on the bare template because real services
+exist only as concrete instances such as ollama-grid@vulkan.service.
+
+This patch changes ollama-grid-common to only create users/tmpfiles and
+reload systemd. Concrete backend subpackages then try-restart their own
+instances during upgrades only, without enabling services automatically.
+---
+ packaging/ollama-grid.spec | 73 +++++++++++++++++++++++++++++++++----
+ 1 file changed, 66 insertions(+), 7 deletions(-)
+
+diff --git a/packaging/ollama-grid.spec b/packaging/ollama-grid.spec
+index 0000000..0000000 100644
+--- a/packaging/ollama-grid.spec
++++ b/packaging/ollama-grid.spec
+@@ -1,7 +1,7 @@
+ Name:           ollama-grid
+ Version:        0.23.0
+ Release:        1%{?dist}
+ Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
+-License:        Apache-2.0 AND MIT
++License:        MIT
+ URL:            https://github.com/ollama/ollama
+@@
+-# Licença do Ollama (Apache 2.0)
++# Licença do Ollama (MIT)
+ install -m 0644 %{bdir}/ollama/LICENSE \
+     %{buildroot}%{og_licensedir}/LICENSE.ollama
+@@
+ # ---- Common ----
+ 
+ %post -n ollama-grid-common
+ # cria usuário, diretórios persistentes e temporários
+ %sysusers_create_compat %{_sysusersdir}/ollama-grid.conf || :
+ %tmpfiles_create %{_tmpfilesdir}/ollama-grid.conf || :
+-
+-# registra o TEMPLATE no systemd
+-%systemd_post ollama-grid@.service
++
++# ollama-grid@.service é apenas um template. As instâncias reais são
++# ollama-grid@cpu.service, ollama-grid@vulkan.service, etc. Portanto,
++# não use %%systemd_post/%%systemd_preun/%%systemd_postun_with_restart
++# sobre o template puro, pois isso pode falhar em upgrades.
++if [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl daemon-reload >/dev/null 2>&1 || :
++fi
+ 
+ %preun -n ollama-grid-common
+-%systemd_preun ollama-grid@.service
++# Nada a parar aqui: ollama-grid@.service é apenas template.
+ 
+ %postun -n ollama-grid-common
+-%systemd_postun_with_restart ollama-grid@.service
++if [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl daemon-reload >/dev/null 2>&1 || :
++fi
++
++# ---- Backend instances ----
++# Os subpacotes não habilitam serviços automaticamente. O usuário escolhe
++# explicitamente a instância desejada, por exemplo:
++#   systemctl enable --now ollama-grid@vulkan.service
++# Em upgrade, apenas tentamos reiniciar a instância concreta se ela já existir.
++
++%if %{with cpu}
++%post -n ollama-grid-cpu
++if [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl daemon-reload >/dev/null 2>&1 || :
++fi
++
++%postun -n ollama-grid-cpu
++if [ $1 -ge 1 ] && [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl try-restart ollama-grid@cpu.service >/dev/null 2>&1 || :
++fi
++%endif
++
++%if %{with vulkan}
++%post -n ollama-grid-vulkan
++if [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl daemon-reload >/dev/null 2>&1 || :
++fi
++
++%postun -n ollama-grid-vulkan
++if [ $1 -ge 1 ] && [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl try-restart ollama-grid@vulkan.service >/dev/null 2>&1 || :
++fi
++%endif
++
++%if %{with rocm} && "%{_arch}" == "x86_64"
++%post -n ollama-grid-rocm
++if [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl daemon-reload >/dev/null 2>&1 || :
++fi
++
++%postun -n ollama-grid-rocm
++if [ $1 -ge 1 ] && [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl try-restart ollama-grid@rocm.service >/dev/null 2>&1 || :
++fi
++%endif
++
++%if %{with cuda}
++%post -n ollama-grid-cuda
++if [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl daemon-reload >/dev/null 2>&1 || :
++fi
++
++%postun -n ollama-grid-cuda
++if [ $1 -ge 1 ] && [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl try-restart ollama-grid@cuda.service >/dev/null 2>&1 || :
++fi
++%endif
++
++%if %{with cuda12}
++%post -n ollama-grid-cuda12
++if [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl daemon-reload >/dev/null 2>&1 || :
++fi
++
++%postun -n ollama-grid-cuda12
++if [ $1 -ge 1 ] && [ -x /usr/bin/systemctl ]; then
++    /usr/bin/systemctl try-restart ollama-grid@cuda12.service >/dev/null 2>&1 || :
++fi
++%endif
+ 
+ # ---- Balancer ----
+-- 
+2.45.0
