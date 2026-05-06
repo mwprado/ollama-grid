@@ -149,6 +149,9 @@ Componentes planejados:
 - [x] Vincular backends a `127.0.0.1` por padrão.
 - [x] Definir Nginx com rotas explícitas por backend.
 - [x] Endurecer propriedade de `/etc/ollama-grid`.
+- [x] Criar patch conservador para estabilização inicial do spec RPM.
+- [ ] Aplicar localmente `packaging/ollama-grid.spec.stabilization.patch` e revisar o resultado.
+- [ ] Validar `rpmbuild -ba packaging/ollama-grid.spec` em ambiente Fedora.
 - [ ] Validar `nginx -t` em ambiente Fedora.
 - [ ] Validar `systemctl enable --now ollama-grid@cpu`.
 - [ ] Validar smoke tests por rota `/api/version`.
