@@ -5,7 +5,7 @@
 <h1 align="center">OllamaGrid</h1>
 <p align="center">
   <b>One brain, many architectures.</b><br>
-  Modular and distributed Ollama packaging for Fedora/COPR.
+  Modular Ollama packaging and local backend routing for Fedora/COPR.
 </p>
 
 <p align="center">
@@ -30,70 +30,69 @@
 
 ---
 
+## Objetivo
+
+OllamaGrid é uma camada comunitária de empacotamento e operação do Ollama para Fedora/COPR. O projeto organiza builds por backend, serviços `systemd` independentes e um proxy Nginx para seleção explícita de backend.
+
+O projeto não substitui o Ollama upstream. Ele organiza builds e serviços para ambientes heterogêneos, por exemplo CPU, Vulkan, ROCm, CUDA moderno e CUDA legado.
+
+---
+
 ## 📦 Estrutura dos pacotes
 
-O OllamaGrid é dividido em módulos independentes, podendo ser instalados no mesmo host ou distribuídos em nós diferentes.
-Cada backend utiliza sua própria configuração, binário e serviço `systemd`.
+Os pacotes usam o prefixo `ollama-grid-*` para evitar colisão semântica com o projeto Ollama upstream.
 
 | Pacote | Descrição |
 |---------|------------|
-| `ollama-cpu` | Backend genérico (CPU / fallback). |
-| `ollama-vulkan` | Backend universal baseado em Vulkan. |
-| `ollama-rocm` | Backend para GPUs AMD, sempre rastreando a última versão estável do ROCm. |
-| `ollama-cuda` | Backend para GPUs NVIDIA modernas, sempre rastreando a última versão estável do CUDA Toolkit. |
-| `ollama-cuda-legacy-12.9` | Backend fixo para GPUs NVIDIA Compute 6.1 (ex.: Tesla P4). |
-| `ollama-balancer` | Serviço Nginx responsável pelo balanceamento entre os backends. |
+| `ollama-grid-common` | Arquivos comuns: usuário, grupo, tmpfiles, units systemd e diretórios. |
+| `ollama-grid-cpu` | Backend genérico CPU/fallback. |
+| `ollama-grid-vulkan` | Backend universal baseado em Vulkan. |
+| `ollama-grid-rocm` | Backend para GPUs AMD via ROCm. |
+| `ollama-grid-cuda` | Backend para GPUs NVIDIA modernas. |
+| `ollama-grid-cuda12` | Backend CUDA 12.9 legado, útil para GPUs Compute 6.1, como Tesla P4. |
+| `ollama-grid-balancer` | Configuração Nginx para proxy e roteamento entre backends. |
 
 ---
 
 ## ⚙️ Estrutura de instalação recomendada
 
-```
-/usr/lib/systemd/system/ollama@.service
-/usr/lib/systemd/system/ollama-balancer.service
-/etc/ollama-grid/                  ← configurações específicas
+```text
+/usr/lib/systemd/system/ollama-grid@.service
+/usr/lib/systemd/system/ollama-grid-balancer.service
+/etc/ollama-grid/                  ← configurações específicas por backend
 /etc/nginx/conf.d/ollama-grid.conf ← proxy/balancer principal
+/var/lib/ollama-grid/              ← dados e modelos
 /var/log/ollama-grid/              ← logs dos serviços
-/run/ollama-grid/                  ← PID e sockets (tmpfiles.d)
+/run/ollama-grid/                  ← PID e sockets, quando necessário
 ```
 
 > **Nota:** O diretório correto é `tmpfiles.d`, e não `tempfiles.d`.
 
 ---
 
-## 🌐 Balanceador (Nginx)
+## 🌐 Balanceador Nginx
 
-O pacote `ollama-balancer` instala a configuração padrão do Nginx em:
+O pacote `ollama-grid-balancer` instala a configuração padrão do Nginx em:
 
-```
+```text
 /etc/nginx/conf.d/ollama-grid.conf
 ```
 
-Trecho simplificado:
+A fase v1 usa roteamento explícito por caminho:
 
-```nginx
-upstream ollama_nodes {
-    server 127.0.0.1:11434; # CPU
-    server 127.0.0.1:11435; # Vulkan
-    server 127.0.0.1:11436; # ROCm
-    server 127.0.0.1:11437; # CUDA
-    # server 127.0.0.1:11439; # CUDA Legacy 12.9 (opcional)
-}
+| Rota | Backend |
+|------|---------|
+| `/api/...` | CPU padrão, compatível com clientes Ollama simples |
+| `/cpu/api/...` | `ollama-grid@cpu` |
+| `/vulkan/api/...` | `ollama-grid@vulkan` |
+| `/rocm/api/...` | `ollama-grid@rocm` |
+| `/cuda/api/...` | `ollama-grid@cuda` |
+| `/cuda12/api/...` | `ollama-grid@cuda12` |
 
-server {
-    listen 8080;
-    location / {
-        proxy_pass http://ollama_nodes;
-        proxy_read_timeout 1h;
-        proxy_send_timeout 1h;
-        proxy_buffering off;
-    }
-
-    location = /health { return 200 "ok\n"; }
-}
-```
+Os backends escutam em `127.0.0.1` por padrão. A exposição externa deve ser feita pelo Nginx, preferencialmente com TLS, autenticação e rate limit quando aplicável.
 
 Recarregue após editar:
+
 ```bash
 sudo nginx -t
 sudo systemctl reload nginx
@@ -101,19 +100,16 @@ sudo systemctl reload nginx
 
 ---
 
-## 🧩 Backends e versões
+## 🧩 Backends e portas
 
-| Backend | Suporte | Versão |
-|----------|----------|----------|
-| CPU | genérica | nativo |
-| Vulkan | genérico (AMD/Intel/NVIDIA) | última versão |
-| ROCm | GPUs AMD | última versão |
-| CUDA | GPUs NVIDIA modernas | última versão |
-| CUDA (legacy) | GPUs NVIDIA Compute 6.1 (ex: Tesla P4) | pacote `ollama-cuda-legacy-12.9` |
-
-> **Nota:** Pacotes `ollama-cuda` e `ollama-rocm` sempre se referem à versão mais recente estável disponível
-> nos repositórios oficiais NVIDIA e AMD ROCm, respectivamente.  
-> Versões legadas utilizam o formato `ollama-cuda-legacy-{versão}`.
+| Backend | Serviço | Porta padrão |
+|----------|---------|--------------|
+| CPU | `ollama-grid@cpu` | `127.0.0.1:11434` |
+| Vulkan | `ollama-grid@vulkan` | `127.0.0.1:11435` |
+| ROCm | `ollama-grid@rocm` | `127.0.0.1:11436` |
+| CUDA 12.9 legado | `ollama-grid@cuda12` | `127.0.0.1:11437` |
+| CUDA atual | `ollama-grid@cuda` | `127.0.0.1:11438` |
+| Nginx | `ollama-grid-balancer` | `0.0.0.0:8080` |
 
 ---
 
@@ -121,14 +117,14 @@ sudo systemctl reload nginx
 
 ```bash
 # Serviços principais
-sudo systemctl enable --now ollama@cpu
-sudo systemctl enable --now ollama@vulkan
-sudo systemctl enable --now ollama@rocm
-sudo systemctl enable --now ollama@cuda
-sudo systemctl enable --now ollama@cuda-legacy-12.9
+sudo systemctl enable --now ollama-grid@cpu
+sudo systemctl enable --now ollama-grid@vulkan
+sudo systemctl enable --now ollama-grid@rocm
+sudo systemctl enable --now ollama-grid@cuda
+sudo systemctl enable --now ollama-grid@cuda12
 
 # Balanceador
-sudo systemctl enable --now ollama-balancer
+sudo systemctl enable --now ollama-grid-balancer
 ```
 
 ---
@@ -137,17 +133,28 @@ sudo systemctl enable --now ollama-balancer
 
 ```bash
 curl -sSf http://localhost:8080/health
+curl -sSf http://localhost:8080/api/version
 curl -sSf http://localhost:8080/cpu/api/version
+curl -sSf http://localhost:8080/vulkan/api/version
+curl -sSf http://localhost:8080/rocm/api/version
 curl -sSf http://localhost:8080/cuda/api/version
+curl -sSf http://localhost:8080/cuda12/api/version
 ```
+
+Use apenas as rotas correspondentes aos backends instalados e ativos.
+
+---
+
+## Licenças
+
+- OllamaGrid: MIT.
+- Ollama upstream: ver licença do projeto upstream empacotado na versão usada.
+- Modelos executados pelo OllamaGrid possuem licenças próprias e independentes.
 
 ---
 
 ### Disclaimer
 
-OllamaGrid é um projeto comunitário independente e não é afiliado, endossado nem patrocinado por NVIDIA, AMD ou Khronos Group.  
-Os logotipos e marcas mencionados (NVIDIA, CUDA, ROCm e Vulkan) são propriedade de seus respectivos detentores.  
-Os símbolos utilizados nas ilustrações e materiais gráficos são representações artísticas originais, criadas apenas para fins ilustrativos e educativos,  
-visando demonstrar compatibilidade técnica entre diferentes arquiteturas.
-
----
+OllamaGrid é um projeto comunitário independente e não é afiliado, endossado nem patrocinado por NVIDIA, AMD, Khronos Group ou Ollama.  
+Os logotipos e marcas mencionados são propriedade de seus respectivos detentores.  
+Os símbolos utilizados nas ilustrações e materiais gráficos são representações artísticas originais, criadas apenas para fins ilustrativos e educativos, visando demonstrar compatibilidade técnica entre diferentes arquiteturas.
