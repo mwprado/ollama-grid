@@ -2,13 +2,13 @@ Name:           ollama-grid
 Version:        0.23.0
 Release:        1%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
-License:        Apache-2.0 AND MIT
-URL:            https://github.com/ollama/ollama
+License:        MIT
+URL:            https://github.com/mwprado/ollama-grid
 
-# ====== SOURCE0: OLLAMA-GRID (seus assets: scripts/patch/nginx/…) =====
+# ====== SOURCE0: OLLAMA-GRID (assets: scripts/patch/nginx/systemd/tmpfiles/sysusers) =====
 Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.tar.gz
 
-# ====== SOURCE1: OLLAMA (upstream) via Forge macros ======
+# ====== SOURCE1: OLLAMA upstream ======
 Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
 
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
@@ -43,7 +43,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 
 %global c_compiler gcc
-%global cpp_compler g++
+%global cpp_compiler g++
   
 # ====== BuildRequires gerais ======
 BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf systemd-rpm-macros
@@ -100,7 +100,7 @@ Requires:     nginx
 
 %description -n ollama-grid-balancer
 Subpacote contendo a configuração do Nginx para o OllamaGrid e arquivos de integração.
-Instale pelo menos um backend (Vulkan/ROCm/CUDA).
+Instale pelo menos um backend (CPU/Vulkan/ROCm/CUDA).
 
 # (3) CPU
 %package -n ollama-grid-cpu
@@ -108,7 +108,7 @@ Summary:        Backend CPU
 Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-cpu
-Bibliotecas Vulkan e wrapper /usr/bin/ollama-grid-cpu.
+Bibliotecas CPU e wrapper /usr/bin/ollama-grid-cpu.
 
 # (4) Vulkan
 %if %{with vulkan}
@@ -281,7 +281,7 @@ echo "#---CUDA 13---#"
 echo "#---CUDA 12---#"
 %if %{with cuda12}
   pushd %{bdir}/ollama
-  mkdir -p %{bdir}/build
+  mkdir -p %{bdir}/ollama/build
   cmake --fresh   --preset "CUDA 12" \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
@@ -364,7 +364,7 @@ install -m 0644 %{bdir}/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_t
 install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
 install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid-balancer.service %{buildroot}%{_unitdir}/ollama-grid-balancer.service
 
-# Licença do Ollama (Apache 2.0)
+# Licença do Ollama upstream; manter arquivo separado facilita auditoria da versão empacotada.
 install -m 0644 %{bdir}/ollama/LICENSE \
     %{buildroot}%{og_licensedir}/LICENSE.ollama
 
