@@ -1,5 +1,4 @@
 diff --git a/packaging/ollama-grid.spec b/packaging/ollama-grid.spec
-index 0000000..0000000 100644
 --- a/packaging/ollama-grid.spec
 +++ b/packaging/ollama-grid.spec
 @@ -1,12 +1,12 @@
@@ -25,30 +24,42 @@ index 0000000..0000000 100644
  %global c_compiler gcc
 -%global cpp_compler g++
 +%global cpp_compiler g++
-@@ -87,16 +87,16 @@ OllamaGrid é um conjunto de pacotes para executar o Ollama em ambientes heterogêneos
- (CPU/GPU) com empacotamentos separados por backend (Vulkan/ROCm/CUDA), integração
- via Nginx e orquestração por serviços systemd.
-@@ -104,7 +104,7 @@ Requires:     nginx
+   
+ # ====== BuildRequires gerais ======
+ BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf systemd-rpm-macros
+@@ -99,13 +99,13 @@ Summary:        Balanceador Nginx e integração do OllamaGrid
+ Requires:       ollama-grid-common = %{version}-%{release}
+ Requires:     nginx
+ 
  %description -n ollama-grid-balancer
  Subpacote contendo a configuração do Nginx para o OllamaGrid e arquivos de integração.
 -Instale pelo menos um backend (Vulkan/ROCm/CUDA).
 +Instale pelo menos um backend (CPU/Vulkan/ROCm/CUDA).
-@@ -114,7 +114,7 @@ Summary:        Backend CPU
+ 
+ # (3) CPU
+ %package -n ollama-grid-cpu
+ Summary:        Backend CPU
  Requires:       ollama-grid-common = %{version}-%{release}
+@@ -113,7 +113,7 @@ Requires:       ollama-grid-common = %{version}-%{release}
  
  %description -n ollama-grid-cpu
 -Bibliotecas Vulkan e wrapper /usr/bin/ollama-grid-cpu.
 +Bibliotecas CPU e wrapper /usr/bin/ollama-grid-cpu.
+ 
+ # (4) Vulkan
+ %if %{with vulkan}
 @@ -304,7 +304,7 @@ echo "#---CUDA 12---#"
  %if %{with cuda12}
    pushd %{bdir}/ollama
 -  mkdir -p %{bdir}/build
 +  mkdir -p %{bdir}/ollama/build
    cmake --fresh   --preset "CUDA 12" \
-@@ -394,7 +394,7 @@ install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
+     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+     -DCMAKE_HIP_COMPILER=NOTFOUND \
+@@ -394,7 +394,7 @@ install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_
  install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid-balancer.service %{buildroot}%{_unitdir}/ollama-grid-balancer.service
  
 -# Licença do Ollama (Apache 2.0)
-+# Licença do Ollama upstream; atualmente MIT na versão empacotada, mas manter arquivo separado facilita auditoria.
++# Licença do Ollama upstream; manter arquivo separado facilita auditoria da versão empacotada.
  install -m 0644 %{bdir}/ollama/LICENSE \
      %{buildroot}%{og_licensedir}/LICENSE.ollama
