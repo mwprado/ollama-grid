@@ -113,6 +113,23 @@ sudo systemctl reload nginx
 
 ---
 
+## 🔭 Evolução futura: afinidade de execução
+
+A fase v1 mantém a seleção explícita de backend por rota. Em releases posteriores, o `ollama-sessiond` deverá introduzir seleção automática entre backends elegíveis, considerando diferentes formas de afinidade:
+
+- **afinidade de sessão:** manter, preferencialmente, uma conversa no backend já utilizado;
+- **afinidade de modelo:** direcionar cada modelo aos backends compatíveis ou definidos por política;
+- **afinidade de capacidade:** considerar memória disponível, arquitetura, carga, latência, throughput e estado de saúde;
+- **afinidade de residência:** preferir o backend em que o modelo já esteja carregado em RAM ou VRAM.
+
+A afinidade será tratada como preferência, não como restrição absoluta. Compatibilidade, capacidade disponível e failover terão precedência quando o backend preferencial não puder atender à requisição.
+
+Inicialmente, a residência do modelo poderá ser registrada apenas como metadado para orientar o roteamento. Em uma fase posterior, esse mecanismo poderá evoluir para gerenciamento ativo de cache, com políticas de retenção, descarregamento, prefetch e eventual replicação de modelos entre backends equivalentes.
+
+Consulte [`ARCHITECTURE.md`](ARCHITECTURE.md) e [`ROADMAP.md`](ROADMAP.md) para a evolução planejada do `ollama-sessiond`.
+
+---
+
 ## 🔧 Serviços
 
 ```bash
