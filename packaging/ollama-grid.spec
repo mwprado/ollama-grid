@@ -198,13 +198,13 @@ echo "#---CPU---#"
 %if %{with cpu}
 pushd %{bdir}/ollama
 mkdir -p  %{bdir}/ollama/build
-cmake --fresh --preset "CPU" \
+cmake --fresh --preset "Default" \
    -DCMAKE_HIP_COMPILER=NOTFOUND \
    -DCMAKE_CUDA_COMPILER=NOTFOUND \
    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
    -DCMAKE_BUILD_TYPE=Release \
    -B %{bdir}/ollama/build
-cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "CPU"
+cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "Default"
 export CC=/usr/bin/gcc
 export CXX=/usr/bin/g++
 export CGO_ENABLED=1
