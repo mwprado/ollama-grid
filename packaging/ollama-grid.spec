@@ -274,7 +274,7 @@ echo "#---ROCm---#"
 %endif
 
 echo "#---CUDA 13---#"
-%if %{with cuda12}
+%if %{with cuda}
   pushd %{bdir}/ollama
 
   export CC=%{cuda_cc}
@@ -289,7 +289,7 @@ echo "#---CUDA 13---#"
     -DCUDAToolkit_ROOT=/usr/local/cuda-13.0 \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
-    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_BUILD_TYPE=Release \
     -B %{bdir}/ollama/build
 
