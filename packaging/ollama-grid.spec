@@ -198,13 +198,14 @@ echo "#---CPU---#"
 %if %{with cpu}
 pushd %{bdir}/ollama
 mkdir -p  %{bdir}/ollama/build
-cmake --fresh --preset "Default" \
+cmake --fresh --preset Default \
+   -DOLLAMA_LLAMA_BACKENDS="" \
    -DCMAKE_HIP_COMPILER=NOTFOUND \
    -DCMAKE_CUDA_COMPILER=NOTFOUND \
    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
    -DCMAKE_BUILD_TYPE=Release \
    -B %{bdir}/ollama/build
-cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "Default"
+cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 export CC=/usr/bin/gcc
 export CXX=/usr/bin/g++
 export CGO_ENABLED=1
@@ -217,12 +218,13 @@ echo "#---Vulkan---#"
 %if %{with vulkan}
   pushd %{bdir}/ollama
   mkdir -p %{bdir}/ollama/build
-  cmake --fresh --preset "Vulkan" \
+  cmake --fresh --preset Default \
+    -DOLLAMA_LLAMA_BACKENDS=vulkan \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
     -B %{bdir}/ollama/build
-  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "Vulkan"
+  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
   export CC=/usr/bin/gcc
   export CXX=/usr/bin/g++
   export CGO_ENABLED=1
@@ -235,14 +237,15 @@ echo "#---ROCm---#"
 %if %{with rocm} && "%{_arch}" == "x86_64"
   pushd %{bdir}/ollama
   mkdir -p %{bdir}/ollama/build
-  cmake --fresh --preset "ROCm 6" \
+  cmake --fresh --preset Default \
+       -DOLLAMA_LLAMA_BACKENDS=rocm_v7_2 \
        -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
        -DCMAKE_CUDA_COMPILER=NOTFOUND \
        -DAMDGPU_TARGETS="gfx803;gfx1032;gfx1035" \
        -DGPU_TARGETS="gfx803;gfx1032;gfx1035" \
        -DCMAKE_BUILD_TYPE=Release \
        -B %{bdir}/ollama/build
-  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus} --preset "ROCm 6"
+  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
   export CC=/usr/bin/gcc
   export CXX=/usr/bin/g++
   export CGO_ENABLED=1
@@ -255,7 +258,8 @@ echo "#---CUDA 13---#"
 %if %{with cuda}
   pushd %{bdir}/ollama
   mkdir -p %{bdir}/ollama/build
-  cmake --fresh --preset "CUDA 13" \
+  cmake --fresh --preset Default \
+    -DOLLAMA_LLAMA_BACKENDS=cuda_v13 \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
@@ -269,7 +273,7 @@ echo "#---CUDA 13---#"
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda13_include -fPIC"
 
-  cmake --build --parallel %{?_smp_build_ncpus} --preset "CUDA 13" 
+  cmake --build --parallel %{?_smp_build_ncpus}
   export CC=/usr/bin/gcc-14
   export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
@@ -282,7 +286,8 @@ echo "#---CUDA 12---#"
 %if %{with cuda12}
   pushd %{bdir}/ollama
   mkdir -p %{bdir}/ollama/build
-  cmake --fresh   --preset "CUDA 12" \
+  cmake --fresh   --preset Default \
+    -DOLLAMA_LLAMA_BACKENDS=cuda_v12 \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
@@ -295,7 +300,7 @@ echo "#---CUDA 12---#"
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda12_include -fPIC" \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda12_include -fPIC"
-  cmake --build --parallel %{?_smp_build_ncpus} --preset "CUDA 12"
+  cmake --build --parallel %{?_smp_build_ncpus}
   export CC=/usr/bin/gcc-14
   export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
