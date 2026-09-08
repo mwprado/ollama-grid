@@ -63,6 +63,12 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %global cuda_cc  /usr/bin/gcc-14
 %global cuda_cxx /usr/bin/g++-14
 %endif
+
+%if 0%{?rhel} == 9
+%global og_cpu_compat -DGGML_CPU_ALL_VARIANTS=OFF
+%else
+%global og_cpu_compat %{nil}
+%endif
   
 # ====== BuildRequires gerais ======
 BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf systemd-rpm-macros
@@ -248,6 +254,7 @@ echo "#---Vulkan---#"
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
+    %{og_cpu_compat} \
     -B %{bdir}/ollama/build
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
   export CC=/usr/bin/gcc
@@ -268,6 +275,7 @@ echo "#---ROCm---#"
        -DCMAKE_CUDA_COMPILER=NOTFOUND \
        -DAMDGPU_TARGETS="gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201" \
        -DCMAKE_BUILD_TYPE=Release \
+       %{og_cpu_compat} \
        -B %{bdir}/ollama/build
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
   export CC=/usr/bin/gcc
@@ -296,6 +304,7 @@ echo "#---CUDA 13---#"
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_BUILD_TYPE=Release \
+    %{og_cpu_compat} \
     -B %{bdir}/ollama/build
 
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
@@ -326,6 +335,7 @@ echo "#---CUDA 12---#"
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_BUILD_TYPE=Release \
+    %{og_cpu_compat} \
     -B %{bdir}/ollama/build
 
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
