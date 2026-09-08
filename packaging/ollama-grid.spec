@@ -283,9 +283,9 @@ echo "#---CUDA 13---#"
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-    -DCMAKE_C_COMPILER=%{cuda_cc}
-    -DCMAKE_CXX_COMPILER=%{cuda_cxx}
-    -DCMAKE_CUDA_HOST_COMPILER=%{cuda_cxx}
+    -DCMAKE_C_COMPILER=%{cuda_cc} \
+    -DCMAKE_CXX_COMPILER=%{cuda_cxx} \
+    -DCMAKE_CUDA_HOST_COMPILER=%{cuda_cxx} \
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc \
     -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda13_include -fPIC" \
@@ -311,9 +311,9 @@ echo "#---CUDA 12---#"
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-    -DCMAKE_C_COMPILER=%{cuda_cc}
-    -DCMAKE_CXX_COMPILER=%{cuda_cxx}
-    -DCMAKE_CUDA_HOST_COMPILER=%{cuda_cxx}
+    -DCMAKE_C_COMPILER=%{cuda_cc} \
+    -DCMAKE_CXX_COMPILER=%{cuda_cxx} \
+    -DCMAKE_CUDA_HOST_COMPILER=%{cuda_cxx} \
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
     -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda12_include -fPIC" \
