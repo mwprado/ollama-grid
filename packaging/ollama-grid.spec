@@ -241,8 +241,7 @@ echo "#---ROCm---#"
        -DOLLAMA_LLAMA_BACKENDS=rocm_v7_2 \
        -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
        -DCMAKE_CUDA_COMPILER=NOTFOUND \
-       -DAMDGPU_TARGETS="gfx803;gfx1032;gfx1035" \
-       -DGPU_TARGETS="gfx803;gfx1032;gfx1035" \
+       -DAMDGPU_TARGETS="gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201" \
        -DCMAKE_BUILD_TYPE=Release \
        -B %{bdir}/ollama/build
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
@@ -460,33 +459,175 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
 # BIBLIOTECAS (instaladas por backend)
 # ============================
 
+# CPU
 %if %{with cpu}
-  install -m 0644 %{bdir}/build-cpu/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/ollama/
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/ollama/*.so; do fix_rpath "$f"; done
+  # Bibliotecas comuns
+  install -m 0644 \
+    %{bdir}/build-cpu/lib/ollama/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/ollama/
+
+  # Executáveis auxiliares do runtime
+  install -m 0755 \
+    %{bdir}/build-cpu/lib/ollama/llama-server \
+    %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/ollama/
+
+  install -m 0755 \
+    %{bdir}/build-cpu/lib/ollama/llama-quantize \
+    %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/ollama/
+
+  # Remove RPATH/RUNPATH somente das bibliotecas
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/ollama/*.so*; do
+    [ -e "$f" ] || continue
+    fix_rpath "$f"
+  done
 %endif
 
 # Vulkan
 %if %{with vulkan}
-  install -m 0644 %{bdir}/build-vulkan/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/*.so; do fix_rpath "$f"; done
+  # Bibliotecas comuns
+  install -m 0644 \
+    %{bdir}/build-vulkan/lib/ollama/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/
+
+  # Executáveis auxiliares do runtime
+  install -m 0755 \
+    %{bdir}/build-vulkan/lib/ollama/llama-server \
+    %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/
+
+  install -m 0755 \
+    %{bdir}/build-vulkan/lib/ollama/llama-quantize \
+    %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/
+
+  # Backend Vulkan específico
+  install -d \
+    %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/vulkan
+
+  install -m 0644 \
+    %{bdir}/build-vulkan/lib/ollama/vulkan/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/vulkan/
+
+  # Remove RPATH/RUNPATH das bibliotecas comuns
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/*.so*; do
+    [ -e "$f" ] || continue
+    fix_rpath "$f"
+  done
+
+  # Remove RPATH/RUNPATH das bibliotecas Vulkan
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/vulkan/*.so*; do
+    [ -e "$f" ] || continue
+    fix_rpath "$f"
+  done
 %endif
 
 # ROCm
 %if %{with rocm} && "%{_arch}" == "x86_64"
-  install -m 0644 %{bdir}/build-rocm/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/*.so; do fix_rpath "$f"; done
+  # Bibliotecas comuns
+  install -m 0644 \
+    %{bdir}/build-rocm/lib/ollama/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/
+
+  # Executáveis auxiliares do runtime
+  install -m 0755 \
+    %{bdir}/build-rocm/lib/ollama/llama-server \
+    %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/
+
+  install -m 0755 \
+    %{bdir}/build-rocm/lib/ollama/llama-quantize \
+    %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/
+
+  # Backend ROCm específico
+  install -d \
+    %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/rocm_v7_2
+
+  install -m 0644 \
+    %{bdir}/build-rocm/lib/ollama/rocm_v7_2/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/rocm_v7_2/
+
+  # Remove RPATH/RUNPATH das bibliotecas comuns
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/*.so*; do
+    [ -e "$f" ] || continue
+    fix_rpath "$f"
+  done
+
+  # Remove RPATH/RUNPATH das bibliotecas ROCm
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/rocm_v7_2/*.so*; do
+    [ -e "$f" ] || continue
+    fix_rpath "$f"
+  done
 %endif
 
 # CUDA (atual)
 %if %{with cuda}
-  install -m 0644 %{bdir}/build-cuda/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/*.so; do fix_rpath "$f"; done
+  # Bibliotecas comuns
+  install -m 0644 \
+    %{bdir}/build-cuda/lib/ollama/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/
+
+  # Executáveis auxiliares do runtime
+  install -m 0755 \
+    %{bdir}/build-cuda/lib/ollama/llama-server \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/
+
+  install -m 0755 \
+    %{bdir}/build-cuda/lib/ollama/llama-quantize \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/
+
+  # Backend CUDA 13 específico
+  install -d \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13
+
+  install -m 0644 \
+    %{bdir}/build-cuda/lib/ollama/cuda_v13/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13/
+
+  # Remove RPATH/RUNPATH das bibliotecas comuns
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/*.so*; do
+    [ -e "$f" ] || continue
+    fix_rpath "$f"
+  done
+
+  # Remove RPATH/RUNPATH das bibliotecas CUDA
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13/*.so*; do
+    [ -e "$f" ] || continue
+    fix_rpath "$f"
+  done
 %endif
 
 # CUDA 12.9 (legacy)
 %if %{with cuda12}
-  install -m 0644 %{bdir}/build-cuda12/lib/ollama/* %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/*.so; do fix_rpath "$f"; done
+  # Bibliotecas comuns
+  install -m 0644 \
+    %{bdir}/build-cuda12/lib/ollama/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/
+
+  # Executáveis auxiliares do runtime
+  install -m 0755 \
+    %{bdir}/build-cuda12/lib/ollama/llama-server \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/
+
+  install -m 0755 \
+    %{bdir}/build-cuda12/lib/ollama/llama-quantize \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/
+
+  # Backend CUDA 12 específico
+  install -d \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12
+
+  install -m 0644 \
+    %{bdir}/build-cuda12/lib/ollama/cuda_v12/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/
+
+  # Remove RPATH/RUNPATH das bibliotecas comuns
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/*.so*; do
+    [ -e "$f" ] || continue
+    fix_rpath "$f"
+  done
+
+  # Remove RPATH/RUNPATH das bibliotecas CUDA 12
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/*.so*; do
+    [ -e "$f" ] || continue
+    fix_rpath "$f"
+  done
 %endif
 
 # ============================
