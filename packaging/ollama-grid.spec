@@ -360,9 +360,11 @@ install -d \
   %{buildroot}%{_tmpfilesdir} \
   %{buildroot}%{_unitdir} \
   %{buildroot}%{og_confdir} \
+  %{buildroot}%{og_confdir}/nginx \
   %{buildroot}%{og_licensedir} \
   %{buildroot}%{_sysconfdir}/nginx/conf.d \
-  %{buildroot}%{_libexecdir}/ollama-grid/
+  %{buildroot}%{_libexecdir}/ollama-grid/ 
+  
 
 %if %{with cpu}
 install -d \
@@ -672,6 +674,9 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
 install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
   %{buildroot}%{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
+install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid-write-policy.conf \
+  %{buildroot}%{og_confdir}/nginx/write-policy.conf
+
 # proprietary guard
 %if %{with cuda} || %{with cuda12}
 if find %{buildroot} -type f \( \
@@ -716,6 +721,10 @@ fi
 # arquivo de configuração do Nginx
 %config(noreplace) %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 %{_unitdir}/ollama-grid-balancer.service
+
+%dir %{og_confdir}/nginx
+%config(noreplace) %{og_confdir}/nginx/write-policy.conf
+
 
 # ============================
 # Subpacote: CPU
