@@ -50,6 +50,14 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 %global c_compiler gcc
 %global cpp_compiler g++
+
+%if 0%{?rhel} == 9
+%global cuda_cc  /opt/rh/gcc-toolset-14/root/usr/bin/gcc
+%global cuda_cxx /opt/rh/gcc-toolset-14/root/usr/bin/g++
+%else
+%global cuda_cc  /usr/bin/gcc-14
+%global cuda_cxx /usr/bin/g++-14
+%endif
   
 # ====== BuildRequires gerais ======
 BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf systemd-rpm-macros
@@ -71,15 +79,20 @@ BuildRequires:    rocm-devel
 
 # CUDA (toolkit deve existir no host de build; não usar repositório NVIDIA no COPR)
 %if %{with cuda} || %{with cuda12}
-BuildRequires:    gcc14
+%if 0%{?rhel} == 9
+BuildRequires: gcc-toolset-14-gcc
+BuildRequires: gcc-toolset-14-gcc-c++
+%else
+BuildRequires: gcc14
+%endif
 %endif
 
 %if %{with cuda}
-Recommends:    cuda-toolkit-13-0
+BuildRequires:    cuda-toolkit-13-0
 %endif
 
 %if %{with cuda12}
-Recommends:    cuda-toolkit-12-9
+BuildRequires:    cuda-toolkit-12-9
 %endif
 
 
@@ -270,18 +283,18 @@ echo "#---CUDA 13---#"
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-    -DCMAKE_C_COMPILER=/usr/bin/gcc-14 \
-    -DCMAKE_CXX_COMPILER=/usr/bin/g++-14 \
+    -DCMAKE_C_COMPILER=%{cuda_cc}
+    -DCMAKE_CXX_COMPILER=%{cuda_cxx}
+    -DCMAKE_CUDA_HOST_COMPILER=%{cuda_cxx}
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc \
-    -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-14 \
     -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda13_include -fPIC" \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda13_include -fPIC"
 
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
-  export CC=/usr/bin/gcc-14
-  export CXX=/usr/bin/g++-14
+  export CC=%{cuda_cc}
+  export CXX=%{cuda_cxx}
   export CGO_ENABLED=1
     %{og_gobuild} %{og_go_ldflag_cuda}  -o %{bdir}/ollama/build/ollama-grid-cuda .
   popd
@@ -298,17 +311,17 @@ echo "#---CUDA 12---#"
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-    -DCMAKE_C_COMPILER=/usr/bin/gcc-14 \
-    -DCMAKE_CXX_COMPILER=/usr/bin/g++-14 \
+    -DCMAKE_C_COMPILER=%{cuda_cc}
+    -DCMAKE_CXX_COMPILER=%{cuda_cxx}
+    -DCMAKE_CUDA_HOST_COMPILER=%{cuda_cxx}
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
-    -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-14 \
     -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda12_include -fPIC" \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda12_include -fPIC"
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
-  export CC=/usr/bin/gcc-14
-  export CXX=/usr/bin/g++-14
+  export CC=%{cuda_cc}
+  export CXX=%{cuda_cxx}
   export CGO_ENABLED=1
       %{og_gobuild} %{og_go_ldflag_cuda12} -o %{bdir}/ollama/build/ollama-grid-cuda12 .
   popd
@@ -429,7 +442,6 @@ install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cuda12.conf    %{buildroot}
 
 # --- utilitário para limpar RPATH/RUNPATH (ignora se patchelf não existir) ---
 fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1" || :; }
-
 
 # CPU  — publica como /usr/bin/ollama-grid-cpu
 %if %{with cpu}
@@ -594,10 +606,8 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
   done
 
   # Remove RPATH/RUNPATH das bibliotecas CUDA
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13/*.so*; do
-    [ -e "$f" ] || continue
-    fix_rpath "$f"
-  done
+  fix_rpath \
+  %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v13/libggml-cuda.so
 %endif
 
 # CUDA 12.9 (legacy)
@@ -621,7 +631,7 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
     %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12
 
   install -m 0644 \
-    %{bdir}/build-cuda12/lib/ollama/cuda_v12/*.so* \
+    %{bdir}/build-cuda12/lib/ollama/cuda_v12/libggml-cuda.so \
     %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/
 
   # Remove RPATH/RUNPATH das bibliotecas comuns
@@ -631,10 +641,8 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
   done
 
   # Remove RPATH/RUNPATH das bibliotecas CUDA 12
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/*.so*; do
-    [ -e "$f" ] || continue
-    fix_rpath "$f"
-  done
+  fix_rpath \
+  %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/libggml-cuda.so
 %endif
 
 # ============================
@@ -771,8 +779,7 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 %{_libexecdir}/ollama-grid/cuda/lib/ollama/llama-server
 %{_libexecdir}/ollama-grid/cuda/lib/ollama/llama-quantize
 %dir %{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13
-%{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13/*.so*
-
+%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v13/libggml-cuda.so
 
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda
@@ -802,7 +809,8 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 %{_libexecdir}/ollama-grid/cuda12/lib/ollama/llama-server
 %{_libexecdir}/ollama-grid/cuda12/lib/ollama/llama-quantize
 %dir %{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12
-%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/*.so*
+%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/libggml-cuda.so
+
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda12
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda12
 
