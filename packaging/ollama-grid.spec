@@ -235,7 +235,7 @@ cmake --fresh --preset Default \
    -DCMAKE_CUDA_COMPILER=NOTFOUND \
    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
    -DCMAKE_BUILD_TYPE=Release \
-   %{og_cpu_compat}
+   %{og_cpu_compat} \
    -B %{bdir}/ollama/build
 cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 export CC=/usr/bin/gcc
