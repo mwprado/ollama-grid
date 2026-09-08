@@ -54,6 +54,7 @@ BuildRequires:    util-linux
 BuildRequires:    pkgconfig(vulkan)
 BuildRequires:    glslang
 BuildRequires:    glslc
+BuildRequires:    cmake(SPIRV-Headers)
 %endif
 
 # ROCm (ajuste conforme sua base de pacotes ROCm)
