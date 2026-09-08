@@ -21,8 +21,13 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %bcond_without rocm
 %endif
 
-%bcond_with cuda
+%if 0%{?rhel} == 9
+%bcond_without cuda12
+%else
 %bcond_with cuda12
+%endi
+
+%bcond_with cuda
 
 # ====== Caminhos de instalação ======
 
