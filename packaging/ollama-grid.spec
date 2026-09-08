@@ -274,29 +274,31 @@ echo "#---ROCm---#"
 %endif
 
 echo "#---CUDA 13---#"
-%if %{with cuda}
+%if %{with cuda12}
   pushd %{bdir}/ollama
-  mkdir -p %{bdir}/ollama/build
-  cmake --fresh --preset Default \
-    -DOLLAMA_LLAMA_BACKENDS=cuda_v13 \
-    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
-    -DCMAKE_HIP_COMPILER=NOTFOUND \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-    -DCMAKE_C_COMPILER=%{cuda_cc} \
-    -DCMAKE_CXX_COMPILER=%{cuda_cxx} \
-    -DCMAKE_CUDA_HOST_COMPILER=%{cuda_cxx} \
-    -DCMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc \
-    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
-    -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda13_include -fPIC" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_FLAGS="-I%{bdir}/cuda13_include -fPIC"
 
-  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
   export CC=%{cuda_cc}
   export CXX=%{cuda_cxx}
+  export CUDAHOSTCXX=%{cuda_cxx}
+  export CUDACXX=/usr/local/cuda-13.0/bin/nvcc
+
+  mkdir -p %{bdir}/ollama/build
+
+  cmake --fresh --preset Default \
+    -DOLLAMA_LLAMA_BACKENDS=cuda_v13 \
+    -DCUDAToolkit_ROOT=/usr/local/cuda-13.0 \
+    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+    -DCMAKE_HIP_COMPILER=NOTFOUND \
+    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -B %{bdir}/ollama/build
+
+  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
+
   export CGO_ENABLED=1
-    %{og_gobuild} %{og_go_ldflag_cuda}  -o %{bdir}/ollama/build/ollama-grid-cuda .
+  %{og_gobuild} %{og_go_ldflag_cuda} \
+    -o %{bdir}/ollama/build/ollama-grid-cuda .
+
   popd
   mv %{bdir}/ollama/build %{bdir}/build-cuda
 %endif
@@ -304,26 +306,29 @@ echo "#---CUDA 13---#"
 echo "#---CUDA 12---#"
 %if %{with cuda12}
   pushd %{bdir}/ollama
-  mkdir -p %{bdir}/ollama/build
-  cmake --fresh   --preset Default \
-    -DOLLAMA_LLAMA_BACKENDS=cuda_v12 \
-    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
-    -DCMAKE_HIP_COMPILER=NOTFOUND \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-    -DCMAKE_C_COMPILER=%{cuda_cc} \
-    -DCMAKE_CXX_COMPILER=%{cuda_cxx} \
-    -DCMAKE_CUDA_HOST_COMPILER=%{cuda_cxx} \
-    -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
-    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
-    -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda12_include -fPIC" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_FLAGS="-I%{bdir}/cuda12_include -fPIC"
-  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
+
   export CC=%{cuda_cc}
   export CXX=%{cuda_cxx}
+  export CUDAHOSTCXX=%{cuda_cxx}
+  export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
+
+  mkdir -p %{bdir}/ollama/build
+
+  cmake --fresh --preset Default \
+    -DOLLAMA_LLAMA_BACKENDS=cuda_v12 \
+    -DCUDAToolkit_ROOT=/usr/local/cuda-12.9 \
+    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+    -DCMAKE_HIP_COMPILER=NOTFOUND \
+    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -B %{bdir}/ollama/build
+
+  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
+
   export CGO_ENABLED=1
-      %{og_gobuild} %{og_go_ldflag_cuda12} -o %{bdir}/ollama/build/ollama-grid-cuda12 .
+  %{og_gobuild} %{og_go_ldflag_cuda12} \
+    -o %{bdir}/ollama/build/ollama-grid-cuda12 .
+
   popd
   mv %{bdir}/ollama/build %{bdir}/build-cuda12
 %endif
