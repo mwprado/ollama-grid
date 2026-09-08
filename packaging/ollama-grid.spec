@@ -27,7 +27,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %bcond_with cuda12
 %endif
 
-%bcond_with cuda
+%bcond_without cuda
 
 # ====== Caminhos de instalação ======
 
