@@ -680,6 +680,8 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 %dir %{_libexecdir}/ollama-grid/cpu/lib
 %dir %{_libexecdir}/ollama-grid/cpu/lib/ollama
 %{_libexecdir}/ollama-grid/cpu/lib/ollama/*.so*
+%{_libexecdir}/ollama-grid/cpu/lib/ollama/llama-server
+%{_libexecdir}/ollama-grid/cpu/lib/ollama/llama-quantize
 
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cpu
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cpu
@@ -702,6 +704,11 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 %dir %{_libexecdir}/ollama-grid/vulkan/lib
 %dir %{_libexecdir}/ollama-grid/vulkan/lib/ollama
 %{_libexecdir}/ollama-grid/vulkan/lib/ollama/*.so*
+%{_libexecdir}/ollama-grid/vulkan/lib/ollama/llama-server
+%{_libexecdir}/ollama-grid/vulkan/lib/ollama/llama-quantize
+
+%dir %{_libexecdir}/ollama-grid/vulkan/lib/ollama/vulkan
+%{_libexecdir}/ollama-grid/vulkan/lib/ollama/vulkan/*.so*
 
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/vulkan
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/vulkan
@@ -725,6 +732,11 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 %dir %{_libexecdir}/ollama-grid/rocm/lib
 %dir %{_libexecdir}/ollama-grid/rocm/lib/ollama
 %{_libexecdir}/ollama-grid/rocm/lib/ollama/*.so*
+%{_libexecdir}/ollama-grid/rocm/lib/ollama/llama-server
+%{_libexecdir}/ollama-grid/rocm/lib/ollama/llama-quantize
+
+%dir %{_libexecdir}/ollama-grid/rocm/lib/ollama/rocm_v7_2
+%{_libexecdir}/ollama-grid/rocm/lib/ollama/rocm_v7_2/*.so*
 
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/rocm
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/rocm
@@ -750,6 +762,11 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 %dir %{_libexecdir}/ollama-grid/cuda/lib
 %dir %{_libexecdir}/ollama-grid/cuda/lib/ollama
 %{_libexecdir}/ollama-grid/cuda/lib/ollama/*.so*
+%{_libexecdir}/ollama-grid/cuda/lib/ollama/llama-server
+%{_libexecdir}/ollama-grid/cuda/lib/ollama/llama-quantize
+%dir %{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13
+%{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13/*.so*
+
 
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda
@@ -776,7 +793,10 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
 %dir %{_libexecdir}/ollama-grid/cuda12/lib
 %dir %{_libexecdir}/ollama-grid/cuda12/lib/ollama
 %{_libexecdir}/ollama-grid/cuda12/lib/ollama/*.so*
-
+%{_libexecdir}/ollama-grid/cuda12/lib/ollama/llama-server
+%{_libexecdir}/ollama-grid/cuda12/lib/ollama/llama-quantize
+%dir %{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12
+%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/*.so*
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda12
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda12
 
