@@ -272,7 +272,7 @@ echo "#---CUDA 13---#"
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda13_include -fPIC"
 
-  cmake --build --parallel %{?_smp_build_ncpus}
+  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
   export CC=/usr/bin/gcc-14
   export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
@@ -299,7 +299,7 @@ echo "#---CUDA 12---#"
     -DCMAKE_CXX_FLAGS="-I%{bdir}/cuda12_include -fPIC" \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-I%{bdir}/cuda12_include -fPIC"
-  cmake --build --parallel %{?_smp_build_ncpus}
+  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
   export CC=/usr/bin/gcc-14
   export CXX=/usr/bin/g++-14
   export CGO_ENABLED=1
