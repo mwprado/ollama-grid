@@ -651,6 +651,25 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
 install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid.conf \
   %{buildroot}%{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 
+# proprietary guard
+%if %{with cuda} || %{with cuda12}
+if find %{buildroot} -type f \( \
+     -name 'libcudart.so*' -o \
+     -name 'libcublas.so*' -o \
+     -name 'libcublasLt.so*' \
+     -name 'libcusparse.so*' \
+     -name 'libcusolver.so*' \
+     -name 'libcurand.so*' \
+     -name 'libcufft.so*' \
+     -name 'libnvrtc.so*' \
+   \) -print | grep -q .; then
+    echo "ERROR: NVIDIA CUDA runtime library found in buildroot"
+    exit 1
+fi
+%endif
+
+
+
 # ==================== Files ====================
 
 # ============================
