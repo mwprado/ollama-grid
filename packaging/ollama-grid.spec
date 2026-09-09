@@ -886,9 +886,9 @@ fi
 %files -n ollama-grid-cuda13
 
 # binário do backend
-%{_bindir}/ollama-grid-cuda
+%{_bindir}/ollama-grid-cuda13
 %{_libexecdir}/ollama-grid/cuda13/bin/ollama-grid-cuda13
-%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cuda.conf
+%config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cuda13.conf
 
 # libs do backend
 %dir %{_libexecdir}/ollama-grid/cuda13
@@ -901,8 +901,8 @@ fi
 %dir %{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13
 %{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13/libggml-cuda.so
 
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda13
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda13
 
 %endif
 
