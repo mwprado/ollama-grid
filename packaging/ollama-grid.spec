@@ -17,8 +17,8 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 %if 0%{?fedora} == 41
   %bcond_without cuda12
-  %bcond_without cuda13
-  %bcond_with  rocm
+  %bcond_with cuda13
+  %bcond_with rocm
 %endif
 
 %if 0%{?fedora} == 42
@@ -72,7 +72,7 @@ BuildRequires: cuda-toolkit-13-0
 %endif
 
 %if 0%{?fedora} == 43 && %{with rocm}
-%global rocm_version 6.6
+%global rocm_version 6.4
 %global rocm_backend rocm_v6_4
 BuildRequires: hip-devel
 BuildRequires: hipblas-devel
