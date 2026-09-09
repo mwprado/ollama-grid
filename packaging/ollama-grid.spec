@@ -213,7 +213,7 @@ mkdir -p %{bdir}/ollama-grid %{bdir}/ollama
 tar -xzf %{SOURCE0} -C %{bdir}/ollama-grid --strip-components=1
 tar -xzf %{SOURCE1} -C %{bdir}/ollama --strip-components=1
 
-%if %{with cuda13}
+%if %{with cuda13} && 0
 mkdir %{bdir}/cuda13_include
 cp -a /usr/local/cuda-13.0/targets/x86_64-linux/include/* %{bdir}/cuda13_include/
 pushd %{bdir}/cuda13_include/crt
@@ -227,7 +227,7 @@ pushd %{bdir}/cuda13_include/crt
 popd
 %endif
 
-%if %{with cuda12}
+%if %{with cuda12} && 0
 mkdir %{bdir}/cuda12_include/
 cp -a /usr/local/cuda-12.9/targets/x86_64-linux/include/* %{bdir}/cuda12_include/
 pushd %{bdir}/cuda12_include/crt
