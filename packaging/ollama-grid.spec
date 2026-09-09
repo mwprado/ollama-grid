@@ -834,7 +834,7 @@ fi
 
 %if %{with cuda13}
 
-%files -n ollama-grid-cuda
+%files -n ollama-grid-cuda13
 
 # binário do backend
 %{_bindir}/ollama-grid-cuda
