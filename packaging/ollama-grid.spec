@@ -369,7 +369,7 @@ echo "#---CUDA 13---#"
     -DOLLAMA_LLAMA_BACKENDS=cuda_v13 \
     -DCUDAToolkit_ROOT=%{cuda13_home} \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
-    -DCMAKE_HIP_COMPILER=NOTFOUND \    
+    -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_BUILD_TYPE=Release \
     %{og_cpu_compat} \
