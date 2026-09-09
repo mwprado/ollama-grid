@@ -17,26 +17,26 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 %if 0%{?fedora} == 41
   %bcond_without cuda12
-  %bcond_with    cuda13
-  %bcond_with    rocm
+  %bcond_without cuda13
+  %bcond_without  rocm
 %endif
 
 %if 0%{?fedora} == 42
   %bcond_with    cuda12
   %bcond_without cuda13
-  %bcond_with    rocm
+  %bcond_without rocm
 %endif 
 
 %if 0%{?fedora} == 43
   %bcond_with    cuda12
   %bcond_without cuda13
-  %bcond_with    rocm
+  %bcond_without rocm
 %endif
 
 %if 0%{?fedora} == 44
   %bcond_with    cuda12
   %bcond_without cuda13
-  %bcond_with    rocm
+  %bcond_without rocm
 %endif
 
 %if 0%{?rhel} == 9
@@ -71,12 +71,28 @@ BuildRequires: cuda-toolkit-12-9
 BuildRequires: cuda-toolkit-13-0
 %endif
 
+%if 0%{?fedora} == 43 && %{with rocm}
+%global rocm_version 6.6
+%global rocm_backend rocm_v6_4
+BuildRequires: hip-devel
+BuildRequires: hipblas-devel
+BuildRequires: numactl-libs
+%endif
+
 %if 0%{?fedora} == 43 && %{with cuda13}
   %global cuda13_version 13.2
   %global cuda13_home    /usr/local/cuda-13.2
   %global cuda13_cc      /usr/bin/gcc
   %global cuda13_cxx     /usr/bin/g++
 BuildRequires: cuda-toolkit-13-2
+%endif
+
+%if 0%{?fedora} == 44 && %{with rocm}
+%global rocm_version 7.1
+%global rocm_backend rocm_v7_1
+BuildRequires: hip-devel
+BuildRequires: hipblas-devel
+BuildRequires: numactl-libs
 %endif
 
 %if 0%{?fedora} == 44 && %{with cuda13}
