@@ -59,7 +59,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda12_cc      /usr/bin/gcc
   %global cuda12_cxx     /usr/bin/g++
 
-  BuildRequires: cuda-toolkit-12-9
+BuildRequires: cuda-toolkit-12-9
 %endif
 
 
@@ -68,7 +68,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda13_home    /usr/local/cuda-13.0
   %global cuda13_cc      /usr/bin/gcc
   %global cuda13_cxx     /usr/bin/g++
-  BuildRequires: cuda-toolkit-13-0
+BuildRequires: cuda-toolkit-13-0
 %endif
 
 %if 0%{?fedora} == 43 && %{with cuda13}
@@ -76,7 +76,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda13_home    /usr/local/cuda-13.2
   %global cuda13_cc      /usr/bin/gcc
   %global cuda13_cxx     /usr/bin/g++
-  BuildRequires: cuda-toolkit-13-2
+BuildRequires: cuda-toolkit-13-2
 %endif
 
 %if 0%{?fedora} == 44 && %{with cuda13}
@@ -84,7 +84,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda13_home    /usr/local/cuda-13.3
   %global cuda13_cc      /usr/bin/gcc
   %global cuda13_cxx     /usr/bin/g++
-  BuildRequires: cuda-toolkit-13-3
+BuildRequires: cuda-toolkit-13-3
 %endif
 
 %if 0%{?rhel} == 9 && %{with cuda12}
@@ -92,7 +92,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda12_home    /usr/local/cuda-12.9
   %global cuda12_cc      /usr/bin/gcc
   %global cuda12_cxx     /usr/bin/g++
-  BuildRequires: cuda-toolkit-12-9
+BuildRequires: cuda-toolkit-12-9
 %endif
 
 %if 0%{?rhel} == 9 && %{with cuda13}
@@ -101,7 +101,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda13_cc      /usr/bin/gcc
   %global cuda13_cxx     /usr/bin/g++
 
-  BuildRequires: cuda-toolkit-13-3
+BuildRequires: cuda-toolkit-13-3
 %endif
 
 %if 0%{?rhel} == 10 && %{with cuda13}
@@ -109,7 +109,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda13_home    /usr/local/cuda-13.3
   %global cuda13_cc      /usr/bin/gcc
   %global cuda13_cxx     /usr/bin/g++
-  BuildRequires: cuda-toolkit-13-3
+BuildRequires: cuda-toolkit-13-3
 %endif
 
 # After, we will include arm && "%{_arch}" == "x86_64"
@@ -117,17 +117,17 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %if 0%{?rhel} == 9 &&  %{with rocm} 
   %global rocm_version 7.2
   %global rocm_backend rocm_v7_2
-  BuildRequires: hip-devel
-  BuildRequires: hipblas-devel
-  BuildRequires: numactl-libs
+BuildRequires: hip-devel
+BuildRequires: hipblas-devel
+BuildRequires: numactl-libs
 %endif
 
 %if 0%{?rhel} == 10 &&  %{with rocm} 
   %global rocm_version 7.2
   %global rocm_backend rocm_v7_2
-  BuildRequires: hip-devel
-  BuildRequires: hipblas-devel
-  BuildRequires: numactl-libs
+BuildRequires: hip-devel
+BuildRequires: hipblas-devel
+BuildRequires: numactl-libs
 %endif
 
 # ====== Caminhos de instalação ======
