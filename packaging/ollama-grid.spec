@@ -650,11 +650,11 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
 
   # Backend ROCm específico
   install -d \
-    %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/rocm_v7_2
+    %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/%{rocm_backend}
 
   install -m 0644 \
-    %{bdir}/build-rocm/lib/ollama/rocm_v7_2/*.so* \
-    %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/rocm_v7_2/
+    %{bdir}/build-rocm/lib/ollama/%{rocm_backend}/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/%{rocm_backend}/
 
   # Remove RPATH/RUNPATH das bibliotecas comuns
   for f in %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/*.so*; do
@@ -663,7 +663,7 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
   done
 
   # Remove RPATH/RUNPATH das bibliotecas ROCm
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/rocm_v7_2/*.so*; do
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/%{rocm_backend}/*.so*; do
     [ -e "$f" ] || continue
     fix_rpath "$f"
   done
@@ -869,8 +869,8 @@ fi
 %{_libexecdir}/ollama-grid/rocm/lib/ollama/llama-server
 %{_libexecdir}/ollama-grid/rocm/lib/ollama/llama-quantize
 
-%dir %{_libexecdir}/ollama-grid/rocm/lib/ollama/rocm_v7_2
-%{_libexecdir}/ollama-grid/rocm/lib/ollama/rocm_v7_2/*.so*
+%dir %{_libexecdir}/ollama-grid/rocm/lib/ollama/%{rocm_backend}
+%{_libexecdir}/ollama-grid/rocm/lib/ollama/%{rocm_backend}/*.so*
 
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/rocm
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/rocm
@@ -878,7 +878,7 @@ fi
 %endif
 
 # ============================
-# Subpacote: CUDA (atual)
+# Subpacote: CUDA13
 # ============================
 
 %if %{with cuda13}
