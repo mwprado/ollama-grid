@@ -96,6 +96,15 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   BuildRequires: cuda-toolkit-12-9
 %endif
 
+%if 0%{?rhel} == 9 && %{with cuda13}
+  %global cuda13_version 13.3
+  %global cuda13_home    /usr/local/cuda-13.3
+  %global cuda13_cc      /usr/bin/gcc
+  %global cuda13_cxx     /usr/bin/g++
+
+  BuildRequires: cuda-toolkit-13-3
+%endif
+
 %if 0%{?rhel} == 10 && %{with cuda13}
   %global cuda13_version 13.3
   %global cuda13_home    /usr/local/cuda-13.3
@@ -353,13 +362,13 @@ echo "#---CUDA 13---#"
   export CC=%{cuda13_cc}
   export CXX=%{cuda13_cxx}
   export CUDAHOSTCXX=%{cuda13_cxx}
-  export CUDACXX=/usr/local/cuda-13.0/bin/nvcc
+  export CUDACXX=%{cuda13_home}/bin/nvcc
 
   mkdir -p %{bdir}/ollama/build
 
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=cuda_v13 \
-    -DCUDAToolkit_ROOT=/usr/local/cuda-13.0 \
+    -DCUDAToolkit_ROOT=%{cuda13_home} \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \    
     -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE"
@@ -386,13 +395,13 @@ echo "#---CUDA 12---#"
   export CC=%{cuda12_cc}
   export CXX=%{cuda12_cxx}
   export CUDAHOSTCXX=%{cuda12_cxx}
-  export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
+  export CUDACXX=%{cuda12_home}/bin/nvcc
 
   mkdir -p %{bdir}/ollama/build
 
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=cuda_v12 \
-    -DCUDAToolkit_ROOT=/usr/local/cuda-12.9 \
+    -DCUDAToolkit_ROOT=%{cuda12_home} \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
