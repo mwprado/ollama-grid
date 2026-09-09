@@ -202,12 +202,14 @@ Subpacote contendo a configuração do Nginx para o OllamaGrid e arquivos de int
 Instale pelo menos um backend (CPU/Vulkan/ROCm/CUDA).
 
 # (3) CPU
+%if %{with cpu}
 %package -n ollama-grid-cpu
 Summary:        Backend CPU
 Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-cpu
 Bibliotecas CPU e wrapper /usr/bin/ollama-grid-cpu.
+%endif
 
 # (4) Vulkan
 %if %{with vulkan}
@@ -778,6 +780,10 @@ fi
 %dir %{og_licensedir}
 %license %{og_licensedir}/LICENSE.ollama
 %license %{og_licensedir}/LICENSE.ollama-grid
+
+%dir %{_libexecdir}/ollama-grid
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid
+%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid
 
 %dir %{og_confdir}
 # sysusers / tmpfiles
