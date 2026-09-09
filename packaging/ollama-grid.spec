@@ -321,11 +321,13 @@ echo "#---CUDA 13---#"
     -DOLLAMA_LLAMA_BACKENDS=cuda_v13 \
     -DCUDAToolkit_ROOT=/usr/local/cuda-13.0 \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
-    -DCMAKE_HIP_COMPILER=NOTFOUND \
-    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+    -DCMAKE_HIP_COMPILER=NOTFOUND \    
+    -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE"
     -DCMAKE_BUILD_TYPE=Release \
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
+
+## removido -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
 
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 
@@ -353,10 +355,12 @@ echo "#---CUDA 12---#"
     -DCUDAToolkit_ROOT=/usr/local/cuda-12.9 \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
-    -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+    -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_BUILD_TYPE=Release \
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
+
+# REMOVIDO -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
 
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 
