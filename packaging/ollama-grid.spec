@@ -198,7 +198,6 @@ Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-cuda12
 Backend CUDA 12.9 para GPUs NVIDIA que não são mais atendidas pelo runtime CUDA 13.
-O patch é aplicado por script antes do build e revertido após o build.
 %endif
 
 echo "# ==================== Prep ==================== #"
