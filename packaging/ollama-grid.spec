@@ -83,27 +83,26 @@ BuildRequires:    rocm-devel
 #BuildRequires:    rocm-hip-devel hipblas-devel 
 %endif
 
-%if 0%{?rhel} >= 9
-%if %{with cuda12}
+%if 0%{?rhel} >= 9 && %if %{with cuda12}
 BuildRequires: gcc-toolset-14-gcc
 BuildRequires: gcc-toolset-14-gcc-c++
 %endif
-%if %{with cuda13}
+
+%if 0%{?rhel} >= 9 && %{with cuda13}
 BuildRequires: gcc-toolset-15-gcc
 BuildRequires: gcc-toolset-15-gcc-c++
 %endif
-%endif
 
-%if 0%{?fedora} <= 42
-%if %{with cuda12}
+%if 0%{?fedora} && 0%{?fedora} <= 42 && %if %{with cuda12}
 BuildRequires: gcc14
+BuildRequires: gcc14-c++
 %endif
 
-%if 0%{?fedora} > 42
-%if %{with cuda13}
+%if 0%{?fedora} && 0%{?fedora} > 42 && %if %{with cuda13}
 BuildRequires: gcc15
+BuildRequires: gcc15-c++
 %endif
-%endif
+
 
 %if %{with cuda13}
 BuildRequires:    cuda-toolkit-13-0
