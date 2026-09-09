@@ -327,7 +327,7 @@ echo "#---CUDA 13---#"
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
 
-## removido -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+## removido -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" 
 
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 
@@ -360,7 +360,7 @@ echo "#---CUDA 12---#"
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
 
-# REMOVIDO -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+# REMOVIDO -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" 
 
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 
