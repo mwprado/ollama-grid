@@ -84,19 +84,23 @@ BuildRequires:    rocm-devel
 %endif
 
 %if 0%{?rhel} >= 9
-%if %if %{with cuda12}
+%if %{with cuda12}
 BuildRequires: gcc-toolset-14-gcc
 BuildRequires: gcc-toolset-14-gcc-c++
-%elsif %{with cuda13}
+%endif
+%if %{with cuda13}
 BuildRequires: gcc-toolset-15-gcc
 BuildRequires: gcc-toolset-15-gcc-c++
 %endif
 %endif
 
-%if !%{?rhel} 
-%if %if %{with cuda12}
+%if 0%{?fedora} <= 42
+%if %{with cuda12}
 BuildRequires: gcc14
-%elsif %{with cuda13}
+%endif
+
+%if 0%{?fedora} > 42
+%if %{with cuda13}
 BuildRequires: gcc15
 %endif
 %endif
