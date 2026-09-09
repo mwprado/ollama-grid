@@ -82,6 +82,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf systemd-rpm-macros
 BuildRequires:    openmpi-devel
 BuildRequires:    util-linux
+
 # Vulkan
 %if %{with vulkan}
 BuildRequires:    pkgconfig(vulkan)
@@ -94,6 +95,7 @@ BuildRequires:    cmake(SPIRV-Headers)
 %if %{with rocm} && "%{_arch}" == "x86_64"
 BuildRequires:    rocm-devel
 #BuildRequires:    rocm-hip-devel hipblas-devel 
+BuildRequires: numactl-libs
 %endif
 
 %if 0%{?rhel} >= 9 && %{with cuda12}
