@@ -59,7 +59,6 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda12_cc      /usr/bin/gcc
   %global cuda12_cxx     /usr/bin/g++
 
-  BuildRequires: gcc14
   BuildRequires: cuda-toolkit-12-9
 %endif
 
@@ -339,7 +338,7 @@ echo "#---ROCm---#"
   pushd %{bdir}/ollama
   mkdir -p %{bdir}/ollama/build
   cmake --fresh --preset Default \
-       -DOLLAMA_LLAMA_BACKENDS=rocm_v7_2 \
+       -DOLLAMA_LLAMA_BACKENDS=%{rocm_backend} \
        -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
        -DCMAKE_CUDA_COMPILER=NOTFOUND \
        -DAMDGPU_TARGETS="gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201" \
@@ -371,7 +370,7 @@ echo "#---CUDA 13---#"
     -DCUDAToolkit_ROOT=%{cuda13_home} \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \    
-    -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE"
+    -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_BUILD_TYPE=Release \
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
