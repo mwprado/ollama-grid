@@ -39,6 +39,12 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %bcond_without rocm
 %endif
 
+%if 0%{?fedora} == 45
+  %bcond_with    cuda12
+  %bcond_without cuda13
+  %bcond_without rocm
+%endif
+
 %if 0%{?rhel} == 9
   %bcond_without cuda12
   %bcond_without cuda13
@@ -101,6 +107,15 @@ BuildRequires: numactl-libs
   %global cuda13_cc      /usr/bin/gcc
   %global cuda13_cxx     /usr/bin/g++
 BuildRequires: cuda-toolkit-13-3
+%endif
+
+%if 0%{?fedora} == 45 && %{with rocm}
+%global rocm_version 7.2
+%global rocm_backend rocm_v7_2
+
+BuildRequires: hip-devel
+BuildRequires: hipblas-devel
+BuildRequires: numactl-libs
 %endif
 
 %if 0%{?rhel} == 9 && %{with cuda12}
