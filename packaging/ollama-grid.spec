@@ -49,12 +49,25 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %global c_compiler gcc
 %global cpp_compiler g++
 
-%if %{with cuda12}
+%if 0%{?rhel} >= 9 && %{with cuda12}
 %global cuda12_cc  /opt/rh/gcc-toolset-14/root/usr/bin/gcc
 %global cuda12_cxx /opt/rh/gcc-toolset-14/root/usr/bin/g++
 %endif
 
-%if %{with cuda13}
+%if 0%{?rhel} >= 9 && %{with cuda13}
+%global cuda12_cc  /opt/rh/gcc-toolset-15/root/usr/bin/gcc
+%global cuda12_cxx /opt/rh/gcc-toolset-15/root/usr/bin/g++
+%endif
+
+
+
+
+%if 0%{?fedora} && 0%{?fedora} <= 42 && %{with cuda12}
+%global cuda13_cc  /usr/bin/gcc-14
+%global cuda13_cxx /usr/bin/g++-14
+%endif
+
+%if 0%{?fedora} && 0%{?fedora} > 42 && %{with cuda13}
 %global cuda13_cc  /usr/bin/gcc-15
 %global cuda13_cxx /usr/bin/g++-15
 %endif
@@ -83,7 +96,7 @@ BuildRequires:    rocm-devel
 #BuildRequires:    rocm-hip-devel hipblas-devel 
 %endif
 
-%if 0%{?rhel} >= 9 && %if %{with cuda12}
+%if 0%{?rhel} >= 9 && %{with cuda12}
 BuildRequires: gcc-toolset-14-gcc
 BuildRequires: gcc-toolset-14-gcc-c++
 %endif
@@ -93,12 +106,12 @@ BuildRequires: gcc-toolset-15-gcc
 BuildRequires: gcc-toolset-15-gcc-c++
 %endif
 
-%if 0%{?fedora} && 0%{?fedora} <= 42 && %if %{with cuda12}
+%if 0%{?fedora} && 0%{?fedora} <= 42 && %{with cuda12}
 BuildRequires: gcc14
 BuildRequires: gcc14-c++
 %endif
 
-%if 0%{?fedora} && 0%{?fedora} > 42 && %if %{with cuda13}
+%if 0%{?fedora} && 0%{?fedora} > 42 && %{with cuda13}
 BuildRequires: gcc15
 BuildRequires: gcc15-c++
 %endif
