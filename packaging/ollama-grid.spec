@@ -67,7 +67,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %global cuda12_cxx /usr/bin/g++-14
 %endif
 
-%if 0%{?fedora} <= 43 && %{with cuda13}
+%if 0%{?fedora} >= 43 && %{with cuda13}
 %global cuda13_cc  /usr/bin/gcc-15
 %global cuda13_cxx /usr/bin/g++-15
 %endif
