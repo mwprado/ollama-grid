@@ -55,16 +55,16 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %endif
 
 %if 0%{?rhel} >= 9 && %{with cuda13}
-%global cuda12_cc  /opt/rh/gcc-toolset-15/root/usr/bin/gcc
-%global cuda12_cxx /opt/rh/gcc-toolset-15/root/usr/bin/g++
+%global cuda13_cc  /opt/rh/gcc-toolset-15/root/usr/bin/gcc
+%global cuda13_cxx /opt/rh/gcc-toolset-15/root/usr/bin/g++
 %endif
 
 
 
 
 %if 0%{?fedora} && 0%{?fedora} <= 42 && %{with cuda12}
-%global cuda13_cc  /usr/bin/gcc-14
-%global cuda13_cxx /usr/bin/g++-14
+%global cuda12_cc  /usr/bin/gcc-14
+%global cuda12_cxx /usr/bin/g++-14
 %endif
 
 %if 0%{?fedora} && 0%{?fedora} > 42 && %{with cuda13}
