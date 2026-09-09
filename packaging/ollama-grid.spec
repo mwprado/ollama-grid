@@ -50,13 +50,13 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %global cpp_compiler g++
 
 %if %{with cuda12}
-%global cuda_cc  /opt/rh/gcc-toolset-14/root/usr/bin/gcc
-%global cuda_cxx /opt/rh/gcc-toolset-14/root/usr/bin/g++
+%global cuda12_cc  /opt/rh/gcc-toolset-14/root/usr/bin/gcc
+%global cuda12_cxx /opt/rh/gcc-toolset-14/root/usr/bin/g++
 %endif
 
 %if %{with cuda13}
-%global cuda_cc  /usr/bin/gcc-15
-%global cuda_cxx /usr/bin/g++-15
+%global cuda13_cc  /usr/bin/gcc-15
+%global cuda13_cxx /usr/bin/g++-15
 %endif
 
 %if 0%{?rhel} == 9
@@ -294,9 +294,9 @@ echo "#---CUDA 13---#"
 %if %{with cuda13}
   pushd %{bdir}/ollama
 
-  export CC=%{cuda_cc}
-  export CXX=%{cuda_cxx}
-  export CUDAHOSTCXX=%{cuda_cxx}
+  export CC=%{cuda13_cc}
+  export CXX=%{cuda13_cxx}
+  export CUDAHOSTCXX=%{cuda13_cxx}
   export CUDACXX=/usr/local/cuda-13.0/bin/nvcc
 
   mkdir -p %{bdir}/ollama/build
@@ -325,9 +325,9 @@ echo "#---CUDA 12---#"
 %if %{with cuda12}
   pushd %{bdir}/ollama
 
-  export CC=%{cuda_cc}
-  export CXX=%{cuda_cxx}
-  export CUDAHOSTCXX=%{cuda_cxx}
+  export CC=%{cuda12_cc}
+  export CXX=%{cuda12_cxx}
+  export CUDAHOSTCXX=%{cuda12_cxx}
   export CUDACXX=/usr/local/cuda-12.9/bin/nvcc
 
   mkdir -p %{bdir}/ollama/build
