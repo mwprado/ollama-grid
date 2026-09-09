@@ -49,18 +49,27 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %global c_compiler gcc
 %global cpp_compiler g++
 
-%if 0%{?rhel} >= 9 && %{with cuda12}
+%if 0%{?rhel} == 9 && %{with cuda12}
 %global cuda12_cc  /opt/rh/gcc-toolset-14/root/usr/bin/gcc
 %global cuda12_cxx /opt/rh/gcc-toolset-14/root/usr/bin/g++
 %endif
 
-%if 0%{?rhel} >= 9 && %{with cuda13}
+%if 0%{?rhel} == 9 && %{with cuda13}
 %global cuda13_cc  /opt/rh/gcc-toolset-15/root/usr/bin/gcc
 %global cuda13_cxx /opt/rh/gcc-toolset-15/root/usr/bin/g++
 %endif
 
 
+%if 0%{?rhel} == 10 && %{with cuda12}
+# Default gcc14
+%global cuda12_cc  /usr/bin/gcc
+%global cuda12_cxx /usr/bin/g++
+%endif
 
+%if 0%{?rhel} == 10 && %{with cuda13}
+%global cuda13_cc  /opt/rh/gcc-toolset-15/root/usr/bin/gcc
+%global cuda13_cxx /opt/rh/gcc-toolset-15/root/usr/bin/g++
+%endif
 
 %if 0%{?fedora} == 42 && %{with cuda12}
 %global cuda12_cc  /usr/bin/gcc-14
@@ -91,6 +100,13 @@ BuildRequires:    glslc
 BuildRequires:    cmake(SPIRV-Headers)
 %endif
 
+%if 0%{?rhel} == 9 && %{with rocm}
+BuildRequires: hip-devel
+BuildRequires: hipblas-devel
+%endif
+
+
+
 # ROCm (ajuste conforme sua base de pacotes ROCm)
 %if %{with rocm} && "%{_arch}" == "x86_64"
 BuildRequires:    rocm-devel
@@ -101,9 +117,11 @@ BuildRequires: numactl-libs
 %if 0%{?rhel} >= 9 && %{with cuda12}
 BuildRequires: gcc-toolset-14-gcc
 BuildRequires: gcc-toolset-14-gcc-c++
+
+
 %endif
 
-%if 0%{?rhel} >= 9 && %{with cuda13}
+%if 0%{?rhel} == 9 && %{with cuda13}
 BuildRequires: gcc-toolset-15-gcc
 BuildRequires: gcc-toolset-15-gcc-c++
 %endif
