@@ -11,15 +11,115 @@ Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.t
 # ====== SOURCE1: OLLAMA upstream ======
 Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
 
-# ====== Seleção de backends (cada build pode habilitar 1..N) ======
+# ====== Backends for Distro ======
 %bcond_without cpu
 %bcond_without vulkan
-%bcond_without rocm
-%bcond_without cuda13
-%bcond_with    cuda12 # legacy
 
-%if 0%{?rhel} >= 9
-%bcond_without cuda12
+%if 0%{?fedora} == 41
+  %bcond_without cuda12
+  %bcond_with    cuda13
+  %bcond_with    rocm
+%endif
+
+%if 0%{?fedora} == 42
+  %bcond_with    cuda12
+  %bcond_without cuda13
+  %bcond_with    rocm
+%endif 
+
+%if 0%{?fedora} == 43
+  %bcond_with    cuda12
+  %bcond_without cuda13
+  %bcond_with    rocm
+%endif
+
+%if 0%{?fedora} == 44
+  %bcond_with    cuda12
+  %bcond_without cuda13
+  %bcond_with    rocm
+%endif
+
+%if 0%{?rhel} == 9
+  %bcond_without cuda12
+  %bcond_without cuda13
+  %bcond_without rocm
+%endif
+
+%if 0%{?rhel} == 10
+  %bcond_with    cuda12
+  %bcond_without cuda13
+  %bcond_without rocm
+%endif
+
+# ====== Requirements for distro and tecnology ======
+
+%if 0%{?fedora} == 41 && %{with cuda12}
+  %global cuda12_version 12.9
+  %global cuda12_home    /usr/local/cuda-12.9
+  %global cuda12_cc      /usr/bin/gcc
+  %global cuda12_cxx     /usr/bin/g++
+
+  BuildRequires: gcc14
+  BuildRequires: cuda-toolkit-12-9
+%endif
+
+
+%if 0%{?fedora} == 42 && %{with cuda13}
+  %global cuda13_version 13.0
+  %global cuda13_home    /usr/local/cuda-13.0
+  %global cuda13_cc      /usr/bin/gcc
+  %global cuda13_cxx     /usr/bin/g++
+  BuildRequires: cuda-toolkit-13-0
+%endif
+
+%if 0%{?fedora} == 43 && %{with cuda13}
+  %global cuda13_version 13.2
+  %global cuda13_home    /usr/local/cuda-13.2
+  %global cuda13_cc      /usr/bin/gcc
+  %global cuda13_cxx     /usr/bin/g++
+  BuildRequires: cuda-toolkit-13-2
+%endif
+
+%if 0%{?fedora} == 44 && %{with cuda13}
+  %global cuda13_version 13.3
+  %global cuda13_home    /usr/local/cuda-13.3
+  %global cuda13_cc      /usr/bin/gcc
+  %global cuda13_cxx     /usr/bin/g++
+  BuildRequires: cuda-toolkit-13-3
+%endif
+
+%if 0%{?rhel} == 9 && %{with cuda12}
+  %global cuda12_version 12.9
+  %global cuda12_home    /usr/local/cuda-12.9
+  %global cuda12_cc      /usr/bin/gcc
+  %global cuda12_cxx     /usr/bin/g++
+  BuildRequires: cuda-toolkit-12-9
+%endif
+
+%if 0%{?rhel} == 10 && %{with cuda13}
+  %global cuda13_version 13.3
+  %global cuda13_home    /usr/local/cuda-13.3
+  %global cuda13_cc      /usr/bin/gcc
+  %global cuda13_cxx     /usr/bin/g++
+  BuildRequires: cuda-toolkit-13-3
+%endif
+
+# After, we will include arm && "%{_arch}" == "x86_64"
+
+%if 0%{?rhel} == 9 &&  %{with rocm} 
+  %global rocm_version 7.2
+  %global rocm_backend rocm_v7_2
+  BuildRequires: hip-devel
+  BuildRequires: hipblas-devel
+  BuildRequires: numactl-libs
+%endif
+
+%if 0%{?rhel} == 10 &&  %{with rocm} 
+  %global rocm_version 7.2
+  %global rocm_backend rocm_v7_2
+  BuildRequires: hip-devel
+  BuildRequires: hipblas-devel
+  BuildRequires: numactl-libs
 %endif
 
 # ====== Caminhos de instalação ======
