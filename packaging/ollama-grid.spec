@@ -18,13 +18,13 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %if 0%{?fedora} == 41
   %bcond_without cuda12
   %bcond_without cuda13
-  %bcond_without  rocm
+  %bcond_with  rocm
 %endif
 
 %if 0%{?fedora} == 42
   %bcond_with    cuda12
   %bcond_without cuda13
-  %bcond_without rocm
+  %bcond_with rocm
 %endif 
 
 %if 0%{?fedora} == 43
