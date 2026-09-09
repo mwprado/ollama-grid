@@ -193,11 +193,11 @@ Bibliotecas CUDA13 (moderno) e wrapper /usr/bin/ollama-grid-cuda13. Requer toolk
 %if %{with cuda12}
 # (7) CUDA legacy 12.9 (ex.: Tesla P4, sm_61)
 %package -n ollama-grid-cuda12
-Summary:        Backend CUDA 12.9 (legado) para GPUs NVIDIA compute 6.1
+Summary:        Backend CUDA 12.9 para GPUs NVIDIA legadas
 Requires:       ollama-grid-common = %{version}-%{release}
 
 %description -n ollama-grid-cuda12
-Bibliotecas CUDA 12.9 (legado) e wrapper /usr/bin/ollama-grid-cuda12.
+Backend CUDA 12.9 para GPUs NVIDIA que não são mais atendidas pelo runtime CUDA 13.
 O patch é aplicado por script antes do build e revertido após o build.
 %endif
 
