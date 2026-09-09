@@ -14,20 +14,13 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 # ====== Seleção de backends (cada build pode habilitar 1..N) ======
 %bcond_without cpu
 %bcond_without vulkan
-
-%if 0%{?rhel} == 9
-%bcond_with rocm
-%else
 %bcond_without rocm
-%endif
+%bcond_without cuda13
+%bcond_with    cuda12 # legacy
 
-%if 0%{?rhel} == 9
+%if 0%{?rhel} >= 9
 %bcond_without cuda12
-%else
-%bcond_with cuda12
 %endif
-
-%bcond_without cuda
 
 # ====== Caminhos de instalação ======
 
@@ -45,7 +38,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 # Comando comum de build do binário Go (repo root do Ollama)
 %global og_go_ldflag_vulkan %{nil}
-%global og_go_ldflag_cuda   %{nil}
+%global og_go_ldflag_cuda13 %{nil}
 %global og_go_ldflag_cuda12 %{nil} 
 %global og_go_ldflag_cpu    %{nil} 
 %global og_go_ldflag_rocm   %{nil} 
@@ -56,12 +49,14 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %global c_compiler gcc
 %global cpp_compiler g++
 
-%if 0%{?rhel} == 9
+%if %{with cuda12}
 %global cuda_cc  /opt/rh/gcc-toolset-14/root/usr/bin/gcc
 %global cuda_cxx /opt/rh/gcc-toolset-14/root/usr/bin/g++
-%else
-%global cuda_cc  /usr/bin/gcc-14
-%global cuda_cxx /usr/bin/g++-14
+%endif
+
+%if %{with cuda13}
+%global cuda_cc  /usr/bin/gcc-15
+%global cuda_cxx /usr/bin/g++-15
 %endif
 
 %if 0%{?rhel} == 9
@@ -88,17 +83,25 @@ BuildRequires:    rocm-devel
 #BuildRequires:    rocm-hip-devel hipblas-devel 
 %endif
 
-# CUDA (toolkit deve existir no host de build; não usar repositório NVIDIA no COPR)
-%if %{with cuda} || %{with cuda12}
-%if 0%{?rhel} == 9
+%if 0%{?rhel} >= 9
+%if %if %{with cuda12}
 BuildRequires: gcc-toolset-14-gcc
 BuildRequires: gcc-toolset-14-gcc-c++
-%else
-BuildRequires: gcc14
+%elsif %{with cuda13}
+BuildRequires: gcc-toolset-15-gcc
+BuildRequires: gcc-toolset-15-gcc-c++
 %endif
 %endif
 
-%if %{with cuda}
+%if !%{?rhel} 
+%if %if %{with cuda12}
+BuildRequires: gcc14
+%elsif %{with cuda13}
+BuildRequires: gcc15
+%endif
+%endif
+
+%if %{with cuda13}
 BuildRequires:    cuda-toolkit-13-0
 %endif
 
@@ -161,14 +164,14 @@ Requires:       ollama-grid-common = %{version}-%{release}
 Bibliotecas ROCm (HIP) e wrapper /usr/bin/ollama-grid-rocm.
 %endif
 
-%if %{with cuda}
+%if %{with cuda13}
 # (6) CUDA (moderno, sempre “latest” disponível no host de build)
-%package -n ollama-grid-cuda
+%package -n ollama-grid-cuda13
 Summary:        Backend CUDA (GPUs NVIDIA modernas)
 Requires:       ollama-grid-common = %{version}-%{release}
 
-%description -n ollama-grid-cuda
-Bibliotecas CUDA (moderno) e wrapper /usr/bin/ollama-grid-cuda. Requer toolkit presente no host.
+%description -n ollama-grid-cuda13
+Bibliotecas CUDA13 (moderno) e wrapper /usr/bin/ollama-grid-cuda13. Requer toolkit presente no host.
 %endif
 
 %if %{with cuda12}
@@ -194,7 +197,7 @@ mkdir -p %{bdir}/ollama-grid %{bdir}/ollama
 tar -xzf %{SOURCE0} -C %{bdir}/ollama-grid --strip-components=1
 tar -xzf %{SOURCE1} -C %{bdir}/ollama --strip-components=1
 
-%if %{with cuda}
+%if %{with cuda13}
 mkdir %{bdir}/cuda13_include
 cp -a /usr/local/cuda-13.0/targets/x86_64-linux/include/* %{bdir}/cuda13_include/
 pushd %{bdir}/cuda13_include/crt
@@ -288,7 +291,7 @@ echo "#---ROCm---#"
 %endif
 
 echo "#---CUDA 13---#"
-%if %{with cuda}
+%if %{with cuda13}
   pushd %{bdir}/ollama
 
   export CC=%{cuda_cc}
@@ -311,11 +314,11 @@ echo "#---CUDA 13---#"
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 
   export CGO_ENABLED=1
-  %{og_gobuild} %{og_go_ldflag_cuda} \
-    -o %{bdir}/ollama/build/ollama-grid-cuda .
+  %{og_gobuild} %{og_go_ldflag_cuda13} \
+    -o %{bdir}/ollama/build/ollama-grid-cuda13 .
 
   popd
-  mv %{bdir}/ollama/build %{bdir}/build-cuda
+  mv %{bdir}/ollama/build %{bdir}/build-cuda13
 %endif
 
 echo "#---CUDA 12---#"
@@ -389,12 +392,12 @@ install -d \
   %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama 
 %endif  
 
-%if %{with cuda}
+%if %{with cuda13}
 install -d \
-  %{buildroot}%{_libexecdir}/ollama-grid/cuda \
-  %{buildroot}%{_libexecdir}/ollama-grid/cuda/bin \
-  %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib \
-  %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama
+  %{buildroot}%{_libexecdir}/ollama-grid/cuda13 \
+  %{buildroot}%{_libexecdir}/ollama-grid/cuda13/bin \
+  %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib \
+  %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama
 %endif
 
 %if %{with cuda12}
@@ -446,10 +449,10 @@ install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/rocm.conf    %{buildroot}%{
 %endif
 
 # CUDA (atual)
-%if %{with cuda}
-install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cuda
-install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cuda
-install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cuda.conf    %{buildroot}%{og_confdir}/cuda.conf
+%if %{with cuda13}
+install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cuda13
+install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cuda13
+install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cuda13.conf    %{buildroot}%{og_confdir}/cuda13.conf
 %endif
 
 # CUDA 12.9 (legacy)
@@ -486,9 +489,9 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
 %endif
 
 # CUDA (atual)
-%if %{with cuda}
-  install -m 0755 %{bdir}/build-cuda/ollama-grid-cuda     %{buildroot}%{_libexecdir}/ollama-grid/cuda/bin/ollama-grid-cuda
-  ln -sr %{_libexecdir}/ollama-grid/cuda/bin/ollama-grid-cuda %{buildroot}%{_bindir}/ollama-grid-cuda  
+%if %{with cuda13}
+  install -m 0755 %{bdir}/build-cuda13/ollama-grid-cuda13     %{buildroot}%{_libexecdir}/ollama-grid/cuda13/bin/ollama-grid-cuda13
+  ln -sr %{_libexecdir}/ollama-grid/cuda13/bin/ollama-grid-cuda13 %{buildroot}%{_bindir}/ollama-grid-cuda13
 %endif
 
 # CUDA 12.9 (legacy)
@@ -599,38 +602,38 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
 %endif
 
 # CUDA (atual)
-%if %{with cuda}
+%if %{with cuda13}
   # Bibliotecas comuns
   install -m 0644 \
-    %{bdir}/build-cuda/lib/ollama/*.so* \
-    %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/
+    %{bdir}/build-cuda13/lib/ollama/*.so* \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama/
 
   # Executáveis auxiliares do runtime
   install -m 0755 \
-    %{bdir}/build-cuda/lib/ollama/llama-server \
-    %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/
+    %{bdir}/build-cuda13/lib/ollama/llama-server \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama/
 
   install -m 0755 \
-    %{bdir}/build-cuda/lib/ollama/llama-quantize \
-    %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/
+    %{bdir}/build-cuda13/lib/ollama/llama-quantize \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama/
 
   # Backend CUDA 13 específico
   install -d \
-    %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13
 
   install -m 0644 \
-    %{bdir}/build-cuda/lib/ollama/cuda_v13/libggml-cuda.so \
-    %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13/
+    %{bdir}/build-cuda13/lib/ollama/cuda_v13/libggml-cuda.so \
+    %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13/
 
   # Remove RPATH/RUNPATH das bibliotecas comuns
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/*.so*; do
+  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama/*.so*; do
     [ -e "$f" ] || continue
     fix_rpath "$f"
   done
 
   # Remove RPATH/RUNPATH das bibliotecas CUDA
   fix_rpath \
-  %{buildroot}%{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13/libggml-cuda.so
+  %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13/libggml-cuda.so
 %endif
 
 # CUDA 12.9 (legacy)
@@ -678,7 +681,7 @@ install -m 0644 %{bdir}/ollama-grid/nginx/ollama-grid-write-policy.conf \
   %{buildroot}%{og_confdir}/nginx/write-policy.conf
 
 # proprietary guard
-%if %{with cuda} || %{with cuda12}
+%if %{with cuda13} || %{with cuda12}
 if find %{buildroot} -type f \( \
      -name 'libcudart.so*' -o \
      -name 'libcublas.so*' -o \
@@ -810,25 +813,25 @@ fi
 # Subpacote: CUDA (atual)
 # ============================
 
-%if %{with cuda}
+%if %{with cuda13}
 
 %files -n ollama-grid-cuda
 
 # binário do backend
 %{_bindir}/ollama-grid-cuda
-%{_libexecdir}/ollama-grid/cuda/bin/ollama-grid-cuda
+%{_libexecdir}/ollama-grid/cuda13/bin/ollama-grid-cuda13
 %config(noreplace) %attr(0640,root,ollama-grid) /etc/ollama-grid/cuda.conf
 
 # libs do backend
-%dir %{_libexecdir}/ollama-grid/cuda
-%dir %{_libexecdir}/ollama-grid/cuda/bin
-%dir %{_libexecdir}/ollama-grid/cuda/lib
-%dir %{_libexecdir}/ollama-grid/cuda/lib/ollama
-%{_libexecdir}/ollama-grid/cuda/lib/ollama/*.so*
-%{_libexecdir}/ollama-grid/cuda/lib/ollama/llama-server
-%{_libexecdir}/ollama-grid/cuda/lib/ollama/llama-quantize
-%dir %{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13
-%{_libexecdir}/ollama-grid/cuda/lib/ollama/cuda_v13/libggml-cuda.so
+%dir %{_libexecdir}/ollama-grid/cuda13
+%dir %{_libexecdir}/ollama-grid/cuda13/bin
+%dir %{_libexecdir}/ollama-grid/cuda13/lib
+%dir %{_libexecdir}/ollama-grid/cuda13/lib/ollama
+%{_libexecdir}/ollama-grid/cuda13/lib/ollama/*.so*
+%{_libexecdir}/ollama-grid/cuda13/lib/ollama/llama-server
+%{_libexecdir}/ollama-grid/cuda13/lib/ollama/llama-quantize
+%dir %{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13
+%{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13/libggml-cuda.so
 
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda
 %dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda
@@ -914,16 +917,16 @@ fi
 %endif
 
 # ---- cuda ----
-%if %{with cuda}
-%post -n ollama-grid-cuda
+%if %{with cuda13}
+%post -n ollama-grid-cuda13
 if [ $1 -eq 1 ] ; then
-    systemctl enable --now ollama-grid@cuda.service >/dev/null 2>&1 || :
+    systemctl enable --now ollama-grid@cuda13.service >/dev/null 2>&1 || :
 else
-    systemctl try-restart ollama-grid@cuda.service >/dev/null 2>&1 || :
+    systemctl try-restart ollama-grid@cuda13.service >/dev/null 2>&1 || :
 fi
-%preun -n ollama-grid-cuda
+%preun -n ollama-grid-cuda13
 if [ $1 -eq 0 ] ; then
-    systemctl disable --now ollama-grid@cuda.service >/dev/null 2>&1 || :
+    systemctl disable --now ollama-grid@cuda13.service >/dev/null 2>&1 || :
 fi
 %endif
 
@@ -974,11 +977,11 @@ fi
 # ==================== Scriptlets ====================
 %changelog
 * Wed Nov 19 2025 Moacyr Prado <seuemail@exemplo> - 0.12.11-12
-- Refatoração do spec para múltiplos backends (CPU/Vulkan/ROCm/CUDA/CUDA-12.9)
+- Refatoração do spec para múltiplos backends (CPU/Vulkan/ROCm/cuda13/CUDA-12.9)
 - Integração com sysusers/tmpfiles e serviços systemd (template + backends + balancer)
 
 * Sat Nov 08 2025 OllamaGrid <maintainers@ollamagrid.org> - 0.12.9-1
-- Estrutura meta (ollama-grid) + common + backends (vulkan/rocm/cuda/cuda-12.9)
+- Estrutura meta (ollama-grid) + common + backends (vulkan/rocm/cuda13/cuda-12.9)
 - Source0 = Ollama upstream; Source1 = ollama-grid (scripts/patch/nginx)
 - CUDA 12.9: patch aplicado por script antes do build e revertido após o build
 - Instalação explícita das .so conforme caminhos reais dos builds
