@@ -54,7 +54,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %if 0%{?rhel} == 10
   %bcond_with    cuda12
   %bcond_without cuda13
-  %bcond_without rocm
+  %bcond_with rocm
 %endif
 
 # ====== Requirements for distro and tecnology ======
@@ -410,6 +410,7 @@ echo "#---CUDA 13---#"
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
+    -DCMAKE_EXE_LINKER_FLAGS="-no-pie" \
     -DCMAKE_BUILD_TYPE=Release \
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
