@@ -13,7 +13,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 # ====== Backends for Distro ======
 %bcond_without cpu
-%bcond_with vulkan
+%bcond_without vulkan
 
 %if 0%{?fedora} == 41
   %bcond_without cuda12
