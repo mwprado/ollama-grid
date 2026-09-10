@@ -151,6 +151,7 @@ BuildRequires: cuda-toolkit-13-3
 %if 0%{?rhel} == 9 &&  %{with rocm} 
   %global rocm_version 7.2
   %global rocm_backend rocm_v7_2
+  %global rocm_home /opt/rocm-%{rocm_version}
 BuildRequires: rocm
 BuildRequires: rocm-smi-devel
 BuildRequires: hip-devel
@@ -443,6 +444,7 @@ echo "#---CUDA 12---#"
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_HIP_COMPILER=%{rocm_home}/bin/hipcc \
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
 
