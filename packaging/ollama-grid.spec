@@ -161,6 +161,8 @@ BuildRequires: numactl-libs
 %if 0%{?rhel} == 10 &&  %{with rocm} 
   %global rocm_version 7.2
   %global rocm_backend rocm_v7_2
+  %global rocm_home /opt/rocm-%{rocm_version}
+BuildRequires: rocm-hip-runtime-devel
 BuildRequires: hip-devel
 BuildRequires: hipblas-devel
 BuildRequires: numactl-libs
