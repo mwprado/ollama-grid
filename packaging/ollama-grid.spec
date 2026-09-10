@@ -84,6 +84,8 @@ BuildRequires: hip-devel
 BuildRequires: hipblas-devel
 BuildRequires: hipcc
 BuildRequires: numactl-libs
+BuildRequires: libatomic 
+BuildRequires: libquadmath
 %endif
 
 %if 0%{?fedora} == 43 && %{with cuda13}
@@ -149,6 +151,8 @@ BuildRequires: cuda-toolkit-13-3
 %if 0%{?rhel} == 9 &&  %{with rocm} 
   %global rocm_version 7.2
   %global rocm_backend rocm_v7_2
+BuildRequires: rocm
+BuildRequires: rocm-smi-devel
 BuildRequires: hip-devel
 BuildRequires: hipblas-devel
 BuildRequires: numactl-libs
