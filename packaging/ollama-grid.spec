@@ -82,6 +82,7 @@ BuildRequires: cuda-toolkit-13-0
 %global rocm_backend rocm_v6_4
 BuildRequires: hip-devel
 BuildRequires: hipblas-devel
+BuildRequires: hipcc
 BuildRequires: numactl-libs
 %endif
 
