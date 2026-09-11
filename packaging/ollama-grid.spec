@@ -104,6 +104,14 @@ BuildRequires: hipblas-devel
 BuildRequires: numactl-libs
 %endif
 
+%if 0%{?fedora} == 44 && %{with cuda12}
+  %global cuda12_home    /usr/local/cuda-12.9
+  %global cuda12_cc      /usr/bin/gcc-14
+  %global cuda12_cxx     /usr/bin/g++-14
+BuildRequires: gcc14
+BuildRequires: cuda-toolkit-12-9
+%endif
+
 %if 0%{?fedora} == 44 && %{with cuda13}
   %global cuda13_version 13.3
   %global cuda13_home    /usr/local/cuda-13.3
