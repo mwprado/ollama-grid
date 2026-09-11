@@ -138,6 +138,14 @@ BuildRequires: cuda-toolkit-12-9
 BuildRequires: cuda-toolkit-13-3
 %endif
 
+%if 0%{?rhel} == 10 && %{with cuda12}
+  %global cuda12_version 12.9
+  %global cuda12_home    /usr/local/cuda-12.9
+  %global cuda12_cc      /usr/bin/gcc
+  %global cuda12_cxx     /usr/bin/g++
+BuildRequires: cuda-toolkit-12-9
+%endif
+
 %if 0%{?rhel} == 10 && %{with cuda13}
   %global cuda13_version 13.3
   %global cuda13_home    /usr/local/cuda-13.3
