@@ -34,9 +34,9 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %endif
 
 %if 0%{?fedora} == 44
-  %bcond_with    cuda12
-  %bcond_without cuda13
-  %bcond_without rocm
+  %bcond_without    cuda12
+  %bcond_with cuda13
+  %bcond_with rocm
 %endif
 
 %if 0%{?fedora} == 45
