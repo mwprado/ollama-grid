@@ -106,10 +106,12 @@ BuildRequires: numactl-libs
 
 %if 0%{?fedora} == 44 && %{with cuda12}
   %global cuda12_home    /usr/local/cuda-12.9
-  %global cuda12_cc      /usr/bin/gcc-14
-  %global cuda12_cxx     /usr/bin/g++-14
-BuildRequires: gcc14
+  %global cuda12_cc      /usr/lib64/custom-gcc14/bin/gcc
+  %global cuda12_cxx     /usr/lib64/custom-gcc14/bin/g++
+BuildRequires: custom-gcc14
 BuildRequires: cuda-toolkit-12-9
+#BuildRequires: python3
+#BuildRequires: python3-pip
 %endif
 
 %if 0%{?fedora} == 44 && %{with cuda13}
