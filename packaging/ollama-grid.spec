@@ -57,6 +57,12 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %bcond_with rocm
 %endif
 
+
+%if %{with cuda12}
+export CUDA12_CFLAGS="$CFLAGS"
+export CUDA12_CXXFLAGS="$CXXFLAGS"
+%endif
+
 # ====== Requirements for distro and tecnology ======
 
 %if 0%{?fedora} == 41 && %{with cuda12}
@@ -108,6 +114,10 @@ BuildRequires: numactl-libs
   %global cuda12_home    /usr/local/cuda-12.9
   %global cuda12_cc      /usr/lib64/custom-gcc14/bin/gcc
   %global cuda12_cxx     /usr/lib64/custom-gcc14/bin/g++
+  
+  export CUDA12_CFLAGS="$(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')"
+  export CUDA12_CXXFLAGS="$(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')"
+  
 BuildRequires: custom-gcc14
 BuildRequires: cuda-toolkit-12-9
 #BuildRequires: python3
@@ -452,6 +462,9 @@ echo "#---CUDA 12---#"
   export CXX=%{cuda12_cxx}
   export CUDAHOSTCXX=%{cuda12_cxx}
   export CUDACXX=%{cuda12_home}/bin/nvcc
+
+  export CFLAGS="$CUDA12_CFLAGS"
+  export CXXFLAGS="$CUDA12_CXXFLAGS"
 
   mkdir -p %{bdir}/ollama/build
 
