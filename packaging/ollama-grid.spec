@@ -112,7 +112,7 @@ BuildRequires: numactl-libs
 %endif
 
 %if 0%{?fedora} == 44 && %{with cuda12}
-  %global cuda13_version 12.0
+  %global cuda12_version 12.9
   %global cuda12_home    /usr/local/cuda-12.9
   %global cuda12_cc      /usr/lib64/custom-gcc14/bin/gcc
   %global cuda12_cxx     /usr/lib64/custom-gcc14/bin/g++
