@@ -12,7 +12,7 @@ Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.t
 Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
 
 # ====== Backends for Distro ======
-%bcond_without cpu
+%bcond_with cpu
 %bcond_with vulkan
 
 %if 0%{?fedora} == 41
@@ -34,9 +34,9 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %endif
 
 %if 0%{?fedora} == 44
-  %bcond_without    cuda12
-  %bcond_with cuda13
-  %bcond_with rocm
+  %bcond_without cuda12
+  %bcond_with    cuda13
+  %bcond_with    rocm
 %endif
 
 %if 0%{?fedora} == 45
@@ -53,10 +53,11 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 %if 0%{?rhel} == 10
   %bcond_without    cuda12
-  %bcond_with cuda13
-  %bcond_with rocm
+  %bcond_with       cuda13
+  %bcond_with       rocm
 %endif
 
+# ====== Start Enviroment ======
 
 %if %{with cuda12}
   %global cuda12_cflags %{build_cflags}
@@ -71,7 +72,6 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda12_home    /usr/local/cuda-12.9
   %global cuda12_cc      /usr/bin/gcc
   %global cuda12_cxx     /usr/bin/g++
-
 BuildRequires: cuda-toolkit-12-9
 %endif
 
@@ -112,6 +112,7 @@ BuildRequires: numactl-libs
 %endif
 
 %if 0%{?fedora} == 44 && %{with cuda12}
+  %global cuda13_version 12.0
   %global cuda12_home    /usr/local/cuda-12.9
   %global cuda12_cc      /usr/lib64/custom-gcc14/bin/gcc
   %global cuda12_cxx     /usr/lib64/custom-gcc14/bin/g++
@@ -455,6 +456,9 @@ echo "#---CUDA 13---#"
 
 echo "#---CUDA 12---#"
 %if %{with cuda12}
+  ls -l %{cuda12_home}/bin/nvcc
+  %{cuda12_home}/bin/nvcc --version
+
   pushd %{bdir}/ollama
 
   mkdir -p %{bdir}/ollama/build
