@@ -462,8 +462,8 @@ echo "#---CUDA 12---#"
   CXX=%{cuda12_cxx} \
   CUDAHOSTCXX=%{cuda12_cxx} \
   CUDACXX=%{cuda12_home}/bin/nvcc \
-  CUDACXX=%{cuda12_home}/bin/nvcc \
   CFLAGS="%{cuda12_cflags}" \
+  CXXFLAGS="%{cuda12_cxxflags}" \
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=cuda_v12 \
     -DCUDAToolkit_ROOT=%{cuda12_home} \
