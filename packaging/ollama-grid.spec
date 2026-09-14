@@ -482,6 +482,13 @@ echo "#---CUDA 12---#"
 
 # REMOVIDO -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" 
 
+  CC=%{cuda12_cc} \
+  CXX=%{cuda12_cxx} \
+  CUDAHOSTCXX=%{cuda12_cxx} \
+  CUDACXX=%{cuda12_home}/bin/nvcc \
+  CFLAGS="%{cuda12_cflags}" \
+  CXXFLAGS="%{cuda12_cxxflags}" \
+  LDFLAGS="%{cuda12_ldflags}" \
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 
   export CGO_ENABLED=1
