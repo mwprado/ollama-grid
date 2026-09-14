@@ -63,6 +63,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda12_cflags %{build_cflags}
   %global cuda12_cxxflags %{build_cxxflags}
   %global cuda12_ldflags %{build_ldflags}
+  %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
 %endif
 
 # ====== Requirements for distro and tecnology ======
@@ -116,10 +117,15 @@ BuildRequires: numactl-libs
   %global cuda12_home    /usr/local/cuda-12.9
   %global cuda12_cc      /usr/lib64/custom-gcc14/bin/gcc
   %global cuda12_cxx     /usr/lib64/custom-gcc14/bin/g++
+
+  %global cuda12_glibc /usr/lib64/custom-glibc
+  %global cuda12_cuda_flags -Xcompiler=-isystem,%{cuda12_glibc}/include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
+  
   %global cuda12_cflags %(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
   %global cuda12_cxxflags %(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
   %global cuda12_ldflags %(echo "%{build_ldflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
 BuildRequires: custom-gcc14
+BuildRequires: custom-glibc
 BuildRequires: cuda-toolkit-12-9
 #BuildRequires: python3
 #BuildRequires: python3-pip
@@ -475,7 +481,7 @@ echo "#---CUDA 12---#"
     -DCUDAToolkit_ROOT=%{cuda12_home} \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
-    -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC" \
+    -DCMAKE_CUDA_FLAGS="%{cuda12_cuda_flags}" \
     -DCMAKE_BUILD_TYPE=Release \
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
