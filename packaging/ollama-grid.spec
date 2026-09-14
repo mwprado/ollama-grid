@@ -59,8 +59,8 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 
 %if %{with cuda12}
-export CUDA12_CFLAGS="$CFLAGS"
-export CUDA12_CXXFLAGS="$CXXFLAGS"
+CUDA12_CFLAGS="$CFLAGS"
+CUDA12_CXXFLAGS="$CXXFLAGS"
 %endif
 
 # ====== Requirements for distro and tecnology ======
@@ -115,8 +115,8 @@ BuildRequires: numactl-libs
   %global cuda12_cc      /usr/lib64/custom-gcc14/bin/gcc
   %global cuda12_cxx     /usr/lib64/custom-gcc14/bin/g++
   
-  export CUDA12_CFLAGS="$(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')"
-  export CUDA12_CXXFLAGS="$(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')"
+  CUDA12_CFLAGS="$(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')"
+  CUDA12_CXXFLAGS="$(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')"
   
 BuildRequires: custom-gcc14
 BuildRequires: cuda-toolkit-12-9
@@ -403,7 +403,7 @@ echo "#---Vulkan---#"
 echo "#---ROCm---#"
 %if %{with rocm} && "%{_arch}" == "x86_64"
   pushd %{bdir}/ollama
-  mkdir -p %{bdir}/ollama/build
+  mkdir -p %{bdir}/ollama/build  
   cmake --fresh --preset Default \
        -DOLLAMA_LLAMA_BACKENDS=%{rocm_backend} \
        -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
@@ -425,13 +425,12 @@ echo "#---CUDA 13---#"
 %if %{with cuda13}
   pushd %{bdir}/ollama
 
-  export CC=%{cuda13_cc}
-  export CXX=%{cuda13_cxx}
-  export CUDAHOSTCXX=%{cuda13_cxx}
-  export CUDACXX=%{cuda13_home}/bin/nvcc
-
   mkdir -p %{bdir}/ollama/build
-
+  
+  CC=%{cuda13_cc} \
+  CXX=%{cuda13_cxx} \
+  CUDAHOSTCXX=%{cuda13_cxx} \
+  CUDACXX=%{cuda13_home}/bin/nvcc \
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=cuda_v13 \
     -DCUDAToolkit_ROOT=%{cuda13_home} \
@@ -458,16 +457,14 @@ echo "#---CUDA 12---#"
 %if %{with cuda12}
   pushd %{bdir}/ollama
 
-  export CC=%{cuda12_cc}
-  export CXX=%{cuda12_cxx}
-  export CUDAHOSTCXX=%{cuda12_cxx}
-  export CUDACXX=%{cuda12_home}/bin/nvcc
-
-  export CFLAGS="$CUDA12_CFLAGS"
-  export CXXFLAGS="$CUDA12_CXXFLAGS"
-
   mkdir -p %{bdir}/ollama/build
 
+  CC=%{cuda12_cc} \
+  CXX=%{cuda12_cxx} \
+  CUDAHOSTCXX=%{cuda12_cxx} \
+  CUDACXX=%{cuda12_home}/bin/nvcc \
+  CFLAGS="$CUDA12_CFLAGS" \
+  CXXFLAGS="$CUDA12_CXXFLAGS" \
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=cuda_v12 \
     -DCUDAToolkit_ROOT=%{cuda12_home} \
