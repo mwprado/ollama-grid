@@ -61,6 +61,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 %if %{with cuda12}
   %global cuda12_cflags %{build_cflags}
   %global cuda12_cxxflags %{build_cxxflags}
+  %global cuda12_ldflags %{build_ldflags}
 %endif
 
 # ====== Requirements for distro and tecnology ======
@@ -116,7 +117,7 @@ BuildRequires: numactl-libs
   %global cuda12_cxx     /usr/lib64/custom-gcc14/bin/g++
   %global cuda12_cflags %(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
   %global cuda12_cxxflags %(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
-  
+  %global cuda12_ldflags %(echo "%{build_ldflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
 BuildRequires: custom-gcc14
 BuildRequires: cuda-toolkit-12-9
 #BuildRequires: python3
@@ -464,6 +465,7 @@ echo "#---CUDA 12---#"
   CUDACXX=%{cuda12_home}/bin/nvcc \
   CFLAGS="%{cuda12_cflags}" \
   CXXFLAGS="%{cuda12_cxxflags}" \
+  LDFLAGS="%{cuda12_ldflags}" \
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=cuda_v12 \
     -DCUDAToolkit_ROOT=%{cuda12_home} \
