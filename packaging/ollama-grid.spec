@@ -124,11 +124,7 @@ BuildRequires: numactl-libs
 # % global cuda12_cuda_flags -Xcompiler=-isystem,%{cuda12_glibc}/include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
 # % global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-fPIC
 
-%global cuda12_cuda_flags \
--Wno-deprecated-gpu-targets \
--Xcompiler=--sysroot=%{cuda12_sysroot} \
--Xcompiler=-B%{cuda12_sysroot}/usr/lib64/ \
--Xcompiler=-fPIC
+%global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-B%{cuda12_sysroot}/usr/lib64/ -Xcompiler=-fPIC
   
   %global cuda12_cflags %(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
   %global cuda12_cxxflags %(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
