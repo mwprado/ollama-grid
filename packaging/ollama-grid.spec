@@ -119,16 +119,15 @@ BuildRequires: numactl-libs
   %global cuda12_cxx     /usr/lib64/custom-gcc14/bin/g++
 
   %global cuda12_glibc /usr/lib64/custom-glibc
-  %global cuda12_cuda_flags -Xcompiler=-isystem,%{cuda12_glibc}/include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
-  
+  %global cuda12_sysroot /usr/lib64/custom-glibc
+#  %global cuda12_cuda_flags -Xcompiler=-isystem,%{cuda12_glibc}/include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
+  %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-fPIC
   %global cuda12_cflags %(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
   %global cuda12_cxxflags %(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
   %global cuda12_ldflags %(echo "%{build_ldflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
 BuildRequires: custom-gcc14
-BuildRequires: custom-glibc
+BuildRequires: custom-glibc = 2.40
 BuildRequires: cuda-toolkit-12-9
-#BuildRequires: python3
-#BuildRequires: python3-pip
 %endif
 
 %if 0%{?fedora} == 44 && %{with cuda13}
