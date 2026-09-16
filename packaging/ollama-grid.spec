@@ -60,6 +60,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 # ====== Start Enviroment ======
 
 %if %{with cuda12}
+  %global cuda12_host_flags %{nil}
   %global cuda12_cflags %{build_cflags}
   %global cuda12_cxxflags %{build_cxxflags}
   %global cuda12_ldflags %{build_ldflags}
@@ -124,11 +125,14 @@ BuildRequires: numactl-libs
 # % global cuda12_cuda_flags -Xcompiler=-isystem,%{cuda12_glibc}/include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
 # % global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-fPIC
 
-%global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-B%{cuda12_sysroot}/usr/lib64/ -Xcompiler=-fPIC
+  %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-B%{cuda12_sysroot}/usr/lib64/ -Xcompiler=-fPIC
   
-  %global cuda12_cflags %(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
-  %global cuda12_cxxflags %(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
-  %global cuda12_ldflags %(echo "%{build_ldflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g')
+  %global cuda12_host_flags --sysroot=%{cuda12_sysroot} -B%{cuda12_sysroot}/usr/lib64/
+
+  %global cuda12_cflags %(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
+  %global cuda12_cxxflags %(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
+  %global cuda12_ldflags %(echo "%{build_ldflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
+   
 BuildRequires: custom-gcc14
 BuildRequires: custom-glibc = 2.40
 BuildRequires: cuda-toolkit-12-9
