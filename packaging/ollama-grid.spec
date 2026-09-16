@@ -504,7 +504,16 @@ echo "#---CUDA 12---#"
   LDFLAGS="%{cuda12_ldflags}" \
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 
-  export CGO_ENABLED=1
+  #export CGO_ENABLED=1
+  #% {og_gobuild} % {og_go_ldflag_cuda12} \
+  #  -o %{bdir}/ollama/build/ollama-grid-cuda12 .
+
+  CC=%{cuda12_cc} \
+  CXX=%{cuda12_cxx} \
+  CGO_ENABLED=1 \
+  CGO_CFLAGS="%{cuda12_cflags}" \
+  CGO_CXXFLAGS="%{cuda12_cxxflags}" \
+  CGO_LDFLAGS="%{cuda12_ldflags}" \
   %{og_gobuild} %{og_go_ldflag_cuda12} \
     -o %{bdir}/ollama/build/ollama-grid-cuda12 .
 
