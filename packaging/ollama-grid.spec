@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.34.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -453,6 +453,8 @@ echo "#---CUDA 13---#"
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=cuda_v13 \
     -DCUDAToolkit_ROOT=%{cuda13_home} \
+    -DCMAKE_CUDA_COMPILER=%{cuda13_home}/bin/nvcc \
+    -DCMAKE_CUDA_HOST_COMPILER=%{cuda13_cxx} \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_FLAGS="-Wno-deprecated-gpu-targets -Xcompiler=-fPIC" \
@@ -460,12 +462,18 @@ echo "#---CUDA 13---#"
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
 
+  CC=%{cuda13_cc} \
+  CXX=%{cuda13_cxx} \
+  CUDAHOSTCXX=%{cuda13_cxx} \
+  CUDACXX=%{cuda13_home}/bin/nvcc \
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 
-  export CGO_ENABLED=1
+  CC=%{cuda13_cc} \
+  CXX=%{cuda13_cxx} \
+  CGO_ENABLED=1 \
   %{og_gobuild} %{og_go_ldflag_cuda13} \
     -o %{bdir}/ollama/build/ollama-grid-cuda13 .
-
+  
   popd
   mv %{bdir}/ollama/build %{bdir}/build-cuda13
 %endif
