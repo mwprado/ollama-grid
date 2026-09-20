@@ -65,6 +65,10 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda12_cxxflags %{build_cxxflags}
   %global cuda12_ldflags %{build_ldflags}
   %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
+
+  # Go/cgo padrão: nenhuma adaptação de toolchain
+  %global cuda12_cmake_go_env CGO_ENABLED=1
+  %global cuda12_final_go_env CGO_ENABLED=1
 %endif
 
 # ====== Requirements for distro and tecnology ======
@@ -124,15 +128,18 @@ BuildRequires: numactl-libs
   
 # % global cuda12_cuda_flags -Xcompiler=-isystem,%{cuda12_glibc}/include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
 # % global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-fPIC
-
-  %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-B%{cuda12_sysroot}/usr/lib64/ -Xcompiler=-fPIC
-  
+ 
   %global cuda12_host_flags --sysroot=%{cuda12_sysroot} -B%{cuda12_sysroot}/usr/lib64/
+  %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-B%{cuda12_sysroot}/usr/lib64/ -Xcompiler=-fPIC
 
   %global cuda12_cflags %(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
   %global cuda12_cxxflags %(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
   %global cuda12_ldflags %(echo "%{build_ldflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
-   
+
+  # Ambiente adicional necessário somente para a cápsula Fedora 44
+  %global cuda12_cmake_go_env CGO_ENABLED=1 CGO_CFLAGS="%{cuda12_cflags}" CGO_CXXFLAGS="%{cuda12_cxxflags}" CGO_LDFLAGS="%{cuda12_ldflags}" GOFLAGS="-buildmode=pie"
+  %global cuda12_final_go_env CGO_ENABLED=1 CGO_CFLAGS="%{cuda12_cflags}" CGO_CXXFLAGS="%{cuda12_cxxflags}" CGO_LDFLAGS="%{cuda12_ldflags}"
+  
 BuildRequires: custom-gcc14
 BuildRequires: custom-glibc = 2.40
 BuildRequires: cuda-toolkit-12-9
@@ -493,8 +500,6 @@ echo "#---CUDA 12---#"
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
 
-# REMOVIDO -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda12_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" 
-
   CC=%{cuda12_cc} \
   CXX=%{cuda12_cxx} \
   CUDAHOSTCXX=%{cuda12_cxx} \
@@ -502,23 +507,12 @@ echo "#---CUDA 12---#"
   CFLAGS="%{cuda12_cflags}" \
   CXXFLAGS="%{cuda12_cxxflags}" \
   LDFLAGS="%{cuda12_ldflags}" \
-  CGO_ENABLED=1 \
-  CGO_CFLAGS="%{cuda12_cflags}" \
-  CGO_CXXFLAGS="%{cuda12_cxxflags}" \
-  CGO_LDFLAGS="%{cuda12_ldflags}" \
-  GOFLAGS="-buildmode=pie" \
+  %{cuda12_cmake_go_env} \
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
-
-  #export CGO_ENABLED=1
-  #% {og_gobuild} % {og_go_ldflag_cuda12} \
-  #  -o %{bdir}/ollama/build/ollama-grid-cuda12 .
 
   CC=%{cuda12_cc} \
   CXX=%{cuda12_cxx} \
-  CGO_ENABLED=1 \
-  CGO_CFLAGS="%{cuda12_cflags}" \
-  CGO_CXXFLAGS="%{cuda12_cxxflags}" \
-  CGO_LDFLAGS="%{cuda12_ldflags}" \
+  %{cuda12_final_go_env} \
   %{og_gobuild} %{og_go_ldflag_cuda12} \
     -o %{bdir}/ollama/build/ollama-grid-cuda12 .
 
