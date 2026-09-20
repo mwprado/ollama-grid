@@ -414,10 +414,13 @@ echo "#---Vulkan---#"
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
-  export CC=/usr/bin/gcc
-  export CXX=/usr/bin/g++
-  export CGO_ENABLED=1
-    %{og_gobuild} %{og_go_ldflag_vulkan} -o %{bdir}/ollama/build/ollama-grid-vulkan .    
+  
+  CC=/usr/bin/gcc \
+  CXX=/usr/bin/g++ \
+  CGO_ENABLED=1 \
+  %{og_gobuild} %{og_go_ldflag_rocm} \
+  -o %{bdir}/ollama/build/ollama-grid-rocm .
+  
   popd
   mv %{bdir}/ollama/build %{bdir}/build-vulkan
 %endif
