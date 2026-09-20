@@ -126,9 +126,6 @@ BuildRequires: numactl-libs
   %global cuda12_glibc /usr/lib64/custom-glibc
   %global cuda12_sysroot /usr/lib64/custom-glibc
   
-# % global cuda12_cuda_flags -Xcompiler=-isystem,%{cuda12_glibc}/include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
-# % global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-fPIC
- 
   %global cuda12_host_flags --sysroot=%{cuda12_sysroot} -B%{cuda12_sysroot}/usr/lib64/
   %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-B%{cuda12_sysroot}/usr/lib64/ -Xcompiler=-fPIC
 
@@ -461,8 +458,6 @@ echo "#---CUDA 13---#"
     -DCMAKE_BUILD_TYPE=Release \
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
-
-## removido -DCMAKE_CUDA_FLAGS="-I%{bdir}/cuda13_include -Wno-deprecated-gpu-targets -Xcompiler=-fPIC -Xcompiler=-fno-PIE" 
 
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 
