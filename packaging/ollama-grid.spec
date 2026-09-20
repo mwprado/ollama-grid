@@ -1,5 +1,5 @@
 Name:           ollama-grid
-Version:        0.34.2
+Version:        0.34.3
 Release:        2%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
@@ -391,10 +391,13 @@ cmake --fresh --preset Default \
    %{og_cpu_compat} \
    -B %{bdir}/ollama/build
 cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
-export CC=/usr/bin/gcc
-export CXX=/usr/bin/g++
-export CGO_ENABLED=1
-  %{og_gobuild} %{og_go_ldflag_cpu} -o %{bdir}/ollama/build/ollama-grid-cpu .
+
+CC=/usr/bin/gcc \
+CXX=/usr/bin/g++ \
+CGO_ENABLED=1 \
+%{og_gobuild} %{og_go_ldflag_cpu} \
+  -o %{bdir}/ollama/build/ollama-grid-cpu .
+
 popd
 mv %{bdir}/ollama/build %{bdir}/build-cpu 
 %endif
@@ -432,10 +435,13 @@ echo "#---ROCm---#"
        %{og_cpu_compat} \
        -B %{bdir}/ollama/build
   cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
-  export CC=/usr/bin/gcc
-  export CXX=/usr/bin/g++
-  export CGO_ENABLED=1
-    %{og_gobuild} %{og_go_ldflag_rocm} -o %{bdir}/ollama/build/ollama-grid-rocm . 
+  
+  CC=/usr/bin/gcc \
+  CXX=/usr/bin/g++ \
+  CGO_ENABLED=1 \
+  %{og_gobuild} %{og_go_ldflag_rocm} \
+  -o %{bdir}/ollama/build/ollama-grid-rocm .
+  
   popd
   mv %{bdir}/ollama/build %{bdir}/build-rocm
 %endif
