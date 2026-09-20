@@ -12,49 +12,49 @@ Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.t
 Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
 
 # ====== Backends for Distro ======
-%bcond_with cpu
-%bcond_with vulkan
+%bcond_without cpu
+%bcond_without vulkan
 
 %if 0%{?fedora} == 41
-  %bcond_without cuda12
+  %bcond_with cuda12
   %bcond_with cuda13
   %bcond_with rocm
 %endif
 
 %if 0%{?fedora} == 42
-  %bcond_with    cuda12
-  %bcond_without cuda13
+  %bcond_with cuda12
+  %bcond_with cuda13
   %bcond_with rocm
 %endif 
 
 %if 0%{?fedora} == 43
   %bcond_with    cuda12
-  %bcond_without cuda13
-  %bcond_without rocm
+  %bcond_with cuda13
+  %bcond_with rocm
 %endif
 
 %if 0%{?fedora} == 44
   %bcond_without cuda12
-  %bcond_with    cuda13
-  %bcond_with    rocm
+  %bcond_without cuda13
+  %bcond_without rocm
 %endif
 
 %if 0%{?fedora} == 45
-  %bcond_with    cuda12
+  %bcond_without cuda12
   %bcond_without cuda13
   %bcond_without rocm
 %endif
 
 %if 0%{?rhel} == 9
-  %bcond_with cuda12
+  %bcond_without cuda12
   %bcond_with cuda13
   %bcond_without rocm
 %endif
 
 %if 0%{?rhel} == 10
-  %bcond_without    cuda12
-  %bcond_with       cuda13
-  %bcond_with       rocm
+  %bcond_without cuda12
+  %bcond_without cuda13
+  %bcond_without rocm
 %endif
 
 # ====== Start Enviroment ======
