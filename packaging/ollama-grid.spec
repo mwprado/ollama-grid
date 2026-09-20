@@ -115,6 +115,7 @@ BuildRequires: cuda-toolkit-13-2
 BuildRequires: hip-devel
 BuildRequires: hipblas-devel
 BuildRequires: numactl-libs
+BuildRequires: cmake(rocblas)
 %endif
 
 %if 0%{?fedora} == 44 && %{with cuda12}
