@@ -59,6 +59,41 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 # ====== Start Enviroment ======
 
+# ====== CPU Environment ======
+
+%if %{with cpu}
+  %global cpu_cc       /usr/bin/gcc
+  %global cpu_cxx      /usr/bin/g++
+  %global cpu_cflags   %{build_cflags}
+  %global cpu_cxxflags %{build_cxxflags}
+  %global cpu_ldflags  %{build_ldflags}
+
+  %global cpu_backend %{nil}
+  %global cpu_go_env CGO_ENABLED=1
+
+  %global cpu_builddir %{bdir}/ollama/build
+  %global cpu_output   %{cpu_builddir}/ollama-grid-cpu
+%endif
+
+
+# ====== Vulkan Environment ======
+
+%if %{with vulkan}
+  %global vulkan_cc       /usr/bin/gcc
+  %global vulkan_cxx      /usr/bin/g++
+  %global vulkan_cflags   %{build_cflags}
+  %global vulkan_cxxflags %{build_cxxflags}
+  %global vulkan_ldflags  %{build_ldflags}
+
+  %global vulkan_backend vulkan
+  %global vulkan_go_env CGO_ENABLED=1
+
+  %global vulkan_builddir %{bdir}/ollama/build
+  %global vulkan_output   %{vulkan_builddir}/ollama-grid-vulkan
+%endif
+
+
+
 %if %{with cuda12}
   %global cuda12_host_flags %{nil}
   %global cuda12_cflags %{build_cflags}
@@ -382,74 +417,97 @@ echo "# ==================== Build =================== #"
 %build
 
 echo "#---CPU---#"
+echo "#---CPU---#"
 %if %{with cpu}
-pushd %{bdir}/ollama
-mkdir -p  %{bdir}/ollama/build
-cmake --fresh --preset Default \
-   -DOLLAMA_LLAMA_BACKENDS="" \
-   -DCMAKE_HIP_COMPILER=NOTFOUND \
-   -DCMAKE_CUDA_COMPILER=NOTFOUND \
-   -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
-   -DCMAKE_BUILD_TYPE=Release \
-   %{og_cpu_compat} \
-   -B %{bdir}/ollama/build
-cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
 
-CC=/usr/bin/gcc \
-CXX=/usr/bin/g++ \
-CGO_ENABLED=1 \
-%{og_gobuild} %{og_go_ldflag_cpu} \
-  -o %{bdir}/ollama/build/ollama-grid-cpu .
+  pushd %{bdir}/ollama
 
-popd
-mv %{bdir}/ollama/build %{bdir}/build-cpu 
+  mkdir -p %{cpu_builddir}
+
+  CC=%{cpu_cc} \
+  CXX=%{cpu_cxx} \
+  CFLAGS="%{cpu_cflags}" \
+  CXXFLAGS="%{cpu_cxxflags}" \
+  LDFLAGS="%{cpu_ldflags}" \
+  cmake --fresh --preset Default \
+    -DCMAKE_C_COMPILER=%{cpu_cc} \
+    -DCMAKE_CXX_COMPILER=%{cpu_cxx} \
+    -DOLLAMA_LLAMA_BACKENDS="" \
+    -DCMAKE_HIP_COMPILER=NOTFOUND \
+    -DCMAKE_CUDA_COMPILER=NOTFOUND \
+    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+    -DCMAKE_BUILD_TYPE=Release \
+    %{og_cpu_compat} \
+    -B %{cpu_builddir}
+
+  CC=%{cpu_cc} \
+  CXX=%{cpu_cxx} \
+  CFLAGS="%{cpu_cflags}" \
+  CXXFLAGS="%{cpu_cxxflags}" \
+  LDFLAGS="%{cpu_ldflags}" \
+  cmake --build %{cpu_builddir} \
+    --parallel %{?_smp_build_ncpus}
+
+  CC=%{cpu_cc} \
+  CXX=%{cpu_cxx} \
+  CFLAGS="%{cpu_cflags}" \
+  CXXFLAGS="%{cpu_cxxflags}" \
+  LDFLAGS="%{cpu_ldflags}" \
+  %{cpu_go_env} \
+  %{og_gobuild} %{og_go_ldflag_cpu} \
+    -o %{cpu_output} .
+
+  popd
+
+  mv %{cpu_builddir} %{bdir}/build-cpu
+
 %endif
 
+
+echo "#---Vulkan---#"
 echo "#---Vulkan---#"
 %if %{with vulkan}
+
   pushd %{bdir}/ollama
-  mkdir -p %{bdir}/ollama/build
+
+  mkdir -p %{vulkan_builddir}
+
+  CC=%{vulkan_cc} \
+  CXX=%{vulkan_cxx} \
+  CFLAGS="%{vulkan_cflags}" \
+  CXXFLAGS="%{vulkan_cxxflags}" \
+  LDFLAGS="%{vulkan_ldflags}" \
   cmake --fresh --preset Default \
-    -DOLLAMA_LLAMA_BACKENDS=vulkan \
+    -DCMAKE_C_COMPILER=%{vulkan_cc} \
+    -DCMAKE_CXX_COMPILER=%{vulkan_cxx} \
+    -DOLLAMA_LLAMA_BACKENDS=%{vulkan_backend} \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
     %{og_cpu_compat} \
-    -B %{bdir}/ollama/build
-  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
-  
-  CC=/usr/bin/gcc \
-  CXX=/usr/bin/g++ \
-  CGO_ENABLED=1 \
-  %{og_gobuild} %{og_go_ldflag_rocm} \
-  -o %{bdir}/ollama/build/ollama-grid-rocm .
-  
-  popd
-  mv %{bdir}/ollama/build %{bdir}/build-vulkan
-%endif
+    -B %{vulkan_builddir}
 
-echo "#---ROCm---#"
-%if %{with rocm} && "%{_arch}" == "x86_64"
-  pushd %{bdir}/ollama
-  mkdir -p %{bdir}/ollama/build  
-  cmake --fresh --preset Default \
-       -DOLLAMA_LLAMA_BACKENDS=%{rocm_backend} \
-       -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
-       -DCMAKE_CUDA_COMPILER=NOTFOUND \
-       -DAMDGPU_TARGETS="gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201" \
-       -DCMAKE_BUILD_TYPE=Release \
-       %{og_cpu_compat} \
-       -B %{bdir}/ollama/build
-  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
-  
-  CC=/usr/bin/gcc \
-  CXX=/usr/bin/g++ \
-  CGO_ENABLED=1 \
-  %{og_gobuild} %{og_go_ldflag_rocm} \
-  -o %{bdir}/ollama/build/ollama-grid-rocm .
-  
+  CC=%{vulkan_cc} \
+  CXX=%{vulkan_cxx} \
+  CFLAGS="%{vulkan_cflags}" \
+  CXXFLAGS="%{vulkan_cxxflags}" \
+  LDFLAGS="%{vulkan_ldflags}" \
+  cmake --build %{vulkan_builddir} \
+    --parallel %{?_smp_build_ncpus}
+
+  CC=%{vulkan_cc} \
+  CXX=%{vulkan_cxx} \
+  CFLAGS="%{vulkan_cflags}" \
+  CXXFLAGS="%{vulkan_cxxflags}" \
+  LDFLAGS="%{vulkan_ldflags}" \
+  %{vulkan_go_env} \
+  %{og_gobuild} %{og_go_ldflag_vulkan} \
+    -o %{vulkan_output} .
+
   popd
-  mv %{bdir}/ollama/build %{bdir}/build-rocm
+
+  mv %{vulkan_builddir} %{bdir}/build-vulkan
+
 %endif
 
 echo "#---CUDA 13---#"
