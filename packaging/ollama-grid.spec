@@ -266,8 +266,6 @@ BuildRequires: numactl-libs
 %global og_nginx_conf %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
 %global build_uuid %(uuidgen | tr -d '\n')
 
-%global bdir %{_builddir}/%{name}-%{version}/%{build_uuid}
-
 %global og_licensedir %{_licensedir}/ollama-grid
 
 # Comando comum de build do binário Go (repo root do Ollama)
@@ -278,7 +276,6 @@ BuildRequires: numactl-libs
 %global og_go_ldflag_rocm   %{nil} 
 
 %global og_gobuild go build -trimpath -buildmode=pie
-
 
 
 %if 0%{?rhel} == 9
