@@ -100,8 +100,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
   %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
 
   # Go/cgo padrão: nenhuma adaptação de toolchain
-  %global cuda12_cmake_go_env CGO_ENABLED=1
-  %global cuda12_final_go_env CGO_ENABLED=1
+  %global cuda12_cmake_go_env CGO_ENABLED=1 GOFLAGS="-buildmode=pie"
 %endif
 
 # ====== Requirements for distro and tecnology ======
@@ -534,6 +533,8 @@ echo "#---ROCm---#"
   CXX=/usr/bin/g++ \
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=%{rocm_backend} \
+    -DOLLAMA_VERSION=%{version} \
+    -DOLLAMA_GO_OUTPUT=%{bdir}/ollama/build/ollama-grid-rocm \
     -DCMAKE_PREFIX_PATH=%{rocm_home} \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_CUDA_COMPILER=NOTFOUND \
@@ -546,14 +547,9 @@ echo "#---ROCm---#"
   PATH=%{rocm_home}/bin:%{rocm_home}/llvm/bin:$PATH \
   CC=/usr/bin/gcc \
   CXX=/usr/bin/g++ \
+  GOFLAGS="-buildmode=pie" \
   cmake --build %{bdir}/ollama/build \
     --parallel %{?_smp_build_ncpus}
-
-  CC=/usr/bin/gcc \
-  CXX=/usr/bin/g++ \
-  CGO_ENABLED=1 \
-  %{og_gobuild} %{og_go_ldflag_rocm} \
-    -o %{bdir}/ollama/build/ollama-grid-rocm .
 
   popd
 
@@ -566,13 +562,15 @@ echo "#---CUDA 13---#"
   pushd %{bdir}/ollama
 
   mkdir -p %{bdir}/ollama/build
-  
+
   CC=%{cuda13_cc} \
   CXX=%{cuda13_cxx} \
   CUDAHOSTCXX=%{cuda13_cxx} \
   CUDACXX=%{cuda13_home}/bin/nvcc \
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=cuda_v13 \
+    -DOLLAMA_VERSION=%{version} \
+    -DOLLAMA_GO_OUTPUT=%{bdir}/ollama/build/ollama-grid-cuda13 \
     -DCUDAToolkit_ROOT=%{cuda13_home} \
     -DCMAKE_CUDA_COMPILER=%{cuda13_home}/bin/nvcc \
     -DCMAKE_CUDA_HOST_COMPILER=%{cuda13_cxx} \
@@ -587,15 +585,12 @@ echo "#---CUDA 13---#"
   CXX=%{cuda13_cxx} \
   CUDAHOSTCXX=%{cuda13_cxx} \
   CUDACXX=%{cuda13_home}/bin/nvcc \
-  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
+  GOFLAGS="-buildmode=pie" \
+  cmake --build %{bdir}/ollama/build \
+    --parallel %{?_smp_build_ncpus}
 
-  CC=%{cuda13_cc} \
-  CXX=%{cuda13_cxx} \
-  CGO_ENABLED=1 \
-  %{og_gobuild} %{og_go_ldflag_cuda13} \
-    -o %{bdir}/ollama/build/ollama-grid-cuda13 .
-  
   popd
+
   mv %{bdir}/ollama/build %{bdir}/build-cuda13
 %endif
 
@@ -617,6 +612,8 @@ echo "#---CUDA 12---#"
   LDFLAGS="%{cuda12_ldflags}" \
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=cuda_v12 \
+    -DOLLAMA_VERSION=%{version} \
+    -DOLLAMA_GO_OUTPUT=%{bdir}/ollama/build/ollama-grid-cuda12 \
     -DCUDAToolkit_ROOT=%{cuda12_home} \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
@@ -633,15 +630,11 @@ echo "#---CUDA 12---#"
   CXXFLAGS="%{cuda12_cxxflags}" \
   LDFLAGS="%{cuda12_ldflags}" \
   %{cuda12_cmake_go_env} \
-  cmake --build %{bdir}/ollama/build --parallel %{?_smp_build_ncpus}
-
-  CC=%{cuda12_cc} \
-  CXX=%{cuda12_cxx} \
-  %{cuda12_final_go_env} \
-  %{og_gobuild} %{og_go_ldflag_cuda12} \
-    -o %{bdir}/ollama/build/ollama-grid-cuda12 .
+  cmake --build %{bdir}/ollama/build \
+    --parallel %{?_smp_build_ncpus}
 
   popd
+
   mv %{bdir}/ollama/build %{bdir}/build-cuda12
 %endif
 
