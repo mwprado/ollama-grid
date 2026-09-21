@@ -61,7 +61,10 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 # ====== CPU Environment ======
 
+%global bdir %{_builddir}/%{name}-%{version}/%{build_uuid}
+
 %if %{with cpu}
+
   %global cpu_cc       /usr/bin/gcc
   %global cpu_cxx      /usr/bin/g++
   %global cpu_cflags   %{build_cflags}
@@ -417,7 +420,6 @@ echo "# ==================== Build =================== #"
 %build
 
 echo "#---CPU---#"
-echo "#---CPU---#"
 %if %{with cpu}
 
   pushd %{bdir}/ollama
@@ -463,8 +465,6 @@ echo "#---CPU---#"
 
 %endif
 
-
-echo "#---Vulkan---#"
 echo "#---Vulkan---#"
 %if %{with vulkan}
 
