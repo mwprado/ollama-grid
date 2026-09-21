@@ -220,7 +220,6 @@ BuildRequires: cuda-toolkit-12-9
 BuildRequires: cuda-toolkit-13-3
 %endif
 
-# After, we will include arm && "%{_arch}" == "x86_64"
 
 %if 0%{?rhel} == 9 &&  %{with rocm} 
   %global rocm_version 7.2
@@ -489,6 +488,46 @@ echo "#---Vulkan---#"
   popd
 
   mv %{vulkan_builddir} %{bdir}/build-vulkan
+
+%endif
+
+echo "#---ROCm---#"
+%if %{with rocm} && "%{_arch}" == "x86_64"
+
+  pushd %{bdir}/ollama
+
+  mkdir -p %{bdir}/ollama/build
+
+  ROCM_PATH=%{rocm_home} \
+  PATH=%{rocm_home}/bin:%{rocm_home}/llvm/bin:$PATH \
+  CC=/usr/bin/gcc \
+  CXX=/usr/bin/g++ \
+  cmake --fresh --preset Default \
+    -DOLLAMA_LLAMA_BACKENDS=%{rocm_backend} \
+    -DCMAKE_PREFIX_PATH=%{rocm_home} \
+    -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
+    -DCMAKE_CUDA_COMPILER=NOTFOUND \
+    -DAMDGPU_TARGETS="gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201" \
+    -DCMAKE_BUILD_TYPE=Release \
+    %{og_cpu_compat} \
+    -B %{bdir}/ollama/build
+
+  ROCM_PATH=%{rocm_home} \
+  PATH=%{rocm_home}/bin:%{rocm_home}/llvm/bin:$PATH \
+  CC=/usr/bin/gcc \
+  CXX=/usr/bin/g++ \
+  cmake --build %{bdir}/ollama/build \
+    --parallel %{?_smp_build_ncpus}
+
+  CC=/usr/bin/gcc \
+  CXX=/usr/bin/g++ \
+  CGO_ENABLED=1 \
+  %{og_gobuild} %{og_go_ldflag_rocm} \
+    -o %{bdir}/ollama/build/ollama-grid-rocm .
+
+  popd
+
+  mv %{bdir}/ollama/build %{bdir}/build-rocm
 
 %endif
 
