@@ -146,8 +146,11 @@ BuildRequires: cuda-toolkit-12-9
 %if 0%{?fedora} == 44 && %{with cuda13}
   %global cuda13_version 13.3
   %global cuda13_home    /usr/local/cuda-13.3
-  %global cuda13_cc      /usr/bin/gcc
-  %global cuda13_cxx     /usr/bin/g++
+  %global cuda13_cc      /usr/bin/gcc-15
+  %global cuda13_cxx     /usr/bin/g++-15
+
+BuildRequires: gcc15
+BuildRequires: gcc15-c++  
 BuildRequires: cuda-toolkit-13-3
 %endif
 
