@@ -221,14 +221,16 @@ BuildRequires: cuda-toolkit-13-3
 %endif
 
 
-%if 0%{?rhel} == 9 &&  %{with rocm} 
+%if 0%{?rhel} == 9 && %{with rocm}
   %global rocm_version 7.2
   %global rocm_backend rocm_v7_2
-  %global rocm_home /opt/rocm-%{rocm_version}
+  %global rocm_home /opt/rocm
+
 BuildRequires: rocblas-devel
 BuildRequires: rocm-hip-runtime-devel
 BuildRequires: hip-devel
 BuildRequires: hipblas-devel
+BuildRequires: hipcc
 BuildRequires: numactl-libs
 %endif
 
