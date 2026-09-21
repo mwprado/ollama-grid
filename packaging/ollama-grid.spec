@@ -142,13 +142,36 @@ BuildRequires: libquadmath
 BuildRequires: cuda-toolkit-13-2
 %endif
 
-%if 0%{?fedora} >= 44 && %{with rocm}
-%global rocm_version 7.2
-%global rocm_backend rocm_v7_2
+%if 0%{?fedora} == 44 && %{with rocm}
+  %global rocm_version 7.1
+
+  # Ollama 0.34.2 usa rocm_v7_2 para o backend Linux
+  %global rocm_backend rocm_v7_2
+
+  # Layout Fedora, não AMD /opt/rocm
+  %global rocm_home /usr
+  %global rocm_llvm_bin /usr/lib64/rocm/llvm/bin
+
 BuildRequires: hip-devel
 BuildRequires: hipblas-devel
-BuildRequires: numactl-libs
+BuildRequires: hipcc
 BuildRequires: cmake(rocblas)
+BuildRequires: numactl-libs
+%endif
+
+
+%if 0%{?fedora} >= 45 && %{with rocm}
+  %global rocm_version 7.2
+  %global rocm_backend rocm_v7_2
+
+  %global rocm_home /usr
+  %global rocm_llvm_bin /usr/lib64/rocm/llvm/bin
+
+BuildRequires: hip-devel
+BuildRequires: hipblas-devel
+BuildRequires: hipcc
+BuildRequires: cmake(rocblas)
+BuildRequires: numactl-libs
 %endif
 
 %if 0%{?fedora} >= 44 && %{with cuda12}
