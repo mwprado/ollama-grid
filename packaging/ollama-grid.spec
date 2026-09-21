@@ -61,6 +61,7 @@ Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.t
 
 # ====== CPU Environment ======
 
+%global build_uuid %(uuidgen | tr -d '\n')
 %global bdir %{_builddir}/%{name}-%{version}/%{build_uuid}
 
 %if %{with cpu}
