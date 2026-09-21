@@ -142,7 +142,7 @@ BuildRequires: libquadmath
 BuildRequires: cuda-toolkit-13-2
 %endif
 
-%if 0%{?fedora} == 44 && %{with rocm}
+%if 0%{?fedora} >= 44 && %{with rocm}
 %global rocm_version 7.2
 %global rocm_backend rocm_v7_2
 BuildRequires: hip-devel
