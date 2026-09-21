@@ -264,7 +264,6 @@ BuildRequires: numactl-libs
 %global og_libdir %{_libdir}/ollama-grid
 %global og_confdir %{_sysconfdir}/ollama-grid
 %global og_nginx_conf %{_sysconfdir}/nginx/conf.d/ollama-grid.conf
-%global build_uuid %(uuidgen | tr -d '\n')
 
 %global og_licensedir %{_licensedir}/ollama-grid
 
