@@ -431,7 +431,7 @@ echo "#---CPU---#"
   cmake --fresh --preset Default \
     -DCMAKE_C_COMPILER=%{cpu_cc} \
     -DCMAKE_CXX_COMPILER=%{cpu_cxx} \
-    -DOLLAMA_LLAMA_BACKENDS="" \
+    -DOLLAMA_LLAMA_BACKENDS="%{cpu_backend}" \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_COMPILER=NOTFOUND \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
