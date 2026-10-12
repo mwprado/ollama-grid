@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.34.2
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -607,13 +607,17 @@ echo "#---CUDA 12---#"
   CXX=%{cuda12_cxx} \
   CUDAHOSTCXX=%{cuda12_cxx} \
   CUDACXX=%{cuda12_home}/bin/nvcc \
+  NVCC_CCBIN=%{cuda12_cxx} \
   CFLAGS="%{cuda12_cflags}" \
   CXXFLAGS="%{cuda12_cxxflags}" \
   LDFLAGS="%{cuda12_ldflags}" \
   cmake --fresh --preset Default \
     -DOLLAMA_LLAMA_BACKENDS=cuda_v12 \
     -DOLLAMA_VERSION=%{version} \
-    -DOLLAMA_GO_OUTPUT=%{bdir}/ollama/build/ollama-grid-cuda12 \
+    -DCMAKE_C_COMPILER=%{cuda12_cc} \
+    -DCMAKE_CXX_COMPILER=%{cuda12_cxx} \
+    -DCMAKE_CUDA_COMPILER=%{cuda12_home}/bin/nvcc \
+    -DCMAKE_CUDA_HOST_COMPILER=%{cuda12_cxx} \
     -DCUDAToolkit_ROOT=%{cuda12_home} \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
@@ -622,16 +626,25 @@ echo "#---CUDA 12---#"
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
 
+  # Compilar os alvos nativos; nao executar o build Go automatico do CMake.
   CC=%{cuda12_cc} \
   CXX=%{cuda12_cxx} \
   CUDAHOSTCXX=%{cuda12_cxx} \
   CUDACXX=%{cuda12_home}/bin/nvcc \
+  NVCC_CCBIN=%{cuda12_cxx} \
   CFLAGS="%{cuda12_cflags}" \
   CXXFLAGS="%{cuda12_cxxflags}" \
   LDFLAGS="%{cuda12_ldflags}" \
-  %{cuda12_cmake_go_env} \
   cmake --build %{bdir}/ollama/build \
+    --target ollama-llama-server-local ollama-llama-server-cuda_v12 \
     --parallel %{?_smp_build_ncpus}
+
+  # Gerar executavel Go separadamente com GCC 14/glibc Cangaceiro.
+  CC=%{cuda12_cc} \
+  CXX=%{cuda12_cxx} \
+  %{cuda12_final_go_env} \
+  %{og_gobuild} %{og_go_ldflag_cuda12} \
+    -o %{bdir}/ollama/build/ollama-grid-cuda12 .
 
   popd
 
