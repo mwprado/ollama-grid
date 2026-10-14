@@ -231,6 +231,7 @@ BuildRequires: cuda-toolkit-13-3
   %global cuda12_home    /usr/local/cuda-12.9
   %global cuda12_cc      /usr/bin/gcc
   %global cuda12_cxx     /usr/bin/g++
+  %global cuda12_final_go_env CGO_ENABLED=1
 BuildRequires: cuda-toolkit-12-9
 %endif
 
