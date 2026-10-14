@@ -125,6 +125,8 @@ BuildRequires: cuda-toolkit-13-0
 %if 0%{?fedora} == 43 && %{with rocm}
 %global rocm_version 6.4
 %global rocm_backend rocm_v6_4
+%global rocm_home /usr
+%global rocm_llvm_bin /usr/lib64/rocm/llvm/bin
 BuildRequires: hip-devel
 BuildRequires: hipblas-devel
 BuildRequires: hipcc
