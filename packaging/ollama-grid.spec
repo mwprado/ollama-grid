@@ -214,6 +214,7 @@ BuildRequires: cuda-toolkit-13-3
   %global cuda12_home    /usr/local/cuda-12.9
   %global cuda12_cc      /usr/bin/gcc
   %global cuda12_cxx     /usr/bin/g++
+  %global cuda12_final_go_env CGO_ENABLED=1
 BuildRequires: cuda-toolkit-12-9
 %endif
 
@@ -231,6 +232,7 @@ BuildRequires: cuda-toolkit-13-3
   %global cuda12_home    /usr/local/cuda-12.9
   %global cuda12_cc      /usr/bin/gcc
   %global cuda12_cxx     /usr/bin/g++
+  %global cuda12_final_go_env CGO_ENABLED=1
 BuildRequires: cuda-toolkit-12-9
 %endif
 
@@ -247,6 +249,7 @@ BuildRequires: cuda-toolkit-13-3
   %global rocm_version 7.2
   %global rocm_backend rocm_v7_2
   %global rocm_home /opt/rocm
+  %global rocm_llvm_bin /opt/rocm/llvm/bin
 
 BuildRequires: rocblas-devel
 BuildRequires: rocm-hip-runtime-devel
@@ -256,16 +259,18 @@ BuildRequires: hipcc
 BuildRequires: numactl-libs
 %endif
 
+# EPEL 10: use native packages (Fedora-style /usr layout).
+# Remove the external AMD ROCm repository from the EPEL 10 Copr chroot.
 %if 0%{?rhel} == 10 && %{with rocm}
-  %global rocm_version 7.2
+  %global rocm_version 7.1
   %global rocm_backend rocm_v7_2
-  %global rocm_home /opt/rocm
+  %global rocm_home /usr
+  %global rocm_llvm_bin /usr/lib64/rocm/llvm/bin
 
-BuildRequires: rocblas-devel
-BuildRequires: rocm-hip-runtime-devel
-BuildRequires: hip-devel
+BuildRequires: rocm-hip-devel
 BuildRequires: hipblas-devel
 BuildRequires: hipcc
+BuildRequires: cmake(rocblas)
 BuildRequires: numactl-libs
 %endif
 
@@ -528,7 +533,7 @@ echo "#---ROCm---#"
   mkdir -p %{bdir}/ollama/build
 
   ROCM_PATH=%{rocm_home} \
-  PATH=%{rocm_home}/bin:%{rocm_home}/llvm/bin:$PATH \
+  PATH=%{rocm_home}/bin:%{rocm_llvm_bin}:$PATH \
   CC=/usr/bin/gcc \
   CXX=/usr/bin/g++ \
   cmake --fresh --preset Default \
@@ -544,7 +549,7 @@ echo "#---ROCm---#"
     -B %{bdir}/ollama/build
 
   ROCM_PATH=%{rocm_home} \
-  PATH=%{rocm_home}/bin:%{rocm_home}/llvm/bin:$PATH \
+  PATH=%{rocm_home}/bin:%{rocm_llvm_bin}:$PATH \
   CC=/usr/bin/gcc \
   CXX=/usr/bin/g++ \
   GOFLAGS="-buildmode=pie" \
