@@ -261,6 +261,7 @@ BuildRequires: hipblas-devel
 BuildRequires: hipcc
 BuildRequires: numactl-libs
 BuildRequires: rocsolver
+BuildRequires: libdrm
 %endif
 
 # EPEL 10: use native packages (Fedora-style /usr layout).
@@ -277,6 +278,7 @@ BuildRequires: hipcc
 BuildRequires: cmake(rocblas)
 BuildRequires: numactl-libs
 BuildRequires: rocsolver
+BuildRequires: libdrm
 %endif
 
 # ====== Caminhos de instalação ======
