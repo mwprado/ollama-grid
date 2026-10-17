@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.40.6
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -292,13 +292,12 @@ BuildRequires: libdrm
 
 %global og_licensedir %{_licensedir}/ollama-grid
 
-# Comando comum de build do binário Go (repo root do Ollama)
-%global og_go_ldflag_vulkan %{nil}
-%global og_go_ldflag_cuda13 %{nil}
-%global og_go_ldflag_cuda12 %{nil} 
-%global og_go_ldflag_cpu    %{nil} 
-%global og_go_ldflag_rocm   %{nil} 
-
+# Go manual somente para CPU/Vulkan/CUDA 12; os demais usam o alvo do CMake.
+# Preservar os metadados de versao e o modo release do Ollama upstream.
+%global og_go_release_flags -ldflags "-s -w -X=github.com/ollama/ollama/version.Version=%{version} -X=github.com/ollama/ollama/server.mode=release"
+%global og_go_ldflag_vulkan %{og_go_release_flags}
+%global og_go_ldflag_cuda12 %{og_go_release_flags}
+%global og_go_ldflag_cpu    %{og_go_release_flags}
 %global og_gobuild go build -trimpath -buildmode=pie
 
 
@@ -309,7 +308,8 @@ BuildRequires: libdrm
 %endif
   
 # ====== BuildRequires gerais ======
-BuildRequires:    gcc gcc-c++ cmake make git-core golang patchelf systemd-rpm-macros
+BuildRequires:    gcc gcc-c++ cmake make git-core systemd-rpm-macros
+BuildRequires:    golang >= 1.26
 BuildRequires:    openmpi-devel
 BuildRequires:    util-linux
 
@@ -457,6 +457,7 @@ echo "#---CPU---#"
     -DCMAKE_C_COMPILER=%{cpu_cc} \
     -DCMAKE_CXX_COMPILER=%{cpu_cxx} \
     -DOLLAMA_LLAMA_BACKENDS="%{cpu_backend}" \
+    -DOLLAMA_VERSION=%{version} \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_COMPILER=NOTFOUND \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
@@ -469,7 +470,9 @@ echo "#---CPU---#"
   CFLAGS="%{cpu_cflags}" \
   CXXFLAGS="%{cpu_cxxflags}" \
   LDFLAGS="%{cpu_ldflags}" \
+  # CMake compila somente os payloads nativos; Go e empacotado com flags RPM.
   cmake --build %{cpu_builddir} \
+    --target ollama-llama-server-local \
     --parallel %{?_smp_build_ncpus}
 
   CC=%{cpu_cc} \
@@ -503,6 +506,7 @@ echo "#---Vulkan---#"
     -DCMAKE_C_COMPILER=%{vulkan_cc} \
     -DCMAKE_CXX_COMPILER=%{vulkan_cxx} \
     -DOLLAMA_LLAMA_BACKENDS=%{vulkan_backend} \
+    -DOLLAMA_VERSION=%{version} \
     -DCMAKE_HIP_COMPILER=NOTFOUND \
     -DCMAKE_CUDA_COMPILER=NOTFOUND \
     -DCMAKE_BUILD_TYPE=Release \
@@ -514,7 +518,9 @@ echo "#---Vulkan---#"
   CFLAGS="%{vulkan_cflags}" \
   CXXFLAGS="%{vulkan_cxxflags}" \
   LDFLAGS="%{vulkan_ldflags}" \
+  # Evitar build Go duplicado pelo alvo ALL do CMake.
   cmake --build %{vulkan_builddir} \
+    --target ollama-llama-server-local ollama-llama-server-vulkan \
     --parallel %{?_smp_build_ncpus}
 
   CC=%{vulkan_cc} \
@@ -777,38 +783,43 @@ install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cuda12.conf    %{buildroot}
 # BINÁRIOS (um por backend)
 # ============================
 
-# --- utilitário para limpar RPATH/RUNPATH (ignora se patchelf não existir) ---
-fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1" || :; }
+# Preservar RPATH/RUNPATH $ORIGIN definido pelo upstream: as bibliotecas
+# ficam isoladas em /usr/libexec/ollama-grid/<backend>/lib/ollama.
 
 # CPU  — publica como /usr/bin/ollama-grid-cpu
 %if %{with cpu}
   install -m 0755 %{bdir}/build-cpu/ollama-grid-cpu         %{buildroot}%{_libexecdir}/ollama-grid/cpu/bin/ollama-grid-cpu
-  ln -sr %{_libexecdir}/ollama-grid/cpu/bin/ollama-grid-cpu %{buildroot}%{_bindir}/ollama-grid-cpu  
+  ln -sr %{buildroot}%{_libexecdir}/ollama-grid/cpu/bin/ollama-grid-cpu %{buildroot}%{_bindir}/ollama-grid-cpu
+  test -x %{buildroot}%{_bindir}/ollama-grid-cpu || { echo "ERROR: broken ollama-grid-cpu symlink" >&2; exit 1; }  
 %endif
 
 # Vulkan
 %if %{with vulkan}
   install -m 0755 %{bdir}/build-vulkan/ollama-grid-vulkan %{buildroot}%{_libexecdir}/ollama-grid/vulkan/bin/ollama-grid-vulkan
-  ln -sr %{_libexecdir}/ollama-grid/vulkan/bin/ollama-grid-vulkan %{buildroot}%{_bindir}/ollama-grid-vulkan
+  ln -sr %{buildroot}%{_libexecdir}/ollama-grid/vulkan/bin/ollama-grid-vulkan %{buildroot}%{_bindir}/ollama-grid-vulkan
+  test -x %{buildroot}%{_bindir}/ollama-grid-vulkan || { echo "ERROR: broken ollama-grid-vulkan symlink" >&2; exit 1; }
 %endif
 
 # ROCm
 %if %{with rocm} && "%{_arch}" == "x86_64"
   install -m 0755 %{bdir}/build-rocm/ollama-grid-rocm     %{buildroot}%{_libexecdir}/ollama-grid/rocm/bin/ollama-grid-rocm
-  ln -sr %{_libexecdir}/ollama-grid/rocm/bin/ollama-grid-rocm %{buildroot}%{_bindir}/ollama-grid-rocm
+  ln -sr %{buildroot}%{_libexecdir}/ollama-grid/rocm/bin/ollama-grid-rocm %{buildroot}%{_bindir}/ollama-grid-rocm
+  test -x %{buildroot}%{_bindir}/ollama-grid-rocm || { echo "ERROR: broken ollama-grid-rocm symlink" >&2; exit 1; }
     
 %endif
 
 # CUDA (atual)
 %if %{with cuda13}
   install -m 0755 %{bdir}/build-cuda13/ollama-grid-cuda13     %{buildroot}%{_libexecdir}/ollama-grid/cuda13/bin/ollama-grid-cuda13
-  ln -sr %{_libexecdir}/ollama-grid/cuda13/bin/ollama-grid-cuda13 %{buildroot}%{_bindir}/ollama-grid-cuda13
+  ln -sr %{buildroot}%{_libexecdir}/ollama-grid/cuda13/bin/ollama-grid-cuda13 %{buildroot}%{_bindir}/ollama-grid-cuda13
+  test -x %{buildroot}%{_bindir}/ollama-grid-cuda13 || { echo "ERROR: broken ollama-grid-cuda13 symlink" >&2; exit 1; }
 %endif
 
 # CUDA 12.9 (legacy)
 %if %{with cuda12}
   install -m 0755 %{bdir}/build-cuda12/ollama-grid-cuda12 %{buildroot}%{_libexecdir}/ollama-grid/cuda12/bin/ollama-grid-cuda12
-  ln -sr %{_libexecdir}/ollama-grid/cuda12/bin/ollama-grid-cuda12 %{buildroot}%{_bindir}/ollama-grid-cuda12    
+  ln -sr %{buildroot}%{_libexecdir}/ollama-grid/cuda12/bin/ollama-grid-cuda12 %{buildroot}%{_bindir}/ollama-grid-cuda12
+  test -x %{buildroot}%{_bindir}/ollama-grid-cuda12 || { echo "ERROR: broken ollama-grid-cuda12 symlink" >&2; exit 1; }    
 %endif
 
 # ============================
@@ -831,11 +842,6 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
     %{bdir}/build-cpu/lib/ollama/llama-quantize \
     %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/ollama/
 
-  # Remove RPATH/RUNPATH somente das bibliotecas
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cpu/lib/ollama/*.so*; do
-    [ -e "$f" ] || continue
-    fix_rpath "$f"
-  done
 %endif
 
 # Vulkan
@@ -862,17 +868,7 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
     %{bdir}/build-vulkan/lib/ollama/vulkan/*.so* \
     %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/vulkan/
 
-  # Remove RPATH/RUNPATH das bibliotecas comuns
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/*.so*; do
-    [ -e "$f" ] || continue
-    fix_rpath "$f"
-  done
 
-  # Remove RPATH/RUNPATH das bibliotecas Vulkan
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/vulkan/lib/ollama/vulkan/*.so*; do
-    [ -e "$f" ] || continue
-    fix_rpath "$f"
-  done
 %endif
 
 # ROCm
@@ -899,17 +895,7 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
     %{bdir}/build-rocm/lib/ollama/%{rocm_backend}/*.so* \
     %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/%{rocm_backend}/
 
-  # Remove RPATH/RUNPATH das bibliotecas comuns
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/*.so*; do
-    [ -e "$f" ] || continue
-    fix_rpath "$f"
-  done
 
-  # Remove RPATH/RUNPATH das bibliotecas ROCm
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/rocm/lib/ollama/%{rocm_backend}/*.so*; do
-    [ -e "$f" ] || continue
-    fix_rpath "$f"
-  done
 %endif
 
 # CUDA (atual)
@@ -936,15 +922,7 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
     %{bdir}/build-cuda13/lib/ollama/cuda_v13/libggml-cuda.so \
     %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13/
 
-  # Remove RPATH/RUNPATH das bibliotecas comuns
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama/*.so*; do
-    [ -e "$f" ] || continue
-    fix_rpath "$f"
-  done
 
-  # Remove RPATH/RUNPATH das bibliotecas CUDA
-  fix_rpath \
-  %{buildroot}%{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13/libggml-cuda.so
 %endif
 
 # CUDA 12.9 (legacy)
@@ -971,15 +949,7 @@ fix_rpath() { command -v patchelf >/dev/null 2>&1 && patchelf --remove-rpath "$1
     %{bdir}/build-cuda12/lib/ollama/cuda_v12/libggml-cuda.so \
     %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/
 
-  # Remove RPATH/RUNPATH das bibliotecas comuns
-  for f in %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/*.so*; do
-    [ -e "$f" ] || continue
-    fix_rpath "$f"
-  done
 
-  # Remove RPATH/RUNPATH das bibliotecas CUDA 12
-  fix_rpath \
-  %{buildroot}%{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/libggml-cuda.so
 %endif
 
 # ============================
@@ -1291,6 +1261,13 @@ fi
 
 # ==================== Scriptlets ====================
 %changelog
+* Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-2
+- Preservar RPATH $ORIGIN para carregamento de bibliotecas privadas por backend.
+- Compilar payloads CMake especificos de CPU/Vulkan sem recompilar Go em duplicidade.
+- Aplicar flags de versao e modo release aos executaveis Go manuais.
+- Corrigir symlinks da arvore RPM e validacao dos executaveis.
+- Exigir Go 1.26 ou superior, conforme go.mod do Ollama v0.40.6.
+
 * Fri Oct 16 2026 OllamaGrid Maintainers - 0.40.6-1
 - Atualiza o Ollama upstream para v0.40.6 e reinicia o Release para 1.
 
