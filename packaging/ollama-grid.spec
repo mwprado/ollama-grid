@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.40.6
-Release:        5%{?dist}
+Release:        6%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -99,27 +99,30 @@ Source2:        https://raw.githubusercontent.com/mwprado/ollama-grid/main/sysus
 
 
 
+# CUDA12 usa sempre a toolchain privada Cangaceiro (inclusive EPEL 9/10).
+# O GCC nativo serve apenas para o bootstrap do pacote cuda12-toolchain;
+# nunca como compilador de Ollama CUDA12 ou do seu cgo.
 %if %{with cuda12}
-  %global cuda12_host_flags %{nil}
-  %global cuda12_cflags %{build_cflags}
-  %global cuda12_cxxflags %{build_cxxflags}
-  %global cuda12_ldflags %{build_ldflags}
-  %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=-fPIC
-
-  # Go/cgo padrão: nenhuma adaptação de toolchain
-  %global cuda12_cmake_go_env CGO_ENABLED=1 GOFLAGS="-buildmode=pie"
-%endif
-
-# ====== Requirements for distro and tecnology ======
-
-%if 0%{?fedora} == 41 && %{with cuda12}
   %global cuda12_version 12.9
   %global cuda12_home    /usr/local/cuda-12.9
-  %global cuda12_cc      /usr/bin/gcc
-  %global cuda12_cxx     /usr/bin/g++
+  %global cuda12_cc      /usr/lib64/custom-gcc14/bin/gcc
+  %global cuda12_cxx     /usr/lib64/custom-gcc14/bin/g++
+  %global cuda12_glibc   /usr/lib64/custom-glibc
+  %global cuda12_sysroot /usr/lib64/custom-glibc
+
+  %global cuda12_host_flags --sysroot=%{cuda12_sysroot} -B%{cuda12_sysroot}/usr/lib64/
+  %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-B%{cuda12_sysroot}/usr/lib64/ -Xcompiler=-fPIC
+  %global cuda12_cflags %(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
+  %global cuda12_cxxflags %(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
+  %global cuda12_ldflags %(echo "%{build_ldflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
+  %global cuda12_final_go_env CGO_ENABLED=1 CGO_CFLAGS="%{cuda12_cflags}" CGO_CXXFLAGS="%{cuda12_cxxflags}" CGO_LDFLAGS="%{cuda12_ldflags}"
+
+BuildRequires: custom-gcc14 >= 14.4.0
+BuildRequires: custom-glibc = 2.40
 BuildRequires: cuda-toolkit-12-9
 %endif
 
+# ====== Requirements for distro and tecnology ======
 
 %if 0%{?fedora} == 42 && %{with cuda13}
   %global cuda13_version 13.0
@@ -183,31 +186,6 @@ BuildRequires: cmake(rocblas)
 BuildRequires: numactl-libs
 %endif
 
-%if 0%{?fedora} >= 44 && %{with cuda12}
-  %global cuda12_version 12.9
-  %global cuda12_home    /usr/local/cuda-12.9
-  %global cuda12_cc      /usr/lib64/custom-gcc14/bin/gcc
-  %global cuda12_cxx     /usr/lib64/custom-gcc14/bin/g++
-
-  %global cuda12_glibc /usr/lib64/custom-glibc
-  %global cuda12_sysroot /usr/lib64/custom-glibc
-  
-  %global cuda12_host_flags --sysroot=%{cuda12_sysroot} -B%{cuda12_sysroot}/usr/lib64/
-  %global cuda12_cuda_flags -Wno-deprecated-gpu-targets -Xcompiler=--sysroot=%{cuda12_sysroot} -Xcompiler=-B%{cuda12_sysroot}/usr/lib64/ -Xcompiler=-fPIC
-
-  %global cuda12_cflags %(echo "%{build_cflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
-  %global cuda12_cxxflags %(echo "%{build_cxxflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
-  %global cuda12_ldflags %(echo "%{build_ldflags}" | sed -E 's@-specs=[^ ]*annobin[^ ]*@@g') %{cuda12_host_flags}
-
-  # Ambiente adicional necessário somente para a cápsula Fedora 44
-  %global cuda12_cmake_go_env CGO_ENABLED=1 CGO_CFLAGS="%{cuda12_cflags}" CGO_CXXFLAGS="%{cuda12_cxxflags}" CGO_LDFLAGS="%{cuda12_ldflags}" GOFLAGS="-buildmode=pie"
-  %global cuda12_final_go_env CGO_ENABLED=1 CGO_CFLAGS="%{cuda12_cflags}" CGO_CXXFLAGS="%{cuda12_cxxflags}" CGO_LDFLAGS="%{cuda12_ldflags}"
-  
-BuildRequires: custom-gcc14
-BuildRequires: custom-glibc = 2.40
-BuildRequires: cuda-toolkit-12-9
-%endif
-
 %if 0%{?fedora} >= 44 && %{with cuda13}
   %global cuda13_version 13.3
   %global cuda13_home    /usr/local/cuda-13.3
@@ -219,15 +197,6 @@ BuildRequires: gcc15-c++
 BuildRequires: cuda-toolkit-13-3
 %endif
 
-%if 0%{?rhel} == 9 && %{with cuda12}
-  %global cuda12_version 12.9
-  %global cuda12_home    /usr/local/cuda-12.9
-  %global cuda12_cc      /usr/bin/gcc
-  %global cuda12_cxx     /usr/bin/g++
-  %global cuda12_final_go_env CGO_ENABLED=1
-BuildRequires: cuda-toolkit-12-9
-%endif
-
 %if 0%{?rhel} == 9 && %{with cuda13}
   %global cuda13_version 13.3
   %global cuda13_home    /usr/local/cuda-13.3
@@ -235,15 +204,6 @@ BuildRequires: cuda-toolkit-12-9
   %global cuda13_cxx     /usr/bin/g++
 
 BuildRequires: cuda-toolkit-13-3
-%endif
-
-%if 0%{?rhel} == 10 && %{with cuda12}
-  %global cuda12_version 12.9
-  %global cuda12_home    /usr/local/cuda-12.9
-  %global cuda12_cc      /usr/bin/gcc
-  %global cuda12_cxx     /usr/bin/g++
-  %global cuda12_final_go_env CGO_ENABLED=1
-BuildRequires: cuda-toolkit-12-9
 %endif
 
 %if 0%{?rhel} == 10 && %{with cuda13}
@@ -405,6 +365,9 @@ Bibliotecas CUDA13 (moderno) e wrapper /usr/bin/ollama-grid-cuda13. Requer toolk
 %package -n ollama-grid-cuda12
 Summary:        Backend CUDA 12.9 para GPUs NVIDIA legadas
 Requires:       ollama-grid-common = %{version}-%{release}
+# A glibc e a libstdc++ privadas sao dependencias de execucao deste backend.
+Requires:       custom-gcc14 >= 14.4.0
+Requires:       custom-glibc = 2.40
 
 %description -n ollama-grid-cuda12
 Backend CUDA 12.9 para GPUs NVIDIA que não são mais atendidas pelo runtime CUDA 13.
@@ -637,6 +600,11 @@ echo "#---CUDA 13---#"
 
 echo "#---CUDA 12---#"
 %if %{with cuda12}
+  # Falhar imediatamente se a toolchain privada estiver ausente/inconsistente.
+  test -x %{cuda12_cc} || { echo "ERROR: missing private CUDA12 GCC" >&2; exit 1; }
+  test -x %{cuda12_cxx} || { echo "ERROR: missing private CUDA12 G++" >&2; exit 1; }
+  test "$(%{cuda12_cc} -dumpfullversion)" = "14.4.0" || { echo "ERROR: wrong private CUDA12 GCC version" >&2; exit 1; }
+  test "$(%{cuda12_cc} -print-sysroot)" = "%{cuda12_sysroot}" || { echo "ERROR: CUDA12 GCC has wrong private sysroot" >&2; exit 1; }
   ls -l %{cuda12_home}/bin/nvcc
   %{cuda12_home}/bin/nvcc --version
 
@@ -1297,6 +1265,13 @@ fi
 
 # ==================== Scriptlets ====================
 %changelog
+* Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-6
+- Exigir GCC14 Cangaceiro e glibc 2.40 privados para CUDA12 em Fedora/EPEL.
+- Eliminar selecao de /usr/bin/gcc nos ramos CUDA12 Fedora 41 e EPEL 9/10.
+- Validar versao e sysroot do GCC privado antes da compilacao CUDA12.
+- Declarar dependencias de runtime da toolchain privada no backend CUDA12.
+- Preservar o bootstrap nativo apenas dentro do pacote cuda12-toolchain.
+
 * Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-5
 - Criar o usuario ollama-grid em %%pre antes da extracao dos arquivos RPM.
 - Declarar sysusers.d como Source2 para a expansao de %%sysusers_create_compat.
