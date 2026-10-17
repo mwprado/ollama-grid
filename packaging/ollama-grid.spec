@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.40.6
-Release:        7%{?dist}
+Release:        8%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -746,35 +746,35 @@ install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid
 
 # CPU
 %if %{with cpu}
-install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cpu
+install -d -m 0750 %{buildroot}%{_localstatedir}/log/ollama-grid/cpu
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cpu
 install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cpu.conf    %{buildroot}%{og_confdir}/cpu.conf
 %endif
 
 # Vulkan
 %if %{with vulkan}
-install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/vulkan
+install -d -m 0750 %{buildroot}%{_localstatedir}/log/ollama-grid/vulkan
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/vulkan
 install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/vulkan.conf    %{buildroot}%{og_confdir}/vulkan.conf
 %endif
 
 # ROCm
 %if %{with rocm} && "%{_arch}" == "x86_64"
-install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/rocm
+install -d -m 0750 %{buildroot}%{_localstatedir}/log/ollama-grid/rocm
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/rocm
 install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/rocm.conf    %{buildroot}%{og_confdir}/rocm.conf
 %endif
 
 # CUDA (atual)
 %if %{with cuda13}
-install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cuda13
+install -d -m 0750 %{buildroot}%{_localstatedir}/log/ollama-grid/cuda13
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cuda13
 install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cuda13.conf    %{buildroot}%{og_confdir}/cuda13.conf
 %endif
 
 # CUDA 12.9 (legacy)
 %if %{with cuda12}
-install -d -m 0755 %{buildroot}%{_localstatedir}/log/ollama-grid/cuda12
+install -d -m 0750 %{buildroot}%{_localstatedir}/log/ollama-grid/cuda12
 install -d -m 0755 %{buildroot}%{_localstatedir}/lib/ollama-grid/cuda12
 install -Dpm0640 %{bdir}/ollama-grid/etc/ollama-grid/cuda12.conf    %{buildroot}%{og_confdir}/cuda12.conf
 %endif
@@ -997,7 +997,7 @@ fi
 %dir %attr(0755,root,root) %{_localstatedir}/lib/ollama-grid
 %dir %attr(0755,root,root) %{_localstatedir}/log/ollama-grid
 
-%dir %{og_confdir}
+%dir %attr(0750,root,ollama-grid) %{og_confdir}
 # sysusers / tmpfiles
 %{_sysusersdir}/ollama-grid.conf
 %{_tmpfilesdir}/ollama-grid.conf
@@ -1035,8 +1035,8 @@ fi
 %{_libexecdir}/ollama-grid/cpu/lib/ollama/llama-server
 %{_libexecdir}/ollama-grid/cpu/lib/ollama/llama-quantize
 
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cpu
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cpu
+%dir %attr(0755,root,root) %{_localstatedir}/lib/ollama-grid/cpu
+%dir %attr(0750,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cpu
 %endif
 
 # ============================
@@ -1062,8 +1062,8 @@ fi
 %dir %{_libexecdir}/ollama-grid/vulkan/lib/ollama/vulkan
 %{_libexecdir}/ollama-grid/vulkan/lib/ollama/vulkan/*.so*
 
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/vulkan
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/vulkan
+%dir %attr(0755,root,root) %{_localstatedir}/lib/ollama-grid/vulkan
+%dir %attr(0750,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/vulkan
 
 %endif
 
@@ -1090,8 +1090,8 @@ fi
 %dir %{_libexecdir}/ollama-grid/rocm/lib/ollama/%{rocm_backend}
 %{_libexecdir}/ollama-grid/rocm/lib/ollama/%{rocm_backend}/*.so*
 
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/rocm
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/rocm
+%dir %attr(0755,root,root) %{_localstatedir}/lib/ollama-grid/rocm
+%dir %attr(0750,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/rocm
 
 %endif
 
@@ -1119,8 +1119,8 @@ fi
 %dir %{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13
 %{_libexecdir}/ollama-grid/cuda13/lib/ollama/cuda_v13/libggml-cuda.so
 
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda13
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda13
+%dir %attr(0755,root,root) %{_localstatedir}/lib/ollama-grid/cuda13
+%dir %attr(0750,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda13
 
 %endif
 
@@ -1149,8 +1149,8 @@ fi
 %dir %{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12
 %{_libexecdir}/ollama-grid/cuda12/lib/ollama/cuda_v12/libggml-cuda.so
 
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid/cuda12
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda12
+%dir %attr(0755,root,root) %{_localstatedir}/lib/ollama-grid/cuda12
+%dir %attr(0750,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid/cuda12
 
 %endif
 
@@ -1266,6 +1266,13 @@ fi
 
 # ==================== Scriptlets ====================
 %changelog
+* Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-8
+- Remover a regra tmpfiles para o caminho obsoleto cuda/home.
+- Definir root:root em todos os diretorios estruturais de estado.
+- Usar ollama-grid apenas para homes, models e folhas de logs.
+- Alinhar proprietarios e modos entre RPM e tmpfiles.d para todos os backends.
+- Preservar dados existentes; nao apagar diretorios legados automaticamente.
+
 * Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-7
 - Alinhar diretorios base de /var/lib e /var/log como root:root em RPM/tmpfiles.
 - Evitar transicao insegura em /var/lib/ollama-grid/cuda legado.
