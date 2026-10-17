@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.40.6
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -465,12 +465,12 @@ echo "#---CPU---#"
     %{og_cpu_compat} \
     -B %{cpu_builddir}
 
+  # CMake compila somente os payloads nativos; Go e empacotado com flags RPM.
   CC=%{cpu_cc} \
   CXX=%{cpu_cxx} \
   CFLAGS="%{cpu_cflags}" \
   CXXFLAGS="%{cpu_cxxflags}" \
   LDFLAGS="%{cpu_ldflags}" \
-  # CMake compila somente os payloads nativos; Go e empacotado com flags RPM.
   cmake --build %{cpu_builddir} \
     --target ollama-llama-server-local \
     --parallel %{?_smp_build_ncpus}
@@ -513,12 +513,12 @@ echo "#---Vulkan---#"
     %{og_cpu_compat} \
     -B %{vulkan_builddir}
 
+  # Evitar build Go duplicado pelo alvo ALL do CMake.
   CC=%{vulkan_cc} \
   CXX=%{vulkan_cxx} \
   CFLAGS="%{vulkan_cflags}" \
   CXXFLAGS="%{vulkan_cxxflags}" \
   LDFLAGS="%{vulkan_ldflags}" \
-  # Evitar build Go duplicado pelo alvo ALL do CMake.
   cmake --build %{vulkan_builddir} \
     --target ollama-llama-server-local ollama-llama-server-vulkan \
     --parallel %{?_smp_build_ncpus}
@@ -657,7 +657,16 @@ echo "#---CUDA 12---#"
     --target ollama-llama-server-local ollama-llama-server-cuda_v12 \
     --parallel %{?_smp_build_ncpus}
 
-  # Gerar executavel Go separadamente com GCC 14/glibc Cangaceiro.
+  # HISTORICO: nao usar o alvo Go automatico do CMake para CUDA12.
+  # O cgo estava selecionando o GCC nativo do chroot em vez do GCC privado.
+  # Verificar CC/CXX efetivos antes do build Go manual.
+  cuda12_go_cc="$(CC=%{cuda12_cc} CXX=%{cuda12_cxx} %{cuda12_final_go_env} go env CC)"
+  cuda12_go_cxx="$(CC=%{cuda12_cc} CXX=%{cuda12_cxx} %{cuda12_final_go_env} go env CXX)"
+  echo "CUDA12 cgo CC: $cuda12_go_cc"
+  echo "CUDA12 cgo CXX: $cuda12_go_cxx"
+  test "$cuda12_go_cc" = "%{cuda12_cc}" || { echo "ERROR: wrong Go/cgo C compiler" >&2; exit 1; }
+  test "$cuda12_go_cxx" = "%{cuda12_cxx}" || { echo "ERROR: wrong Go/cgo C++ compiler" >&2; exit 1; }
+
   CC=%{cuda12_cc} \
   CXX=%{cuda12_cxx} \
   %{cuda12_final_go_env} \
@@ -1261,6 +1270,11 @@ fi
 
 # ==================== Scriptlets ====================
 %changelog
+* Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-3
+- Preservar o build Go manual do CUDA12 para usar GCC privado via cgo.
+- Validar CC/CXX efetivos do cgo antes do build Go CUDA12.
+- Corrigir comentarios intercalados nas continuacoes dos comandos CMake CPU/Vulkan.
+
 * Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-2
 - Preservar RPATH $ORIGIN para carregamento de bibliotecas privadas por backend.
 - Compilar payloads CMake especificos de CPU/Vulkan sem recompilar Go em duplicidade.
