@@ -1,6 +1,6 @@
 Name:           ollama-grid
-Version:        0.40.4
-Release:        2%{?dist}
+Version:        0.40.6
+Release:        1%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -1291,6 +1291,9 @@ fi
 
 # ==================== Scriptlets ====================
 %changelog
+* Fri Oct 16 2026 OllamaGrid Maintainers - 0.40.6-1
+- Atualiza o Ollama upstream para v0.40.6 e reinicia o Release para 1.
+
 * Wed Nov 19 2025 Moacyr Prado <seuemail@exemplo> - 0.12.11-12
 - Refatoração do spec para múltiplos backends (CPU/Vulkan/ROCm/cuda13/CUDA-12.9)
 - Integração com sysusers/tmpfiles e serviços systemd (template + backends + balancer)
