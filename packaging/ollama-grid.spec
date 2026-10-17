@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.40.6
-Release:        8%{?dist}
+Release:        9%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -10,10 +10,6 @@ Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.t
 
 # ====== SOURCE1: OLLAMA upstream ======
 Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
-
-# ====== SOURCE2: sysusers precisa existir quando o RPM expande %%pre.
-# O arquivo extraido de Source0 em %%prep ainda nao existe nessa etapa.
-Source2:        https://raw.githubusercontent.com/mwprado/ollama-grid/main/sysusers.d/ollama-grid.conf
 
 # ====== Backends for Distro ======
 # %%bcond_with = desligado por padrao e habilitavel via --with.
@@ -300,7 +296,9 @@ via Nginx e orquestração por serviços systemd.
 
 # (1) Common (binário e estrutura)
 %package -n ollama-grid-common
-%sysusers_requires_compat
+# Precisa criar usuario/grupo no %%pre (antes da extracao com %%attr).
+# Dependencia por arquivo funciona independentemente da distro.
+Requires(pre): /usr/bin/systemd-sysusers
 Requires(post): systemd
 Requires(postun): systemd
 
@@ -726,7 +724,7 @@ install -d \
 %endif
   
 # --- sysusers / tmpfiles (arquivos do repositório) ---
-install -m 0644 %{SOURCE2} %{buildroot}%{_sysusersdir}/ollama-grid.conf
+install -m 0644 %{bdir}/ollama-grid/sysusers.d/ollama-grid.conf %{buildroot}%{_sysusersdir}/ollama-grid.conf
 install -m 0644 %{bdir}/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_tmpfilesdir}/ollama-grid.conf
 install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
 install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid-balancer.service %{buildroot}%{_unitdir}/ollama-grid-balancer.service
@@ -1157,9 +1155,16 @@ fi
 # ---- Common ----
 
 # Criar usuario/grupo ANTES de desempacotar diretorios com %%attr.
-# A macro e expandida no rpmbuild; precisa do arquivo %%{SOURCE2}.
+# Nao usar %%sysusers_create_compat: macro nao garantida no rpmbuild -bs.
+# Esta definicao deve permanecer identica a sysusers.d/ollama-grid.conf.
 %pre -n ollama-grid-common
-%sysusers_create_compat %{SOURCE2}
+/usr/bin/systemd-sysusers --replace=%{_sysusersdir}/ollama-grid.conf - <<'OLLAMA_GRID_SYSUSERS'
+g ollama-grid - - - -
+u ollama-grid - "Ollama Grid Service User" /var/lib/ollama-grid /usr/sbin/nologin
+m ollama-grid ollama-grid
+m ollama-grid video
+m ollama-grid render
+OLLAMA_GRID_SYSUSERS
 
 %post -n ollama-grid-common
 # Criar estrutura persistente conforme tmpfiles.d.
@@ -1266,6 +1271,12 @@ fi
 
 # ==================== Scriptlets ====================
 %changelog
+* Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-9
+- Corrigir falha de parse do SRPM Fedora 44: %%sysusers_requires_compat indefinida.
+- Usar Requires(pre) por arquivo e systemd-sysusers no %%pre sem macros externas.
+- Remover Source2 redundante, mantendo sysusers.d empacotado via Source0.
+- Preservar criacao do usuario antes da extracao RPM e a hierarquia 0.40.6-8.
+
 * Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-8
 - Remover a regra tmpfiles para o caminho obsoleto cuda/home.
 - Definir root:root em todos os diretorios estruturais de estado.
