@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.40.6
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -11,7 +11,14 @@ Source0:        https://github.com/mwprado/ollama-grid/archive/refs/heads/main.t
 # ====== SOURCE1: OLLAMA upstream ======
 Source1:        https://github.com/ollama/ollama/archive/refs/tags/v%{version}.tar.gz
 
+# ====== SOURCE2: sysusers precisa existir quando o RPM expande %%pre.
+# O arquivo extraido de Source0 em %%prep ainda nao existe nessa etapa.
+Source2:        https://raw.githubusercontent.com/mwprado/ollama-grid/main/sysusers.d/ollama-grid.conf
+
 # ====== Backends for Distro ======
+# %%bcond_with = desligado por padrao e habilitavel via --with.
+# Fedora 41-43 mantem CUDA/ROCm opt-in (configuracoes historicas);
+# nao habilitar sem validar toolkit e compatibilidade com Ollama 0.40.6.
 %bcond_without cpu
 %bcond_without vulkan
 
@@ -333,6 +340,7 @@ via Nginx e orquestração por serviços systemd.
 
 # (1) Common (binário e estrutura)
 %package -n ollama-grid-common
+%sysusers_requires_compat
 Requires(post): systemd
 Requires(postun): systemd
 
@@ -344,7 +352,9 @@ Arquivos comuns ao sistema (usuário/grupo ollama-grid, diretórios padrão, tmp
 %package -n ollama-grid-balancer
 Summary:        Balanceador Nginx e integração do OllamaGrid
 Requires:       ollama-grid-common = %{version}-%{release}
-Requires:     nginx
+# A rota / do nginx usa ollama_grid_cpu (127.0.0.1:11434).
+Requires:       ollama-grid-cpu = %{version}-%{release}
+Requires:       nginx
 
 %description -n ollama-grid-balancer
 Subpacote contendo a configuração do Nginx para o OllamaGrid e arquivos de integração.
@@ -412,33 +422,8 @@ mkdir -p %{bdir}/ollama-grid %{bdir}/ollama
 tar -xzf %{SOURCE0} -C %{bdir}/ollama-grid --strip-components=1
 tar -xzf %{SOURCE1} -C %{bdir}/ollama --strip-components=1
 
-%if %{with cuda13} && 0
-mkdir %{bdir}/cuda13_include
-cp -a /usr/local/cuda-13.0/targets/x86_64-linux/include/* %{bdir}/cuda13_include/
-pushd %{bdir}/cuda13_include/crt
-  %if 0%{?fedora} == 43
-    cp -a %{bdir}/ollama-grid/scripts/cuda13-math-functions.h.patch %{bdir}/cuda13_include/crt/
-    patch -u < cuda13-math-functions.h.patch
-  %elif 0%{?fedora} == 42
-    cp -a %{bdir}/ollama-grid/scripts/f42-cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
-    patch -u < f42-cuda12-math-functions.h.patch
-  %endif
-popd
-%endif
-
-%if %{with cuda12} && 0
-mkdir %{bdir}/cuda12_include/
-cp -a /usr/local/cuda-12.9/targets/x86_64-linux/include/* %{bdir}/cuda12_include/
-pushd %{bdir}/cuda12_include/crt
-  %if 0%{?fedora} == 43
-    cp -a %{bdir}/ollama-grid/scripts/cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
-    patch -u < cuda12-math-functions.h.patch
-  %elif 0%{?fedora} == 42
-    cp -a %{bdir}/ollama-grid/scripts/f42-cuda12-math-functions.h.patch %{bdir}/cuda12_include/crt/                           
-    patch -u < f42-cuda12-math-functions.h.patch
-  %endif
-popd
-%endif
+# Blocos antigos de patch CUDA desativados foram removidos.
+# Em caso de reativacao, portar primeiro os patches para o toolkit atual.
 
 echo "# ==================== Build =================== #"
 %build
@@ -773,7 +758,7 @@ install -d \
 %endif
   
 # --- sysusers / tmpfiles (arquivos do repositório) ---
-install -m 0644 %{bdir}/ollama-grid/sysusers.d/ollama-grid.conf %{buildroot}%{_sysusersdir}/ollama-grid.conf
+install -m 0644 %{SOURCE2} %{buildroot}%{_sysusersdir}/ollama-grid.conf
 install -m 0644 %{bdir}/ollama-grid/tmpfiles.d/ollama-grid.conf %{buildroot}%{_tmpfilesdir}/ollama-grid.conf
 install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid@.service %{buildroot}%{_unitdir}/ollama-grid@.service
 install -Dpm644 %{bdir}/ollama-grid/systemd/ollama-grid-balancer.service %{buildroot}%{_unitdir}/ollama-grid-balancer.service
@@ -1045,8 +1030,8 @@ fi
 
 %dir %{og_confdir}
 # sysusers / tmpfiles
-%config(noreplace) %{_sysusersdir}/ollama-grid.conf
-%config(noreplace) %{_tmpfilesdir}/ollama-grid.conf
+%{_sysusersdir}/ollama-grid.conf
+%{_tmpfilesdir}/ollama-grid.conf
 %{_unitdir}/ollama-grid@.service
 
 # ============================
@@ -1202,9 +1187,13 @@ fi
 
 # ---- Common ----
 
+# Criar usuario/grupo ANTES de desempacotar diretorios com %%attr.
+# A macro e expandida no rpmbuild; precisa do arquivo %%{SOURCE2}.
+%pre -n ollama-grid-common
+%sysusers_create_compat %{SOURCE2}
+
 %post -n ollama-grid-common
-# cria usuário, diretórios persistentes e temporários
-%sysusers_create_compat %{_sysusersdir}/ollama-grid.conf || :
+# Criar estrutura persistente conforme tmpfiles.d.
 %tmpfiles_create %{_tmpfilesdir}/ollama-grid.conf || :
 
 # registra o TEMPLATE no systemd
@@ -1308,6 +1297,14 @@ fi
 
 # ==================== Scriptlets ====================
 %changelog
+* Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-5
+- Criar o usuario ollama-grid em %%pre antes da extracao dos arquivos RPM.
+- Declarar sysusers.d como Source2 para a expansao de %%sysusers_create_compat.
+- Remover %%config de sysusers.d e tmpfiles.d.
+- Exigir backend CPU no balancer porque nginx usa CPU na rota padrao.
+- Documentar os bcond opt-in legados e remover blocos de patch CUDA inativos.
+- Preservar os builds Go/cgo manuais e as arquiteturas CUDA upstream.
+
 * Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-4
 - Compilar somente os alvos CMake nativos em CUDA13 e ROCm.
 - Gerar os binarios Go/cgo manualmente com CC/CXX explicitos por backend.
