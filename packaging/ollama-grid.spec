@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.40.6
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -292,11 +292,13 @@ BuildRequires: libdrm
 
 %global og_licensedir %{_licensedir}/ollama-grid
 
-# Go manual somente para CPU/Vulkan/CUDA 12; os demais usam o alvo do CMake.
+# Go/cgo manual para todos os backends; o CMake compila somente os alvos nativos.
 # Preservar os metadados de versao e o modo release do Ollama upstream.
 %global og_go_release_flags -ldflags "-s -w -X=github.com/ollama/ollama/version.Version=%{version} -X=github.com/ollama/ollama/server.mode=release"
 %global og_go_ldflag_vulkan %{og_go_release_flags}
 %global og_go_ldflag_cuda12 %{og_go_release_flags}
+%global og_go_ldflag_cuda13 %{og_go_release_flags}
+%global og_go_ldflag_rocm   %{og_go_release_flags}
 %global og_go_ldflag_cpu    %{og_go_release_flags}
 %global og_gobuild go build -trimpath -buildmode=pie
 
@@ -553,6 +555,8 @@ echo "#---ROCm---#"
     -DOLLAMA_LLAMA_BACKENDS=%{rocm_backend} \
     -DOLLAMA_VERSION=%{version} \
     -DOLLAMA_GO_OUTPUT=%{bdir}/ollama/build/ollama-grid-rocm \
+    -DCMAKE_C_COMPILER=/usr/bin/gcc \
+    -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
     -DCMAKE_PREFIX_PATH=%{rocm_home} \
     -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=TRUE \
     -DCMAKE_CUDA_COMPILER=NOTFOUND \
@@ -561,13 +565,30 @@ echo "#---ROCm---#"
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
 
+  # Apenas targets nativos: nao invocar o ollama-go (ALL) do CMake.
   ROCM_PATH=%{rocm_home} \
   PATH=%{rocm_home}/bin:%{rocm_llvm_bin}:$PATH \
   CC=/usr/bin/gcc \
   CXX=/usr/bin/g++ \
-  GOFLAGS="-buildmode=pie" \
   cmake --build %{bdir}/ollama/build \
+    --target ollama-llama-server-local ollama-llama-server-%{rocm_backend} \
     --parallel %{?_smp_build_ncpus}
+
+  # Executavel Go compila no proprio ambiente RPM com CC/CXX verificados.
+  rocm_go_cc="$(CC=/usr/bin/gcc CXX=/usr/bin/g++ CGO_ENABLED=1 go env CC)"
+  rocm_go_cxx="$(CC=/usr/bin/gcc CXX=/usr/bin/g++ CGO_ENABLED=1 go env CXX)"
+  echo "ROCm cgo CC: $rocm_go_cc"
+  echo "ROCm cgo CXX: $rocm_go_cxx"
+  test "$rocm_go_cc" = "/usr/bin/gcc" || { echo "ERROR: wrong ROCm Go/cgo C compiler" >&2; exit 1; }
+  test "$rocm_go_cxx" = "/usr/bin/g++" || { echo "ERROR: wrong ROCm Go/cgo C++ compiler" >&2; exit 1; }
+
+  ROCM_PATH=%{rocm_home} \
+  PATH=%{rocm_home}/bin:%{rocm_llvm_bin}:$PATH \
+  CC=/usr/bin/gcc \
+  CXX=/usr/bin/g++ \
+  CGO_ENABLED=1 \
+  %{og_gobuild} %{og_go_ldflag_rocm} \
+    -o %{bdir}/ollama/build/ollama-grid-rocm .
 
   popd
 
@@ -589,6 +610,8 @@ echo "#---CUDA 13---#"
     -DOLLAMA_LLAMA_BACKENDS=cuda_v13 \
     -DOLLAMA_VERSION=%{version} \
     -DOLLAMA_GO_OUTPUT=%{bdir}/ollama/build/ollama-grid-cuda13 \
+    -DCMAKE_C_COMPILER=%{cuda13_cc} \
+    -DCMAKE_CXX_COMPILER=%{cuda13_cxx} \
     -DCUDAToolkit_ROOT=%{cuda13_home} \
     -DCMAKE_CUDA_COMPILER=%{cuda13_home}/bin/nvcc \
     -DCMAKE_CUDA_HOST_COMPILER=%{cuda13_cxx} \
@@ -599,13 +622,28 @@ echo "#---CUDA 13---#"
     %{og_cpu_compat} \
     -B %{bdir}/ollama/build
 
+  # Apenas targets nativos: nao invocar o ollama-go (ALL) do CMake.
   CC=%{cuda13_cc} \
   CXX=%{cuda13_cxx} \
   CUDAHOSTCXX=%{cuda13_cxx} \
   CUDACXX=%{cuda13_home}/bin/nvcc \
-  GOFLAGS="-buildmode=pie" \
   cmake --build %{bdir}/ollama/build \
+    --target ollama-llama-server-local ollama-llama-server-cuda_v13 \
     --parallel %{?_smp_build_ncpus}
+
+  # Executavel Go usa explicitamente o host GCC selecionado para CUDA13.
+  cuda13_go_cc="$(CC=%{cuda13_cc} CXX=%{cuda13_cxx} CGO_ENABLED=1 go env CC)"
+  cuda13_go_cxx="$(CC=%{cuda13_cc} CXX=%{cuda13_cxx} CGO_ENABLED=1 go env CXX)"
+  echo "CUDA13 cgo CC: $cuda13_go_cc"
+  echo "CUDA13 cgo CXX: $cuda13_go_cxx"
+  test "$cuda13_go_cc" = "%{cuda13_cc}" || { echo "ERROR: wrong CUDA13 Go/cgo C compiler" >&2; exit 1; }
+  test "$cuda13_go_cxx" = "%{cuda13_cxx}" || { echo "ERROR: wrong CUDA13 Go/cgo C++ compiler" >&2; exit 1; }
+
+  CC=%{cuda13_cc} \
+  CXX=%{cuda13_cxx} \
+  CGO_ENABLED=1 \
+  %{og_gobuild} %{og_go_ldflag_cuda13} \
+    -o %{bdir}/ollama/build/ollama-grid-cuda13 .
 
   popd
 
@@ -1270,6 +1308,13 @@ fi
 
 # ==================== Scriptlets ====================
 %changelog
+* Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-4
+- Compilar somente os alvos CMake nativos em CUDA13 e ROCm.
+- Gerar os binarios Go/cgo manualmente com CC/CXX explicitos por backend.
+- Verificar go env CC/CXX antes de cada build manual.
+- Alinhar os compiladores nativos CMake com as toolchains dos backends.
+- Preservar o metodo manual de build Go do CUDA12 com GCC14/glibc privada.
+
 * Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-3
 - Preservar o build Go manual do CUDA12 para usar GCC privado via cgo.
 - Validar CC/CXX efetivos do cgo antes do build Go CUDA12.
