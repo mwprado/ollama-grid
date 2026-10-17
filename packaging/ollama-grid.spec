@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.40.6
-Release:        9%{?dist}
+Release:        10%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -363,6 +363,9 @@ Bibliotecas CUDA13 (moderno) e wrapper /usr/bin/ollama-grid-cuda13. Requer toolk
 %package -n ollama-grid-cuda12
 Summary:        Backend CUDA 12.9 para GPUs NVIDIA legadas
 Requires:       ollama-grid-common = %{version}-%{release}
+# Runtime CUDA (libcudart/cublas/etc), sem exigir a instalacao de driver.
+# cuda-runtime-12-9 inclui driver; cuda-libraries-12-9 nao.
+Requires:       cuda-libraries-12-9
 # A glibc e a libstdc++ privadas sao dependencias de execucao deste backend.
 Requires:       custom-gcc14 >= 14.4.0
 Requires:       custom-glibc = 2.40
@@ -1271,6 +1274,11 @@ fi
 
 # ==================== Scriptlets ====================
 %changelog
+* Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-10
+- Exigir cuda-libraries-12-9 para execucao do backend CUDA12 sem puxar driver.
+- Explicitar caminhos CUDA 12.9 no EnvironmentFile exclusivo de cuda12.
+- Preservar dependencias da toolchain GCC14/glibc2.40 privada.
+
 * Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-9
 - Corrigir falha de parse do SRPM Fedora 44: %%sysusers_requires_compat indefinida.
 - Usar Requires(pre) por arquivo e systemd-sysusers no %%pre sem macros externas.
