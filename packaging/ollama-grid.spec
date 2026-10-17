@@ -1,6 +1,6 @@
 Name:           ollama-grid
 Version:        0.40.6
-Release:        6%{?dist}
+Release:        7%{?dist}
 Summary:        Meta-pacote e backends do Ollama (Vulkan/ROCm/CUDA) com balanceador Nginx
 License:        MIT
 URL:            https://github.com/mwprado/ollama-grid
@@ -993,8 +993,9 @@ fi
 %license %{og_licensedir}/LICENSE.ollama-grid
 
 %dir %{_libexecdir}/ollama-grid
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/lib/ollama-grid
-%dir %attr(0755,ollama-grid,ollama-grid) %{_localstatedir}/log/ollama-grid
+# Diretorios estruturais sob controle de root; homes e modelos ficam com ollama-grid.
+%dir %attr(0755,root,root) %{_localstatedir}/lib/ollama-grid
+%dir %attr(0755,root,root) %{_localstatedir}/log/ollama-grid
 
 %dir %{og_confdir}
 # sysusers / tmpfiles
@@ -1265,6 +1266,12 @@ fi
 
 # ==================== Scriptlets ====================
 %changelog
+* Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-7
+- Alinhar diretorios base de /var/lib e /var/log como root:root em RPM/tmpfiles.
+- Evitar transicao insegura em /var/lib/ollama-grid/cuda legado.
+- Criar explicitamente models compartilhado e home de cuda13 via tmpfiles.
+- Preservar diretorios de dados e homes como propriedade de ollama-grid.
+
 * Sat Oct 17 2026 OllamaGrid Maintainers - 0.40.6-6
 - Exigir GCC14 Cangaceiro e glibc 2.40 privados para CUDA12 em Fedora/EPEL.
 - Eliminar selecao de /usr/bin/gcc nos ramos CUDA12 Fedora 41 e EPEL 9/10.
