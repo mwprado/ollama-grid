@@ -110,6 +110,34 @@ sudo systemctl reload nginx
 
 ---
 
+## 💬 Clientes recomendados
+
+O Ollama-Grid expõe a API nativa do Ollama pelo **Nginx na porta `8080`**. Para conversar com os modelos, dois clientes interessantes são:
+
+| Cliente | Perfil | Configuração recomendada |
+|---|---|---|
+| **[Moose](https://github.com/moooossee/moose)** | Aplicativo desktop nativo para Linux (GTK/libadwaita), com chats e arquivos locais | Selecionar a opção para conectar a uma **instância Ollama existente** e apontar para o endereço do Ollama-Grid |
+| **[Open WebUI](https://github.com/open-webui/open-webui)** | Interface web self-hosted, com histórico, gerenciamento de modelos e recursos para múltiplos usuários | Configurar uma conexão do tipo **Ollama** com a URL-base do Nginx |
+
+Em ambos os casos, use **`http://127.0.0.1:8080`** quando o cliente tiver acesso à mesma rede local do host e estiver sendo executado diretamente nele. Em outra máquina, substitua `127.0.0.1` pelo endereço do servidor, com acesso autorizado no firewall. **Não aponte o cliente diretamente para as portas 11434–11438**: isso contorna o failover e a política centralizada de escrita dos modelos.
+
+### Moose
+
+- Disponível no [Flathub](https://flathub.org/apps/io.github.moooossee.Moose), além do repositório do projeto.
+- Na configuração, escolha **Ollama existente/externo**, e não o Ollama gerenciado pelo próprio Moose, para usar o Ollama-Grid.
+- Se um modo de privacidade permitir somente o Ollama gerenciado pelo aplicativo, ajuste-o conforme a documentação do Moose para habilitar a conexão externa ao Ollama-Grid.
+
+### Open WebUI
+
+- Em **Admin → Settings → Connections**, configure uma conexão **Ollama** apontando para a API do Ollama-Grid, por exemplo `http://servidor:8080`.
+- Também é possível usar `OLLAMA_BASE_URL=http://servidor:8080` na configuração inicial. A variável define a URL **base**, sem sufixo `/api`.
+- Se Open WebUI estiver em Docker/Podman, `localhost` aponta para o **contêiner**, não para o host. Use um endereço do host acessível ao contêiner; no Podman, por exemplo, `host.containers.internal` quando disponível.
+- Caso ambos rodem na mesma máquina, evite conflito entre as portas HTTP do **Open WebUI** e do **Nginx Ollama-Grid** (que utiliza a porta `8080`).
+
+A URL pública do Ollama-Grid é suficiente para listar modelos, fazer inferência e solicitar downloads: o Nginx encaminha operações de escrita (`/api/pull`, `/api/create` etc.) ao backend CPU e prioriza as GPUs para consultas. Os clientes são **opcionais** e não são dependências RPM do Ollama-Grid.
+
+---
+
 ## 🧩 Backends e portas
 
 | Backend | Serviço | Porta padrão |
