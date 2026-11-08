@@ -70,6 +70,16 @@ Os pacotes usam o prefixo `ollama-grid-*` para evitar colisão semântica com o 
 
 ---
 
+## 🔐 Pós-instalação: firewall e SELinux
+
+Após instalar o `ollama-grid-balancer`, **verifique o isolamento das portas 11434–11438**, exponha somente a API Nginx (`8080/tcp`) à rede autorizada e confira se o SELinux permite as conexões do Nginx aos backends.
+
+O guia inclui configuração do `firewalld`, diagnóstico de `502 Bad Gateway` causado por `httpd_can_network_connect=off`, verificações e ressalvas de segurança. **O pacote não altera automaticamente firewall ou SELinux no `%post`.**
+
+Consulte **[Pós-instalação: firewall e SELinux](docs/POST_INSTALL.md)**.
+
+---
+
 ## 🌐 Balanceador Nginx
 
 O pacote `ollama-grid-balancer` instala a configuração padrão do Nginx em:
